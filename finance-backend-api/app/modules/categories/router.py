@@ -7,12 +7,41 @@ from app.shared.dependencies import get_current_user
 from app.modules.auth.models import User
 from app.modules.categories import service
 from app.modules.categories.schemas import (
+    CategoryGroupCreate, CategoryGroupOut,
     CategoryCreate, CategoryUpdate, CategoryOut,
     SubcategoryCreate, SubcategoryOut,
     TagCreate, TagOut,
 )
 
 router = APIRouter(tags=["Categories"])
+
+
+# ── Category Group Routes ──────────────────────────────────────────────────────
+
+@router.post("/category-groups", response_model=CategoryGroupOut, status_code=201)
+def create_category_group(
+    body: CategoryGroupCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return service.create_group(db, current_user.id, body.name, body.sort_order)
+
+
+@router.get("/category-groups", response_model=List[CategoryGroupOut])
+def list_category_groups(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return service.list_groups(db, current_user.id)
+
+
+@router.delete("/category-groups/{group_id}", status_code=204)
+def delete_category_group(
+    group_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service.delete_group(db, group_id, current_user.id)
 
 
 # ── Category Routes ────────────────────────────────────────────────────────────
@@ -29,10 +58,11 @@ def create_category(
 @router.get("/categories", response_model=List[CategoryOut])
 def list_categories(
     type: Optional[str] = Query(None, description="income or expense"),
+    include_inactive: bool = Query(False),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return service.list_categories(db, current_user.id, type)
+    return service.list_categories(db, current_user.id, type, include_inactive)
 
 
 @router.patch("/categories/{cat_id}", response_model=CategoryOut)
@@ -46,12 +76,13 @@ def update_category(
 
 
 @router.delete("/categories/{cat_id}", status_code=204)
-def delete_category(
+def deactivate_category(
     cat_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    service.delete_category(db, cat_id, current_user.id)
+    """Soft-delete: marks the category inactive. Historical budget data is preserved."""
+    service.deactivate_category(db, cat_id, current_user.id)
 
 
 # ── Subcategory Routes ─────────────────────────────────────────────────────────

@@ -1,6 +1,19 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, func, PrimaryKeyConstraint
+from sqlalchemy import (
+    Column, Integer, String, DateTime, Enum, Boolean, ForeignKey, func, PrimaryKeyConstraint,
+)
 from app.db.base import Base
 from app.shared.enums import CategoryType
+
+
+class CategoryGroup(Base):
+    __tablename__ = "category_groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String(100), nullable=False)
+    sort_order = Column(Integer, nullable=False, default=0)
+    is_system = Column(Boolean, nullable=False, default=False)  # system groups cannot be deleted
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
 
 class Category(Base):
@@ -8,10 +21,12 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    group_id = Column(Integer, ForeignKey("category_groups.id", ondelete="SET NULL"), nullable=True, index=True)
     name = Column(String(100), nullable=False)
     type = Column(Enum(CategoryType), nullable=False)
-    color = Column(String(20), nullable=True)  # hex color e.g. #FF5733
-    icon = Column(String(50), nullable=True)   # icon name/key
+    color = Column(String(20), nullable=True)
+    icon = Column(String(50), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 

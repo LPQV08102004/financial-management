@@ -5,9 +5,11 @@ class Base(DeclarativeBase):
     pass
 
 
-# Import all models here so Alembic can detect them for autogenerate
+# Import all models here so Alembic autogenerate can detect them
 from app.modules.auth.models import User, RefreshToken  # noqa: F401, E402
 from app.modules.accounts.models import Account  # noqa: F401, E402
-from app.modules.categories.models import Category, Subcategory, Tag, TransactionTag  # noqa: F401, E402
-from app.modules.transactions.models import Transaction  # noqa: F401, E402
-from app.modules.budgets.models import Budget, BudgetAlert  # noqa: F401, E402
+from app.modules.categories.models import (  # noqa: F401, E402
+    CategoryGroup, Category, Subcategory, Tag, TransactionTag,
+)
+from app.modules.transactions.models import Transaction, SplitItem  # noqa: F401, E402
+from app.modules.budgets.models import BudgetEntry, BudgetAlert, AuditLog  # noqa: F401, E402

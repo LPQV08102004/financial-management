@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import SidebarDrawer from '../components/SidebarDrawer';
 import HeaderIconButton from '../components/HeaderIconButton';
 import DateTimeSelector from '../components/DateTimeSelector';
+import { getBalance, getStatsByCategory } from '../api/analyticsApi';
 
 export default function HomeScreen({ navigation }) {
   const [amount, setAmount] = useState('');
@@ -19,7 +20,45 @@ export default function HomeScreen({ navigation }) {
   const [showCalendar, setShowCalendar] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // ── Analytics state ────────────────────────────────────────────────────────
+  const [balance, setBalance] = useState(null);
+  const [categoryStats, setCategoryStats] = useState([]);
 
+  const _toDateStr = (d) => {
+    if (!d) return undefined;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const params = timePeriod === 'custom'
+      ? { period: 'custom', from_date: _toDateStr(confirmedStartDate), to_date: _toDateStr(confirmedEndDate) }
+      : { period: timePeriod, date: _toDateStr(selectedDate) };
+    const fetchAnalytics = async () => {
+      try {
+        const [bal, stats] = await Promise.all([
+          getBalance(params),
+          getStatsByCategory({ ...params, type: activeTab }),
+        ]);
+        if (!cancelled) {
+          setBalance(bal);
+          setCategoryStats(stats);
+        }
+      } catch (_) { /* backend not available yet */ }
+    };
+    fetchAnalytics();
+    return () => { cancelled = true; };
+  }, [activeTab, timePeriod, selectedDate, confirmedStartDate, confirmedEndDate]);
+
+  // Build pie segments from API category stats
+  const CIRCUMFERENCE = 628.31;
+  let _pieOffset = 0;
+  const pieSegments = categoryStats.map((item) => {
+    const arcLen = (Number(item.percentage) / 100) * CIRCUMFERENCE;
+    const seg = { arcLen, offset: _pieOffset, color: item.color || '#999999', category: item.category, amount: Number(item.amount) };
+    _pieOffset += arcLen;
+    return seg;
+  });
 
   return (
     <View style={styles.screenContainer}>
@@ -35,7 +74,9 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.iconLabel}>💳</Text>
               <Text style={styles.headerText}>Tổng số dư</Text>
             </View>
-            <Text style={styles.balanceText}>5,000,000 đ</Text>
+            <Text style={styles.balanceText}>
+              {balance ? Number(balance.balance).toLocaleString('vi-VN') + ' đ' : '—'}
+            </Text>
           </View>
           <HeaderIconButton 
             icon="📋" 
@@ -77,62 +118,37 @@ export default function HomeScreen({ navigation }) {
         setShowCalendar={setShowCalendar}
       />
 
-      {/* Gray Circle Chart - Pie Chart */}
+      {/* Pie Chart */}
       <View style={styles.chartContainer}>
         <Svg width="320" height="320" viewBox="0 0 320 320">
-          {activeTab === 'expense' ? (
-            // Multi-colored pie chart for expenses
+          {pieSegments.length > 0 ? (
             <G rotation="-90" origin="160,160">
-              {/* Health - 50% (xanh lá) - 180 degrees */}
-              <Circle
-                cx="160"
-                cy="160"
-                r="100"
-                stroke="#4CAF50"
-                strokeWidth="35"
-                fill="none"
-                strokeDasharray="314.16 628.31"
-              />
-              {/* Cafe - 20% (cam) - 72 degrees */}
-              <Circle
-                cx="160"
-                cy="160"
-                r="100"
-                stroke="#FF9800"
-                strokeWidth="35"
-                fill="none"
-                strokeDasharray="125.66 628.31"
-                strokeDashoffset="-314.16"
-              />
-              {/* Exercise - 30% (tím) - 108 degrees */}
-              <Circle
-                cx="160"
-                cy="160"
-                r="100"
-                stroke="#9C27B0"
-                strokeWidth="35"
-                fill="none"
-                strokeDasharray="188.50 628.31"
-                strokeDashoffset="-439.82"
-              />
+              {pieSegments.map((seg, i) => (
+                <Circle
+                  key={i}
+                  cx="160"
+                  cy="160"
+                  r="100"
+                  stroke={seg.color}
+                  strokeWidth="35"
+                  fill="none"
+                  strokeDasharray={`${seg.arcLen.toFixed(2)} ${CIRCUMFERENCE}`}
+                  strokeDashoffset={`${(-seg.offset).toFixed(2)}`}
+                />
+              ))}
             </G>
           ) : (
-            // Solid blue circle for income
-            <Circle
-              cx="160"
-              cy="160"
-              r="100"
-              stroke="#2196F3"
-              strokeWidth="35"
-              fill="none"
-              strokeDasharray="628.31 628.31"
-            />
+            <Circle cx="160" cy="160" r="100" stroke="#e0e0e0" strokeWidth="35" fill="none" />
           )}
         </Svg>
-        {/* Center circle with amount */}
+        {/* Center total */}
         <View style={styles.chartOverlay}>
           <Text style={styles.chartAmount}>
-            {activeTab === 'expense' ? '100.000' : '200.000'} đ
+            {balance
+              ? (activeTab === 'expense'
+                  ? Number(balance.total_expense).toLocaleString('vi-VN')
+                  : Number(balance.total_income).toLocaleString('vi-VN')) + ' đ'
+              : '—'}
           </Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('AddTransaction')}>
@@ -142,26 +158,23 @@ export default function HomeScreen({ navigation }) {
 
       {/* Category List */}
       <View style={styles.categoryContainer}>
-        {activeTab === 'expense' ? (
-          <>
-            <View style={[styles.categoryItem, styles.categoryItemHealth]}>
-              <Text style={styles.categoryName}>🏥 Sức khỏe</Text>
-              <Text style={styles.categoryAmount}>50.000 đ</Text>
+        {categoryStats.length > 0 ? (
+          categoryStats.map((item, i) => (
+            <View
+              key={i}
+              style={[
+                styles.categoryItem,
+                { borderLeftColor: item.color || '#075c09', backgroundColor: item.color ? item.color + '22' : '#f8f9fa' },
+              ]}
+            >
+              <Text style={styles.categoryName}>{item.category}</Text>
+              <Text style={styles.categoryAmount}>
+                {Number(item.amount).toLocaleString('vi-VN')} đ
+              </Text>
             </View>
-            <View style={[styles.categoryItem, styles.categoryItemCafe]}>
-              <Text style={styles.categoryName}>☕ Cafe</Text>
-              <Text style={styles.categoryAmount}>20.000 đ</Text>
-            </View>
-            <View style={[styles.categoryItem, styles.categoryItemExercise]}>
-              <Text style={styles.categoryName}>🏋️ Tập thể dục</Text>
-              <Text style={styles.categoryAmount}>30.000 đ</Text>
-            </View>
-          </>
+          ))
         ) : (
-          <View style={[styles.categoryItem, styles.categoryItemIncome]}>
-            <Text style={styles.categoryName}>💼 Lương tháng</Text>
-            <Text style={styles.categoryAmount}>200.000 đ</Text>
-          </View>
+          <Text style={{ color: '#999', textAlign: 'center', padding: 10 }}>Không có dữ liệu</Text>
         )}
       </View>
      

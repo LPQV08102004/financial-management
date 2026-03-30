@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import SidebarDrawer from '../components/SidebarDrawer';
 import HeaderIconButton from '../components/HeaderIconButton';
@@ -7,7 +7,6 @@ import DateTimeSelector from '../components/DateTimeSelector';
 import { getBalance, getStatsByCategory } from '../api/analyticsApi';
 
 export default function HomeScreen({ navigation }) {
-  const [amount, setAmount] = useState('');
   const [activeTab, setActiveTab] = useState('expense');
   const [timePeriod, setTimePeriod] = useState('day');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -21,13 +20,22 @@ export default function HomeScreen({ navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Analytics state ────────────────────────────────────────────────────────
-  const [balance, setBalance] = useState(null);
+  const [totalBalance, setTotalBalance] = useState(null);  // all-time, for header
+  const [balance, setBalance] = useState(null);            // period-filtered, for pie centre
   const [categoryStats, setCategoryStats] = useState([]);
 
   const _toDateStr = (d) => {
     if (!d) return undefined;
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
+
+  // Fetch all-time balance once for the header
+  useEffect(() => {
+    const today = _toDateStr(new Date());
+    getBalance({ period: 'custom', from_date: '2000-01-01', to_date: today })
+      .then(setTotalBalance)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,7 +83,7 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.headerText}>Tổng số dư</Text>
             </View>
             <Text style={styles.balanceText}>
-              {balance ? Number(balance.balance).toLocaleString('vi-VN') + ' đ' : '—'}
+              {totalBalance ? Number(totalBalance.balance).toLocaleString('vi-VN') + ' đ' : '—'}
             </Text>
           </View>
           <HeaderIconButton 

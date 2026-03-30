@@ -32,6 +32,8 @@ export default function Chart({ navigation }) {
 
   // ── API chart data ────────────────────────────────────────────────────────────
   const [apiChartData, setApiChartData] = useState([]);
+  // Colors keyed by category name, populated when activeTab is expense/income
+  const [apiCategoryColors, setApiCategoryColors] = useState({});
 
   const _toDateStr = (d) => {
     if (!d) return undefined;
@@ -59,10 +61,15 @@ export default function Chart({ navigation }) {
           // by-category returns [{category, amount, color, percentage}]
           // Reshape: one bar per category for renderStackedBarChart
           const rows = await getStatsByCategory({ ...params, type: activeTab });
-          data = rows.map(r => ({
-            label: r.category,
-            categories: { [r.category]: Number(r.amount) },
-          }));
+          const colorMap = {};
+          data = rows.map(r => {
+            colorMap[r.category] = r.color || '#999999';
+            return {
+              label: r.category,
+              categories: { [r.category]: Number(r.amount) },
+            };
+          });
+          if (!cancelled) setApiCategoryColors(colorMap);
         }
         if (!cancelled) setApiChartData(data);
       } catch (_) { /* fallback to mock data below */ }
@@ -366,10 +373,12 @@ export default function Chart({ navigation }) {
   const chartHeight = 300;
   // Tính barWidth dựa trên số lượng bars thực tế
   const getMaxBars = () => {
+    // When API data is loaded, always use the actual number of data points
+    if (apiChartData.length > 0) return Math.max(chartData.length, 1);
     if (timePeriod === 'week') return 7;
     if (timePeriod === 'month') return 4;
     if (timePeriod === 'year') return 12;
-    if (timePeriod === 'custom') return Math.max(chartData.length, 1); // Dùng số lượng thực tế
+    if (timePeriod === 'custom') return Math.max(chartData.length, 1);
     return 1; // day
   };
   const maxPossibleBars = getMaxBars();
@@ -543,7 +552,7 @@ export default function Chart({ navigation }) {
                     const categoryAmount = data.categories?.[category] || 0;
                     const barHeight = (categoryAmount / maxValue) * graphHeight || 0;
                     const barY = currentY - barHeight;
-                    const color = categoryColors[category] || '#999';
+                    const color = apiCategoryColors[category] || categoryColors[category] || '#999';
 
                     const element = (
                       <Rect

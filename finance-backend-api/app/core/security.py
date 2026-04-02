@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Any
+from uuid import uuid4
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from app.core.config import settings
@@ -34,7 +35,7 @@ def create_access_token(subject: Any, extra: Optional[dict] = None) -> str:
 
 
 def create_refresh_token(subject: Any) -> str:
-    data = {"sub": str(subject), "type": "refresh"}
+    data = {"sub": str(subject), "type": "refresh", "jti": str(uuid4())}
     return _create_token(data, timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
 
 

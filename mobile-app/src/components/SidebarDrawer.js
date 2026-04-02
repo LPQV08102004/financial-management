@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
 export default function SidebarDrawer({ isOpen, onClose, navigation }) {
+  const { state } = useAuth();
+  const user = state.user;
   const sidebarAnimation = useRef(new Animated.Value(-240)).current;
 
   useEffect(() => {
@@ -44,7 +47,7 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
               <Text style={styles.userAvatarText}>👤</Text>
             </View>
             <View style={styles.userInfoContainer} pointerEvents="none">
-              <Text style={styles.userName}>Nguyễn Văn A</Text>
+              <Text style={styles.userName}>{user?.fullname || 'Người dùng'}</Text>
               <Text style={styles.userBalance}>Số dư: 5,000,000 đ</Text>
             </View>
           </TouchableOpacity>

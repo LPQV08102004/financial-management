@@ -252,9 +252,10 @@ def list_transactions(
     if account_id:
         q = q.filter(Transaction.account_id == account_id)
     if from_date:
-        q = q.filter(Transaction.transaction_date >= from_date)
+        q = q.filter(Transaction.transaction_date >= from_date.replace(hour=0, minute=0, second=0, microsecond=0))
     if to_date:
-        q = q.filter(Transaction.transaction_date <= to_date)
+        # Include the full to_date day
+        q = q.filter(Transaction.transaction_date <= to_date.replace(hour=23, minute=59, second=59, microsecond=999999))
     return q.order_by(Transaction.transaction_date.desc()).offset(skip).limit(limit).all()
 
 

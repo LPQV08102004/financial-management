@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: user-service
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/finance_user_db
+    username: root
+    password: '@Masao1010'
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your-email@gmail.com
+    password: your-app-password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+# JWT Configuration
+jwt:
+  secret: your-super-secret-key-min-32-characters-please-change-this
+  access-token-expiration: 900000  # 15 minutes
+  refresh-token-expiration: 604800000  # 7 days
+
+# Server Configuration
+server:
+  port: 8081
+  servlet:
+    context-path: /
+
+# Logging
+logging:
+  level:
+    com.cnlthd.user: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

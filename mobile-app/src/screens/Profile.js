@@ -1,10 +1,34 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
+/* eslint-disable react/prop-types */
+import React, { useCallback, useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 
 export default function Profile({ navigation }) {
-  const { state, signOut } = useAuth();
-  const user = state.user;
+  const { refreshProfile, signOut } = useAuth();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      const result = await refreshProfile();
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      setUser(result.user);
+    } catch (error) {
+      Alert.alert('Lỗi', error.message || 'Không tải được hồ sơ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+    }, [])
+  );
 
   const handleLogout = async () => {
     Alert.alert(
@@ -16,13 +40,24 @@ export default function Profile({ navigation }) {
           text: 'Đăng xuất',
           onPress: async () => {
             await signOut();
-            // Navigation will be handled automatically by App.js based on auth state
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
           },
           style: 'destructive',
         },
       ]
     );
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.screenContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#075c09" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screenContainer}>
@@ -59,7 +94,7 @@ export default function Profile({ navigation }) {
             <View style={styles.infoGroup}>
               <Text style={styles.infoLabel}>Tên</Text>
               <View style={styles.infoBox}>
-                <Text style={styles.infoValue}>{user?.fullname || 'N/A'}</Text>
+                <Text style={styles.infoValue}>{user?.full_name || 'N/A'}</Text>
               </View>
             </View>
 
@@ -75,7 +110,7 @@ export default function Profile({ navigation }) {
             <View style={styles.infoGroup}>
               <Text style={styles.infoLabel}>Số điện thoại</Text>
               <View style={styles.infoBox}>
-                <Text style={styles.infoValue}>{user?.sdt || 'N/A'}</Text>
+                <Text style={styles.infoValue}>{user?.phone_number || 'Chưa cập nhật'}</Text>
               </View>
             </View>
 

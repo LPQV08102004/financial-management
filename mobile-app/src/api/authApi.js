@@ -26,7 +26,7 @@ export async function login(email, password) {
   return data;
 }
 
-export async function register(fullName, email, password) {
+export async function register(fullName, email, password, phoneNumber) {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -34,6 +34,7 @@ export async function register(fullName, email, password) {
       full_name: fullName,
       email,
       password,
+      phone_number: phoneNumber || null,
     }),
   });
 
@@ -55,4 +56,42 @@ export async function getSavedToken() {
 
 export async function logout() {
   await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+}
+
+async function getAuthHeaders() {
+  const token = await getSavedToken();
+  if (!token) {
+    throw new Error('Bạn chưa đăng nhập');
+  }
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+export async function getMyProfile() {
+  const response = await fetch(`${API_BASE_URL}/users/me`, {
+    method: 'GET',
+    headers: await getAuthHeaders(),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data?.detail || 'Không lấy được hồ sơ người dùng');
+  }
+  return data;
+}
+
+export async function updateMyProfile(payload) {
+  const response = await fetch(`${API_BASE_URL}/users/me`, {
+    method: 'PATCH',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data?.detail || 'Không cập nhật được hồ sơ người dùng');
+  }
+  return data;
 }

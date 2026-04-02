@@ -11,31 +11,34 @@ import AddNotification from './src/screens/AddNotification';
 import EditNotification from './src/screens/EditNotification';
 import Profile from './src/screens/Profile';
 import LoginScreen from './src/screens/LoginScreen';
+import { AuthProvider } from './src/context/AuthContext';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName="Login"
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
-          <Stack.Screen name="Transaction" component={Transaction} />
-          <Stack.Screen name="Chart" component={Chart} />
-          <Stack.Screen name="Notification" component={Notification} />
-          <Stack.Screen name="AddNotification" component={AddNotification} />
-          <Stack.Screen name="EditNotification" component={EditNotification} />
-          <Stack.Screen name="Profile" component={Profile} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <AuthProvider>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Stack.Navigator
+            initialRouteName="Login"
+            screenOptions={{
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
+            <Stack.Screen name="Transaction" component={Transaction} />
+            <Stack.Screen name="Chart" component={Chart} />
+            <Stack.Screen name="Notification" component={Notification} />
+            <Stack.Screen name="AddNotification" component={AddNotification} />
+            <Stack.Screen name="EditNotification" component={EditNotification} />
+            <Stack.Screen name="Profile" component={Profile} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }
 

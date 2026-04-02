@@ -270,7 +270,7 @@ Nhu cầu chi tiêu của người dùng thay đổi theo thời gian — danh m
 
 ---
 
-**US-13** · Ghi giao dịch chuyển khoản
+<!-- **US-13** · Ghi giao dịch chuyển khoản
 
 > *Với tư cách là người dùng, tôi muốn ghi nhận việc chuyển tiền giữa hai tài khoản của mình mà không ảnh hưởng đến ngân sách.*
 
@@ -279,7 +279,7 @@ Nhu cầu chi tiêu của người dùng thay đổi theo thời gian — danh m
 - Trừ tài khoản nguồn, cộng tài khoản đích; không tạo `BudgetEntry`
 - Tổng tài sản không thay đổi
 
----
+--- -->
 
 **US-14** · Giao dịch chi tiêu nhiều danh mục (Split)
 
@@ -600,7 +600,6 @@ Chatbot **không thực hiện hành động ghi/sửa/xoá dữ liệu tài ch�
 
 *Truy vấn số dư:*
 - *"Tổng số dư hiện tại của tôi là bao nhiêu?"* → tổng `current_balance` tất cả tài khoản
-- *"Tài khoản Techcombank của tôi còn bao nhiêu?"* → số dư tài khoản cụ thể
 
 *Yêu cầu kỹ thuật:*
 - Chatbot chỉ truy cập dữ liệu của `user_id` đang đăng nhập — tuyệt đối không lẫn dữ liệu người dùng khác

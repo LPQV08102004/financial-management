@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 import SidebarDrawer from '../components/SidebarDrawer';
 import HeaderIconButton from '../components/HeaderIconButton';
 import DateTimeSelector from '../components/DateTimeSelector';
+import { getOverTime, getStatsByCategory } from '../api/analyticsApi';
 
 // Category color mapping
 const categoryColors = {
@@ -29,7 +30,55 @@ export default function Chart({ navigation }) {
   const [confirmedEndDate, setConfirmedEndDate] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // Sample transaction data
+  // ── API chart data ────────────────────────────────────────────────────────────
+  const [apiChartData, setApiChartData] = useState([]);
+  // Colors keyed by category name, populated when activeTab is expense/income
+  const [apiCategoryColors, setApiCategoryColors] = useState({});
+
+  const _toDateStr = (d) => {
+    if (!d) return undefined;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const params = timePeriod === 'custom'
+      ? { period: 'custom', from_date: _toDateStr(confirmedStartDate), to_date: _toDateStr(confirmedEndDate) }
+      : { period: timePeriod, date: _toDateStr(selectedDate) };
+
+    const fetchData = async () => {
+      try {
+        let data = [];
+        if (activeTab === 'all') {
+          // over-time returns [{label, income, expense}] → matches renderBarChart directly
+          const rows = await getOverTime({ ...params, type: 'all' });
+          data = rows.map(r => ({
+            label: r.label,
+            income: Number(r.income),
+            expense: Number(r.expense),
+          }));
+        } else {
+          // by-category returns [{category, amount, color, percentage}]
+          // Reshape: one bar per category for renderStackedBarChart
+          const rows = await getStatsByCategory({ ...params, type: activeTab });
+          const colorMap = {};
+          data = rows.map(r => {
+            colorMap[r.category] = r.color || '#999999';
+            return {
+              label: r.category,
+              categories: { [r.category]: Number(r.amount) },
+            };
+          });
+          if (!cancelled) setApiCategoryColors(colorMap);
+        }
+        if (!cancelled) setApiChartData(data);
+      } catch (_) { /* fallback to mock data below */ }
+    };
+    fetchData();
+    return () => { cancelled = true; };
+  }, [activeTab, timePeriod, selectedDate, confirmedStartDate, confirmedEndDate]);
+
+  // Sample transaction data (fallback when backend is not available)
   const allTransactions = [
     { id: '1', name: 'Sức khỏe', amount: 50000, date: new Date(2026, 2, 15), type: 'expense' },
     { id: '2', name: 'Cafe', amount: 20000, date: new Date(2026, 2, 15), type: 'expense' },
@@ -307,8 +356,9 @@ export default function Chart({ navigation }) {
     return data;
   };
 
-  const chartData = getChartData();
-  
+  // Use API data when available, otherwise fall back to mock getChartData()
+  const chartData = apiChartData.length > 0 ? apiChartData : getChartData();
+
   // Calculate maxValue based on active tab
   let maxValue = 100000;
   if (activeTab === 'all') {
@@ -323,10 +373,12 @@ export default function Chart({ navigation }) {
   const chartHeight = 300;
   // Tính barWidth dựa trên số lượng bars thực tế
   const getMaxBars = () => {
+    // When API data is loaded, always use the actual number of data points
+    if (apiChartData.length > 0) return Math.max(chartData.length, 1);
     if (timePeriod === 'week') return 7;
     if (timePeriod === 'month') return 4;
     if (timePeriod === 'year') return 12;
-    if (timePeriod === 'custom') return Math.max(chartData.length, 1); // Dùng số lượng thực tế
+    if (timePeriod === 'custom') return Math.max(chartData.length, 1);
     return 1; // day
   };
   const maxPossibleBars = getMaxBars();
@@ -500,7 +552,7 @@ export default function Chart({ navigation }) {
                     const categoryAmount = data.categories?.[category] || 0;
                     const barHeight = (categoryAmount / maxValue) * graphHeight || 0;
                     const barY = currentY - barHeight;
-                    const color = categoryColors[category] || '#999';
+                    const color = apiCategoryColors[category] || categoryColors[category] || '#999';
 
                     const element = (
                       <Rect

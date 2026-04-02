@@ -6,12 +6,12 @@ services:
     container_name: finance_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_ROOT_PASSWORD: 11223344
       MYSQL_DATABASE: financedb
       MYSQL_USER: finuser
       MYSQL_PASSWORD: finpass
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:

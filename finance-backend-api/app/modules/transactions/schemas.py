@@ -132,6 +132,8 @@ class TransactionOut(BaseModel):
     reconcile_status: ReconcileStatus
     is_split: bool
     created_at: datetime
+    # Populated by the router for display convenience
+    category_name: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

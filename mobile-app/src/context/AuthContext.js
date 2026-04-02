@@ -1,7 +1,7 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, useEffect } from 'react';
+import { getMyProfile, getSavedToken, login, logout, register } from '../api/authApi';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [state, dispatch] = React.useReducer(
@@ -35,6 +35,13 @@ export function AuthProvider({ children }) {
             userToken: null,
             user: null,
           };
+        case 'UPDATE_USER':
+          return {
+            ...prevState,
+            user: action.payload || null,
+          };
+        default:
+          return prevState;
       }
     },
     {
@@ -48,19 +55,20 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
-        const token = await AsyncStorage.getItem('userToken');
-        const user = await AsyncStorage.getItem('user');
-        
-        if (token && user) {
-          dispatch({ 
-            type: 'RESTORE_TOKEN', 
-            payload: { token, user: JSON.parse(user) } 
-          });
-        } else {
+        const token = await getSavedToken();
+        if (!token) {
           dispatch({ type: 'RESTORE_TOKEN', payload: null });
+          return;
         }
+
+        const user = await getMyProfile();
+        dispatch({
+          type: 'RESTORE_TOKEN',
+          payload: { token, user },
+        });
       } catch (e) {
         console.error('Failed to restore token:', e);
+        await logout();
         dispatch({ type: 'RESTORE_TOKEN', payload: null });
       }
     };
@@ -71,31 +79,16 @@ export function AuthProvider({ children }) {
   const authContext = {
     signIn: async (email, password) => {
       try {
-        const response = await fetch('http://localhost:8081/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Login failed');
-        }
-
-        const data = await response.json();
-        const { accessToken, user } = data.data;
-
-        await AsyncStorage.setItem('userToken', accessToken);
-        await AsyncStorage.setItem('user', JSON.stringify(user));
+        const data = await login(email, password);
+        const token = data?.access_token || await getSavedToken();
+        const user = await getMyProfile();
 
         dispatch({
           type: 'SIGN_IN',
-          payload: { token: accessToken, user },
+          payload: { token, user },
         });
 
-        return { success: true };
+        return { success: true, user };
       } catch (error) {
         return { success: false, message: error.message };
       }
@@ -103,24 +96,35 @@ export function AuthProvider({ children }) {
 
     signUp: async (email, password, fullname, sdt) => {
       try {
-        const response = await fetch('http://localhost:8081/api/auth/signup', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password, fullname, sdt }),
-        });
+        const registerData = await register(fullname, email, password, sdt);
+        let token = registerData?.access_token || await getSavedToken();
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Signup failed');
+        if (!token) {
+          const loginData = await login(email, password);
+          token = loginData?.access_token || await getSavedToken();
         }
 
-        const data = await response.json();
-        const user = data.data;
+        if (!token) {
+          throw new Error('Đăng ký thành công nhưng chưa đăng nhập được');
+        }
 
-        // Note: user-service returns user data but not token on signup
-        // You may need to auto-login after signup
+        const user = await getMyProfile();
+
+        dispatch({
+          type: 'SIGN_UP',
+          payload: { token, user },
+        });
+
+        return { success: true, user };
+      } catch (error) {
+        return { success: false, message: error.message };
+      }
+    },
+
+    refreshProfile: async () => {
+      try {
+        const user = await getMyProfile();
+        dispatch({ type: 'UPDATE_USER', payload: user });
         return { success: true, user };
       } catch (error) {
         return { success: false, message: error.message };
@@ -129,8 +133,7 @@ export function AuthProvider({ children }) {
 
     signOut: async () => {
       try {
-        await AsyncStorage.removeItem('userToken');
-        await AsyncStorage.removeItem('user');
+        await logout();
         dispatch({ type: 'SIGN_OUT' });
         return { success: true };
       } catch (error) {

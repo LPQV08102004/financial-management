@@ -1,11 +1,14 @@
+/* eslint-disable react/prop-types */
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { login, register } from '../api/authApi';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
+  const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState('login');
   const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,11 +28,17 @@ export default function LoginScreen({ navigation }) {
 
     try {
       setLoading(true);
+      let result;
       if (mode === 'register') {
-        await register(fullName.trim(), email.trim(), password);
+        result = await signUp(email.trim(), password, fullName.trim(), phoneNumber.trim());
       } else {
-        await login(email.trim(), password);
+        result = await signIn(email.trim(), password);
       }
+
+      if (!result?.success) {
+        throw new Error(result?.message || (mode === 'register' ? 'Đăng ký thất bại' : 'Đăng nhập thất bại'));
+      }
+
       navigation.replace('Home');
     } catch (e) {
       setError(e.message || (mode === 'register' ? 'Đăng ký thất bại' : 'Đăng nhập thất bại'));
@@ -51,12 +60,22 @@ export default function LoginScreen({ navigation }) {
       </Text>
 
       {mode === 'register' && (
-        <TextInput
-          style={styles.input}
-          placeholder="Họ và tên"
-          value={fullName}
-          onChangeText={setFullName}
-        />
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Họ và tên"
+            value={fullName}
+            onChangeText={setFullName}
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Số điện thoại"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            keyboardType="phone-pad"
+          />
+        </>
       )}
 
       <TextInput

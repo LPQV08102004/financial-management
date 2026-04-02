@@ -1,7 +1,29 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
 export default function Profile({ navigation }) {
+  const { state, signOut } = useAuth();
+  const user = state.user;
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Xác nhận đăng xuất',
+      'Bạn có chắc chắn muốn đăng xuất?',
+      [
+        { text: 'Hủy', onPress: () => {}, style: 'cancel' },
+        {
+          text: 'Đăng xuất',
+          onPress: async () => {
+            await signOut();
+            // Navigation will be handled automatically by App.js based on auth state
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.screenContainer}>
       <ScrollView style={styles.container} scrollEnabled={true}>
@@ -37,7 +59,7 @@ export default function Profile({ navigation }) {
             <View style={styles.infoGroup}>
               <Text style={styles.infoLabel}>Tên</Text>
               <View style={styles.infoBox}>
-                <Text style={styles.infoValue}>Nguyễn Văn A</Text>
+                <Text style={styles.infoValue}>{user?.fullname || 'N/A'}</Text>
               </View>
             </View>
 
@@ -45,7 +67,7 @@ export default function Profile({ navigation }) {
             <View style={styles.infoGroup}>
               <Text style={styles.infoLabel}>Địa chỉ email</Text>
               <View style={styles.infoBox}>
-                <Text style={styles.infoValue}>nguyenvana@email.com</Text>
+                <Text style={styles.infoValue}>{user?.email || 'N/A'}</Text>
               </View>
             </View>
 
@@ -53,7 +75,7 @@ export default function Profile({ navigation }) {
             <View style={styles.infoGroup}>
               <Text style={styles.infoLabel}>Số điện thoại</Text>
               <View style={styles.infoBox}>
-                <Text style={styles.infoValue}>0912345678</Text>
+                <Text style={styles.infoValue}>{user?.sdt || 'N/A'}</Text>
               </View>
             </View>
 
@@ -65,10 +87,7 @@ export default function Profile({ navigation }) {
             {/* Logout Button */}
             <TouchableOpacity 
               style={styles.logoutButton}
-              onPress={() => {
-                console.log('User logged out');
-                navigation.navigate('Home');
-              }}
+              onPress={handleLogout}
             >
               <Text style={styles.logoutButtonText}>Đăng xuất</Text>
             </TouchableOpacity>

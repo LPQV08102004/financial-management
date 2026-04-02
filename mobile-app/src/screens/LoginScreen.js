@@ -1,213 +1,170 @@
+/* eslint-disable react/prop-types */
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
+  const { signIn, signUp } = useAuth();
+  const [mode, setMode] = useState('login');
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const { signIn } = useAuth();
+  const [error, setError] = useState('');
 
-  const handleLogin = async () => {
+  const handleSubmit = async () => {
+    setError('');
     if (!email || !password) {
-      Alert.alert('Lỗi', 'Vui lòng nhập email và mật khẩu');
+      setError('Vui lòng nhập email và mật khẩu');
       return;
     }
 
-    setLoading(true);
-    const result = await signIn(email, password);
-    setLoading(false);
+    if (mode === 'register' && !fullName.trim()) {
+      setError('Vui lòng nhập họ và tên');
+      return;
+    }
 
-    if (result.success) {
-      // Navigation will be handled by App.js based on auth state
-    } else {
-      Alert.alert('Đăng nhập thất bại', result.message);
+    try {
+      setLoading(true);
+      let result;
+      if (mode === 'register') {
+        result = await signUp(email.trim(), password, fullName.trim(), phoneNumber.trim());
+      } else {
+        result = await signIn(email.trim(), password);
+      }
+
+      if (!result?.success) {
+        throw new Error(result?.message || (mode === 'register' ? 'Đăng ký thất bại' : 'Đăng nhập thất bại'));
+      }
+
+      navigation.replace('Home');
+    } catch (e) {
+      setError(e.message || (mode === 'register' ? 'Đăng ký thất bại' : 'Đăng nhập thất bại'));
+    } finally {
+      setLoading(false);
     }
   };
 
+  const switchMode = () => {
+    setError('');
+    setMode(mode === 'login' ? 'register' : 'login');
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.headerSection}>
-          <Text style={styles.appIcon}>💰</Text>
-          <Text style={styles.appTitle}>Quản Lý Tài Chính</Text>
-          <Text style={styles.appSubtitle}>Đăng nhập để tiếp tục</Text>
-        </View>
+    <View style={styles.container}>
+      <Text style={styles.title}>{mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}</Text>
+      <Text style={styles.subtitle}>
+        {mode === 'login' ? 'Nhập tài khoản để vào ứng dụng' : 'Tạo tài khoản mới để sử dụng ứng dụng'}
+      </Text>
 
-        {/* Form */}
-        <View style={styles.formSection}>
-          {/* Email */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập email của bạn"
-              placeholderTextColor="#999"
-              value={email}
-              onChangeText={setEmail}
-              editable={!loading}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
+      {mode === 'register' && (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Họ và tên"
+            value={fullName}
+            onChangeText={setFullName}
+          />
 
-          {/* Password */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Mật khẩu</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="Nhập mật khẩu"
-                placeholderTextColor="#999"
-                value={password}
-                onChangeText={setPassword}
-                editable={!loading}
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Text>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="Số điện thoại"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            keyboardType="phone-pad"
+          />
+        </>
+      )}
 
-          {/* Login Button */}
-          <TouchableOpacity
-            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.loginButtonText}>
-              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-            </Text>
-          </TouchableOpacity>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+      />
 
-          {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotButton}>
-            <Text style={styles.forgotText}>Quên mật khẩu?</Text>
-          </TouchableOpacity>
-        </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Mật khẩu"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
 
-        {/* Footer */}
-        <View style={styles.footerSection}>
-          <Text style={styles.footerText}>Chưa có tài khoản? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-            <Text style={styles.signupLink}>Đăng ký tại đây</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ScrollView>
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
+
+      <TouchableOpacity style={styles.loginButton} onPress={handleSubmit} disabled={loading}>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.loginButtonText}>{mode === 'login' ? 'Đăng nhập' : 'Đăng ký'}</Text>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.switchButton} onPress={switchMode} disabled={loading}>
+        <Text style={styles.switchText}>
+          {mode === 'login' ? 'Chưa có tài khoản? Đăng ký ngay' : 'Đã có tài khoản? Đăng nhập'}
+        </Text>
+      </TouchableOpacity>
+
+  
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8F0',
+    backgroundColor: '#f6f8f7',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 40,
-    justifyContent: 'space-between',
-  },
-  headerSection: {
-    alignItems: 'center',
-    marginVertical: 40,
-  },
-  appIcon: {
-    fontSize: 60,
-    marginBottom: 20,
-  },
-  appTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#075c09',
-    marginBottom: 10,
-  },
-  appSubtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  formSection: {
-    marginVertical: 20,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
+  title: {
+    fontSize: 30,
+    fontWeight: '700',
     color: '#075c09',
     marginBottom: 8,
   },
+  subtitle: {
+    color: '#4f5b52',
+    marginBottom: 20,
+  },
   input: {
+    height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    fontSize: 14,
+    borderColor: '#d1d9d4',
+    borderRadius: 10,
     backgroundColor: '#fff',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#fff',
-  },
-  passwordInput: {
-    flex: 1,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    fontSize: 14,
-  },
-  eyeIcon: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
+    marginBottom: 12,
   },
   loginButton: {
+    height: 48,
+    borderRadius: 10,
     backgroundColor: '#075c09',
-    paddingVertical: 14,
-    borderRadius: 8,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
-  },
-  loginButtonDisabled: {
-    opacity: 0.6,
+    marginTop: 4,
   },
   loginButtonText: {
     color: '#fff',
+    fontWeight: '700',
     fontSize: 16,
-    fontWeight: '600',
   },
-  forgotButton: {
+  errorText: {
+    color: '#c62828',
+    marginBottom: 8,
+  },
+  switchButton: {
+    marginTop: 16,
     alignItems: 'center',
-    marginTop: 15,
   },
-  forgotText: {
+  switchText: {
     color: '#075c09',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  footerSection: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 40,
-  },
-  footerText: {
-    fontSize: 13,
-    color: '#666',
-  },
-  signupLink: {
-    color: '#075c09',
-    fontSize: 13,
     fontWeight: '600',
   },
 });

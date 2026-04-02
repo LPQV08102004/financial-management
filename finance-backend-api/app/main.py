@@ -9,12 +9,9 @@ from app.db.base import Base
 # Import all routers
 from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
-from app.modules.accounts.router import router as accounts_router
 from app.modules.categories.router import router as categories_router
 from app.modules.transactions.router import router as transactions_router
 from app.modules.budgets.router import router as budgets_router
-from app.modules.analytics.router import reports_router, dashboard_router
-from app.modules.exports.router import router as exports_router
 
 
 @asynccontextmanager
@@ -47,13 +44,9 @@ PREFIX = settings.API_V1_PREFIX
 
 app.include_router(auth_router, prefix=PREFIX)
 app.include_router(users_router, prefix=PREFIX)
-app.include_router(accounts_router, prefix=PREFIX)
 app.include_router(categories_router, prefix=PREFIX)
 app.include_router(transactions_router, prefix=PREFIX)
 app.include_router(budgets_router, prefix=PREFIX)
-app.include_router(reports_router, prefix=PREFIX)
-app.include_router(dashboard_router, prefix=PREFIX)
-app.include_router(exports_router, prefix=PREFIX)
 
 
 @app.get("/", tags=["Health"])

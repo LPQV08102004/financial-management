@@ -10,6 +10,7 @@ import Notification from './src/screens/Notification';
 import AddNotification from './src/screens/AddNotification';
 import EditNotification from './src/screens/EditNotification';
 import Profile from './src/screens/Profile';
+import LoginScreen from './src/screens/LoginScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,10 +19,12 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <Stack.Navigator
+          initialRouteName="Login"
           screenOptions={{
             headerShown: false,
           }}
         >
+          <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
           <Stack.Screen name="Transaction" component={Transaction} />

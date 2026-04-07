@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Modal, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Modal, Image, Alert, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { listCategories } from '../api/categoriesApi';
+import { listAccounts } from '../api/accountsApi';
+import { createIncome, createExpense } from '../api/transactionsApi';
 
 export default function AddTransactionScreen({ navigation }) {
   const [amount, setAmount] = useState('');
@@ -14,24 +17,18 @@ export default function AddTransactionScreen({ navigation }) {
   const [showCalculator, setShowCalculator] = useState(false);
   const [calculatorDisplay, setCalculatorDisplay] = useState('0');
   const [calculatorInput, setCalculatorInput] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  const expenseCategories = [
-    { id: 1, name: 'Sức khỏe', icon: '🏥' },
-    { id: 2, name: 'Giải trí', icon: '🎬' },
-    { id: 3, name: 'Cafe', icon: '☕' },
-    { id: 4, name: 'Ăn uống', icon: '🍔' },
-    { id: 5, name: 'Giáo dục', icon: '📚' },
-  ];
+  useEffect(() => {
+    listAccounts().then(setAccounts).catch(() => {});
+  }, []);
 
-  const incomeCategories = [
-    { id: 6, name: 'Phiếu lương', icon: '💼' },
-    { id: 7, name: 'Quà tặng', icon: '🎁' },
-    { id: 8, name: 'Sở thích', icon: '🎨' },
-    { id: 9, name: 'Thưởng', icon: '🏆' },
-    { id: 10, name: 'Khác', icon: '📌' },
-  ];
-
-  const categories = activeTab === 'expense' ? expenseCategories : incomeCategories;
+  useEffect(() => {
+    setSelectedCategory(null);
+    listCategories(activeTab).then(setCategories).catch(() => {});
+  }, [activeTab]);
 
   const handleAmountChange = (text) => {
     let numericValue = text.replace(/[^0-9]/g, '');
@@ -138,10 +135,47 @@ export default function AddTransactionScreen({ navigation }) {
     navigation.goBack();
   };
 
-  const handleAddTransaction = () => {
-    if (amount.trim()) {
-      // TODO: Xử lý thêm giao dịch
+  const handleAddTransaction = async () => {
+    if (!amount.trim()) return;
+
+    if (accounts.length === 0) {
+      Alert.alert('Lỗi', 'Bạn chưa có tài khoản nào. Vui lòng tạo tài khoản trước.');
+      return;
+    }
+
+    if (activeTab === 'expense' && !selectedCategory) {
+      Alert.alert('Lỗi', 'Vui lòng chọn danh mục cho khoản chi.');
+      return;
+    }
+
+    const account_id = accounts[0].id;
+    const transaction_date = selectedDate.toISOString();
+    const amountNum = parseFloat(amount);
+
+    try {
+      setSubmitting(true);
+      if (activeTab === 'income') {
+        await createIncome({
+          account_id,
+          amount: amountNum,
+          transaction_date,
+          note: description || null,
+          category_id: selectedCategory?.id || null,
+        });
+      } else {
+        await createExpense({
+          account_id,
+          category_id: selectedCategory.id,
+          amount: amountNum,
+          transaction_date,
+          note: description || null,
+        });
+      }
       handleGoBack();
+    } catch (error) {
+      Alert.alert('Lỗi', error.message || 'Không thêm được giao dịch');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -279,10 +313,13 @@ export default function AddTransactionScreen({ navigation }) {
         </View>
 
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, submitting && { opacity: 0.6 }]}
           onPress={handleAddTransaction}
+          disabled={submitting}
         >
-          <Text style={styles.addButtonText}>Thêm giao dịch</Text>
+          {submitting
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={styles.addButtonText}>Thêm giao dịch</Text>}
         </TouchableOpacity>
       </ScrollView>
 

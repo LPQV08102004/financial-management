@@ -13,6 +13,7 @@ class Account(Base):
     type = Column(Enum(AccountType), nullable=False)
     current_balance = Column(Numeric(15, 2), nullable=False, default=0)
     note = Column(Text, nullable=True)
+    currency = Column(String(10), nullable=False, default="VND")
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)

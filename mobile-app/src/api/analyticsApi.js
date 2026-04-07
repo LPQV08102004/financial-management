@@ -1,26 +1,25 @@
-// ── Base URL ──────────────────────────────────────────────────────────────────
-// Android emulator  → 10.0.2.2  (maps to localhost on your PC)
-// Physical device   → replace with your machine's local IP, e.g. 192.168.1.x
-// iOS simulator     → localhost
-export const BASE_URL = 'http://10.0.2.2:8000/api/v1';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// ── Auth token ────────────────────────────────────────────────────────────────
-// Call setAuthToken(token) right after the user logs in (auth handled by Toản).
-let _token = '';
-export const setAuthToken = (token) => { _token = token; };
+const EXPO_HOST = Constants.expoConfig?.hostUri?.split(':')[0];
+export const BASE_URL = EXPO_HOST
+  ? `http://${EXPO_HOST}:8000/api/v1`
+  : 'http://127.0.0.1:8000/api/v1';
 
-const _headers = () => ({
-  'Content-Type': 'application/json',
-  ...(_token ? { Authorization: `Bearer ${_token}` } : {}),
-});
+const ACCESS_TOKEN_KEY = 'access_token';
 
-// Remove null/undefined params before building query string
+async function _headers() {
+  const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
 const _buildQuery = (params) =>
   new URLSearchParams(
     Object.fromEntries(Object.entries(params).filter(([, v]) => v != null))
   ).toString();
-
-// ── API calls ─────────────────────────────────────────────────────────────────
 
 /**
  * GET /analytics/dashboard/balance
@@ -29,7 +28,7 @@ const _buildQuery = (params) =>
 export async function getBalance(params = {}) {
   const res = await fetch(
     `${BASE_URL}/analytics/dashboard/balance?${_buildQuery(params)}`,
-    { headers: _headers() }
+    { headers: await _headers() }
   );
   if (!res.ok) throw new Error(`getBalance failed: ${res.status}`);
   return res.json();
@@ -42,7 +41,7 @@ export async function getBalance(params = {}) {
 export async function getStatsByCategory(params = {}) {
   const res = await fetch(
     `${BASE_URL}/analytics/reports/by-category?${_buildQuery(params)}`,
-    { headers: _headers() }
+    { headers: await _headers() }
   );
   if (!res.ok) throw new Error(`getStatsByCategory failed: ${res.status}`);
   return res.json();
@@ -55,7 +54,7 @@ export async function getStatsByCategory(params = {}) {
 export async function getOverTime(params = {}) {
   const res = await fetch(
     `${BASE_URL}/analytics/reports/over-time?${_buildQuery(params)}`,
-    { headers: _headers() }
+    { headers: await _headers() }
   );
   if (!res.ok) throw new Error(`getOverTime failed: ${res.status}`);
   return res.json();

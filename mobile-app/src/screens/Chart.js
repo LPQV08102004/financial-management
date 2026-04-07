@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
+import { useFocusEffect } from '@react-navigation/native';
 import SidebarDrawer from '../components/SidebarDrawer';
 import HeaderIconButton from '../components/HeaderIconButton';
 import DateTimeSelector from '../components/DateTimeSelector';
 import { getOverTime, getStatsByCategory } from '../api/analyticsApi';
-
-// Category color mapping
-const categoryColors = {
-  'Sức khỏe': '#e74c3c',
-  'Cafe': '#f39c12',
-  'Tập thể dục': '#3498db',
-  'Lương tháng': '#27ae60',
-  'Bonus': '#f1c40f',
-  'Ăn cơm trưa': '#9b59b6',
-  'Freelance': '#1abc9c',
-};
 
 export default function Chart({ navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,352 +30,56 @@ export default function Chart({ navigation }) {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchData = useCallback(async () => {
     const params = timePeriod === 'custom'
       ? { period: 'custom', from_date: _toDateStr(confirmedStartDate), to_date: _toDateStr(confirmedEndDate) }
       : { period: timePeriod, date: _toDateStr(selectedDate) };
 
-    const fetchData = async () => {
-      try {
-        let data = [];
-        if (activeTab === 'all') {
-          // over-time returns [{label, income, expense}] → matches renderBarChart directly
-          const rows = await getOverTime({ ...params, type: 'all' });
-          data = rows.map(r => ({
-            label: r.label,
-            income: Number(r.income),
-            expense: Number(r.expense),
-          }));
-        } else {
-          // by-category returns [{category, amount, color, percentage}]
-          // Reshape: one bar per category for renderStackedBarChart
-          const rows = await getStatsByCategory({ ...params, type: activeTab });
-          const colorMap = {};
-          data = rows.map(r => {
-            colorMap[r.category] = r.color || '#999999';
-            return {
-              label: r.category,
-              categories: { [r.category]: Number(r.amount) },
-            };
-          });
-          if (!cancelled) setApiCategoryColors(colorMap);
-        }
-        if (!cancelled) setApiChartData(data);
-      } catch (_) { /* fallback to mock data below */ }
-    };
-    fetchData();
-    return () => { cancelled = true; };
+    try {
+      if (activeTab === 'all') {
+        const rows = await getOverTime({ ...params, type: 'all' });
+        setApiChartData(rows.map(r => ({
+          label: r.label,
+          income: Number(r.income),
+          expense: Number(r.expense),
+        })));
+      } else {
+        const rows = await getStatsByCategory({ ...params, type: activeTab });
+        const colorMap = {};
+        const data = rows.map(r => {
+          colorMap[r.category] = r.color || '#999999';
+          return { label: r.category, categories: { [r.category]: Number(r.amount) } };
+        });
+        setApiCategoryColors(colorMap);
+        setApiChartData(data);
+      }
+    } catch (_) {
+      setApiChartData([]);
+    }
   }, [activeTab, timePeriod, selectedDate, confirmedStartDate, confirmedEndDate]);
 
-  // Sample transaction data (fallback when backend is not available)
-  const allTransactions = [
-    { id: '1', name: 'Sức khỏe', amount: 50000, date: new Date(2026, 2, 15), type: 'expense' },
-    { id: '2', name: 'Cafe', amount: 20000, date: new Date(2026, 2, 15), type: 'expense' },
-    { id: '3', name: 'Tập thể dục', amount: 30000, date: new Date(2026, 2, 14), type: 'expense' },
-    { id: '4', name: 'Lương tháng', amount: 300000, date: new Date(2026, 2, 10), type: 'income' },
-    { id: '5', name: 'Bonus', amount: 100000, date: new Date(2026, 2, 5), type: 'income' },
-    { id: '6', name: 'Ăn cơm trưa', amount: 40000, date: new Date(2026, 2, 12), type: 'expense' },
-    { id: '7', name: 'Freelance', amount: 200000, date: new Date(2026, 2, 8), type: 'income' },
-  ];
+  useFocusEffect(useCallback(() => { fetchData(); }, [fetchData]));
+
 
   // Calculate chart data based on time period
-  const getChartData = () => {
-    let data = [];
-
-    // For 'all' tab - original income vs expense
-    if (activeTab === 'all') {
-      if (timePeriod === 'day') {
-        const dayData = {
-          date: new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()),
-          label: `${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`,
-          income: 0,
-          expense: 0,
-        };
-        
-        allTransactions.forEach(t => {
-          if (t.date.toDateString() === dayData.date.toDateString()) {
-            if (t.type === 'income') dayData.income += t.amount;
-            if (t.type === 'expense') dayData.expense += t.amount;
-          }
-        });
-        
-        dayData.profit = dayData.income - dayData.expense;
-        dayData.loss = dayData.expense - dayData.income > 0 ? dayData.expense - dayData.income : 0;
-        data.push(dayData);
-      } else if (timePeriod === 'week') {
-        // Hiển thị tất cả 7 ngày trong tuần
-        const startOfWeek = new Date(selectedDate);
-        startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
-        
-        for (let i = 0; i < 7; i++) {
-          const currentDate = new Date(startOfWeek);
-          currentDate.setDate(startOfWeek.getDate() + i);
-          currentDate.setHours(0, 0, 0, 0);
-          
-          const dayData = {
-            date: new Date(currentDate),
-            label: `${currentDate.getDate()}/${currentDate.getMonth() + 1}`,
-            income: 0,
-            expense: 0,
-          };
-          
-          allTransactions.forEach(t => {
-            const transDate = new Date(t.date);
-            transDate.setHours(0, 0, 0, 0);
-            
-            if (transDate.getTime() === currentDate.getTime()) {
-              if (t.type === 'income') dayData.income += t.amount;
-              if (t.type === 'expense') dayData.expense += t.amount;
-            }
-          });
-          
-          dayData.profit = dayData.income - dayData.expense;
-          dayData.loss = dayData.expense - dayData.income > 0 ? dayData.expense - dayData.income : 0;
-          data.push(dayData);
-        }
-      } else if (timePeriod === 'month') {
-        // Hiển thị 4 tuần trong tháng
-        for (let week = 0; week < 4; week++) {
-          const weekStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), week * 7 + 1);
-          const weekLabel = `Tuần ${week + 1}`;
-          
-          const weekData = {
-            date: weekStart,
-            label: weekLabel,
-            income: 0,
-            expense: 0,
-          };
-          
-          allTransactions.forEach(t => {
-            if (t.date.getMonth() === selectedDate.getMonth() && t.date.getFullYear() === selectedDate.getFullYear()) {
-              const day = t.date.getDate();
-              if (day > week * 7 && day <= (week + 1) * 7) {
-                if (t.type === 'income') weekData.income += t.amount;
-                if (t.type === 'expense') weekData.expense += t.amount;
-              }
-            }
-          });
-          
-          weekData.profit = weekData.income - weekData.expense;
-          weekData.loss = weekData.expense - weekData.income > 0 ? weekData.expense - weekData.income : 0;
-          data.push(weekData);
-        }
-      } else if (timePeriod === 'year') {
-        // Hiển thị 12 tháng trong năm
-        for (let month = 0; month < 12; month++) {
-          const monthData = {
-            date: new Date(selectedDate.getFullYear(), month, 1),
-            label: `T${month + 1}`,
-            income: 0,
-            expense: 0,
-          };
-          
-          allTransactions.forEach(t => {
-            if (t.date.getMonth() === month && t.date.getFullYear() === selectedDate.getFullYear()) {
-              if (t.type === 'income') monthData.income += t.amount;
-              if (t.type === 'expense') monthData.expense += t.amount;
-            }
-          });
-          
-          monthData.profit = monthData.income - monthData.expense;
-          monthData.loss = monthData.expense - monthData.income > 0 ? monthData.expense - monthData.income : 0;
-          data.push(monthData);
-        }
-      } else if (timePeriod === 'custom' && confirmedStartDate && confirmedEndDate) {
-        const current = new Date(confirmedStartDate);
-        current.setHours(0, 0, 0, 0);
-        const end = new Date(confirmedEndDate);
-        end.setHours(23, 59, 59, 999);
-
-        // Hiển thị từng ngày riêng lẻ trong khoảng thời gian
-        while (current <= end) {
-          const dayData = {
-            date: new Date(current),
-            label: `${current.getDate()}/${current.getMonth() + 1}`,
-            income: 0,
-            expense: 0,
-          };
-
-          allTransactions.forEach(t => {
-            const transDate = new Date(t.date);
-            transDate.setHours(0, 0, 0, 0);
-            
-            if (transDate.getTime() === current.getTime()) {
-              if (t.type === 'income') dayData.income += t.amount;
-              if (t.type === 'expense') dayData.expense += t.amount;
-            }
-          });
-
-          dayData.profit = dayData.income - dayData.expense;
-          dayData.loss = dayData.expense - dayData.income > 0 ? dayData.expense - dayData.income : 0;
-          data.push(dayData);
-
-          current.setDate(current.getDate() + 1);
-        }
-      }
-    } else {
-      // For 'expense' and 'income' tabs - breakdown by category
-      const transactionType = activeTab === 'expense' ? 'expense' : 'income';
-      
-      if (timePeriod === 'day') {
-        const dayData = {
-          date: new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()),
-          label: `${selectedDate.getDate()}/${selectedDate.getMonth() + 1}`,
-          categories: {},
-        };
-        
-        allTransactions.forEach(t => {
-          if (t.type === transactionType && t.date.toDateString() === dayData.date.toDateString()) {
-            dayData.categories[t.name] = (dayData.categories[t.name] || 0) + t.amount;
-          }
-        });
-        
-        data.push(dayData);
-      } else if (timePeriod === 'week') {
-        // Hiển thị tất cả 7 ngày trong tuần
-        const startOfWeek = new Date(selectedDate);
-        startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
-        
-        for (let i = 0; i < 7; i++) {
-          const currentDate = new Date(startOfWeek);
-          currentDate.setDate(startOfWeek.getDate() + i);
-          currentDate.setHours(0, 0, 0, 0);
-          
-          const dayData = {
-            date: new Date(currentDate),
-            label: `${currentDate.getDate()}/${currentDate.getMonth() + 1}`,
-            categories: {},
-          };
-          
-          allTransactions.forEach(t => {
-            const transDate = new Date(t.date);
-            transDate.setHours(0, 0, 0, 0);
-            
-            if (t.type === transactionType && transDate.getTime() === currentDate.getTime()) {
-              dayData.categories[t.name] = (dayData.categories[t.name] || 0) + t.amount;
-            }
-          });
-          
-          data.push(dayData);
-        }
-      } else if (timePeriod === 'month') {
-        // Hiển thị 4 tuần trong tháng
-        for (let week = 0; week < 4; week++) {
-          const weekStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), week * 7 + 1);
-          const weekLabel = `Tuần ${week + 1}`;
-          
-          const weekData = {
-            date: weekStart,
-            label: weekLabel,
-            categories: {},
-          };
-          
-          allTransactions.forEach(t => {
-            if (t.type === transactionType && t.date.getMonth() === selectedDate.getMonth() && t.date.getFullYear() === selectedDate.getFullYear()) {
-              const day = t.date.getDate();
-              if (day > week * 7 && day <= (week + 1) * 7) {
-                weekData.categories[t.name] = (weekData.categories[t.name] || 0) + t.amount;
-              }
-            }
-          });
-          
-          data.push(weekData);
-        }
-      } else if (timePeriod === 'year') {
-        // Hiển thị 12 tháng trong năm
-        for (let month = 0; month < 12; month++) {
-          const monthData = {
-            date: new Date(selectedDate.getFullYear(), month, 1),
-            label: `T${month + 1}`,
-            categories: {},
-          };
-          
-          allTransactions.forEach(t => {
-            if (t.type === transactionType && t.date.getMonth() === month && t.date.getFullYear() === selectedDate.getFullYear()) {
-              monthData.categories[t.name] = (monthData.categories[t.name] || 0) + t.amount;
-            }
-          });
-          
-          data.push(monthData);
-        }
-      } else if (timePeriod === 'custom' && confirmedStartDate && confirmedEndDate) {
-        const current = new Date(confirmedStartDate);
-        current.setHours(0, 0, 0, 0);
-        const end = new Date(confirmedEndDate);
-        end.setHours(23, 59, 59, 999);
-
-        const customWeeks = {};
-        let weekIndex = 0;
-        
-        while (current <= end) {
-          const weekStart = new Date(current);
-          weekStart.setHours(0, 0, 0, 0);
-          const weekEnd = new Date(current);
-          weekEnd.setDate(weekEnd.getDate() + 6);
-          weekEnd.setHours(23, 59, 59, 999);
-          
-          if (weekEnd > end) {
-            weekEnd.setTime(end.getTime());
-          }
-
-          const weekLabel = `Tuần ${weekIndex + 1}`;
-          customWeeks[weekLabel] = {
-            date: weekStart,
-            label: weekLabel,
-            categories: {},
-          };
-
-          allTransactions.forEach(t => {
-            const transDate = new Date(t.date);
-            transDate.setHours(0, 0, 0, 0);
-            
-            if (t.type === transactionType && transDate >= weekStart && transDate <= weekEnd) {
-              customWeeks[weekLabel].categories[t.name] = (customWeeks[weekLabel].categories[t.name] || 0) + t.amount;
-            }
-          });
-
-          data.push(customWeeks[weekLabel]);
-
-          current.setDate(current.getDate() + 7);
-          weekIndex++;
-        }
-      }
-    }
-
-    return data;
-  };
-
-  // Use API data when available, otherwise fall back to mock getChartData()
-  const chartData = apiChartData.length > 0 ? apiChartData : getChartData();
+  const chartData = apiChartData;
 
   // Calculate maxValue based on active tab
   let maxValue = 100000;
   if (activeTab === 'all') {
-    maxValue = Math.max(...chartData.map(d => Math.max(d.income || 0, d.expense || 0))) || 100000;
+    maxValue = Math.max(...chartData.map(d => Math.max(d.income || 0, d.expense || 0)), 100000);
   } else {
     maxValue = Math.max(...chartData.map(d => {
-      const categoryValues = Object.values(d.categories || {});
-      return categoryValues.length > 0 ? categoryValues.reduce((a, b) => a + b, 0) : 0;
-    })) || 100000;
+      const vals = Object.values(d.categories || {});
+      return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) : 0;
+    }), 100000);
   }
-  
+
   const chartHeight = 300;
-  // Tính barWidth dựa trên số lượng bars thực tế
-  const getMaxBars = () => {
-    // When API data is loaded, always use the actual number of data points
-    if (apiChartData.length > 0) return Math.max(chartData.length, 1);
-    if (timePeriod === 'week') return 7;
-    if (timePeriod === 'month') return 4;
-    if (timePeriod === 'year') return 12;
-    if (timePeriod === 'custom') return Math.max(chartData.length, 1);
-    return 1; // day
-  };
-  const maxPossibleBars = getMaxBars();
-  // Dynamic chartWidth: mỗi bar ~ 120px, +300px cho labels cuối
+  const maxPossibleBars = Math.max(chartData.length, 1);
   const chartWidth = Math.max(400, maxPossibleBars * 120) + 300;
   const barSpacing = chartWidth / maxPossibleBars;
-  const barWidth = Math.max(barSpacing * 0.25, 10); // Tối thiểu 10px
+  const barWidth = Math.max(barSpacing * 0.25, 10);
 
   // Get unique categories from all chart data for stacked charts
   const getAllCategories = () => {
@@ -552,7 +246,7 @@ export default function Chart({ navigation }) {
                     const categoryAmount = data.categories?.[category] || 0;
                     const barHeight = (categoryAmount / maxValue) * graphHeight || 0;
                     const barY = currentY - barHeight;
-                    const color = apiCategoryColors[category] || categoryColors[category] || '#999';
+                    const color = apiCategoryColors[category] || '#999';
 
                     const element = (
                       <Rect
@@ -674,7 +368,7 @@ export default function Chart({ navigation }) {
             <View style={styles.chartLegend}>
               {getAllCategories().map((category) => (
                 <View key={`legend-${category}`} style={styles.legendItem}>
-                  <View style={[styles.legendColor, { backgroundColor: categoryColors[category] || '#999' }]}></View>
+                  <View style={[styles.legendColor, { backgroundColor: apiCategoryColors[category] || '#999' }]}></View>
                   <Text style={styles.legendText}>{category}</Text>
                 </View>
               ))}

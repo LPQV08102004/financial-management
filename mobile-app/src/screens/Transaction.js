@@ -1,8 +1,13 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import React, { useCallback } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import SidebarDrawer from '../components/SidebarDrawer';
 import HeaderIconButton from '../components/HeaderIconButton';
 import DateTimeSelector from '../components/DateTimeSelector';
+import { listTransactions, updateTransaction } from '../api/transactionsApi';
+
+const _toDateStr = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 export default function Transaction({ navigation }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
@@ -16,63 +21,113 @@ export default function Transaction({ navigation }) {
   const [confirmedStartDate, setConfirmedStartDate] = React.useState(null);
   const [confirmedEndDate, setConfirmedEndDate] = React.useState(null);
   const [showCalendar, setShowCalendar] = React.useState(false);
+  const [transactions, setTransactions] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [editingTransaction, setEditingTransaction] = React.useState(null);
+  const [editAmount, setEditAmount] = React.useState('');
+  const [editNote, setEditNote] = React.useState('');
+  const [savingEdit, setSavingEdit] = React.useState(false);
 
-  const allTransactions = [
-    { id: '1', name: 'Sức khỏe', amount: 50000, date: new Date(2026, 2, 15), type: 'expense' },
-    { id: '2', name: 'Cafe', amount: 20000, date: new Date(2026, 2, 14), type: 'expense' },
-    { id: '3', name: 'Tập thể dục', amount: 30000, date: new Date(2026, 2, 13), type: 'expense' },
-    { id: '4', name: 'Lương tháng', amount: 200000, date: new Date(2026, 2, 1), type: 'income' },
-    { id: '5', name: 'Bonus', amount: 50000, date: new Date(2026, 1, 28), type: 'income' },
-  ];
-
-  const getFilteredTransactions = () => {
-    let filtered = allTransactions.filter(t => t.type === activeTab);
-    
-    const today = new Date();
-    let startDate, endDate;
+  const fetchTransactions = useCallback(async () => {
+    const params = { type: activeTab, limit: 100 };
 
     if (timePeriod === 'day') {
-      startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-      endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 1);
+      params.from_date = _toDateStr(selectedDate) + 'T00:00:00';
+      params.to_date = _toDateStr(selectedDate) + 'T23:59:59';
     } else if (timePeriod === 'week') {
-      const weekStart = new Date(selectedDate);
-      weekStart.setDate(selectedDate.getDate() - selectedDate.getDay());
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 7);
-      startDate = weekStart;
-      endDate = weekEnd;
+      const start = new Date(selectedDate);
+      start.setDate(selectedDate.getDate() - selectedDate.getDay() + 1); // Monday
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      params.from_date = _toDateStr(start) + 'T00:00:00';
+      params.to_date = _toDateStr(end) + 'T23:59:59';
     } else if (timePeriod === 'month') {
-      startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-      endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
+      const start = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+      const end = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+      params.from_date = _toDateStr(start) + 'T00:00:00';
+      params.to_date = _toDateStr(end) + 'T23:59:59';
     } else if (timePeriod === 'year') {
-      startDate = new Date(selectedDate.getFullYear(), 0, 1);
-      endDate = new Date(selectedDate.getFullYear() + 1, 0, 1);
+      params.from_date = `${selectedDate.getFullYear()}-01-01T00:00:00`;
+      params.to_date = `${selectedDate.getFullYear()}-12-31T23:59:59`;
     } else if (timePeriod === 'custom' && confirmedStartDate && confirmedEndDate) {
-      startDate = confirmedStartDate;
-      endDate = new Date(confirmedEndDate);
-      endDate.setDate(endDate.getDate() + 1);
+      params.from_date = _toDateStr(confirmedStartDate) + 'T00:00:00';
+      params.to_date = _toDateStr(confirmedEndDate) + 'T23:59:59';
     }
 
-    if (startDate && endDate) {
-      return filtered.filter(t => t.date >= startDate && t.date < endDate).reverse();
+    try {
+      setLoading(true);
+      const data = await listTransactions(params);
+      setTransactions(data);
+    } catch {
+      setTransactions([]);
+    } finally {
+      setLoading(false);
     }
-    return filtered.reverse();
+  }, [activeTab, timePeriod, selectedDate, confirmedStartDate, confirmedEndDate]);
+
+  useFocusEffect(useCallback(() => { fetchTransactions(); }, [fetchTransactions]));
+
+  const openEditModal = (item) => {
+    if (item.reconcile_status === 'reconciled') {
+      Alert.alert('Không thể sửa', 'Giao dịch đã đối soát nên không thể chỉnh sửa.');
+      return;
+    }
+    setEditingTransaction(item);
+    setEditAmount(String(item.amount ?? ''));
+    setEditNote(item.note || '');
+    setShowEditModal(true);
   };
 
-  const transactions = getFilteredTransactions();
+  const closeEditModal = () => {
+    setShowEditModal(false);
+    setEditingTransaction(null);
+    setEditAmount('');
+    setEditNote('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingTransaction) return;
+
+    const normalizedAmount = String(editAmount).replace(',', '.').trim();
+    const amountValue = Number(normalizedAmount);
+    if (!normalizedAmount || Number.isNaN(amountValue) || amountValue <= 0) {
+      Alert.alert('Lỗi', 'Số tiền không hợp lệ.');
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+      await updateTransaction(editingTransaction.id, {
+        amount: amountValue,
+        note: editNote.trim() || null,
+      });
+      closeEditModal();
+      await fetchTransactions();
+    } catch (error) {
+      Alert.alert('Lỗi', error.message || 'Không cập nhật được giao dịch');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const renderTransactionItem = ({ item }) => {
-    const displayDate = `${item.date.getDate().toString().padStart(2, '0')}/${(item.date.getMonth() + 1).toString().padStart(2, '0')}/${item.date.getFullYear()}`;
+    const date = new Date(item.transaction_date);
+    const displayDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    const title = item.category_name || (item.type === 'income' ? 'Thu nhập' : 'Chi phí');
+    const note = item.note?.trim();
+    const amount = parseFloat(item.amount);
     return (
-      <View style={styles.transactionItem}>
+      <TouchableOpacity style={styles.transactionItem} activeOpacity={0.8} onPress={() => openEditModal(item)}>
         <View style={styles.transactionInfo}>
-          <Text style={styles.transactionName}>{item.name}</Text>
+          <Text style={styles.transactionName}>{title}</Text>
           <Text style={styles.transactionDate}>{displayDate}</Text>
+          {note ? <Text style={styles.transactionNote}>{note}</Text> : null}
         </View>
         <Text style={[styles.transactionAmount, item.type === 'income' ? styles.amountIncome : styles.amountExpense]}>
-          {item.type === 'income' ? '+' : '-'}{item.amount.toLocaleString('vi-VN')} đ
+          {item.type === 'income' ? '+' : '-'}{amount.toLocaleString('vi-VN')} đ
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -129,19 +184,62 @@ export default function Transaction({ navigation }) {
             setShowCalendar={setShowCalendar}
           />
 
-          <FlatList
-            data={transactions}
-            renderItem={renderTransactionItem}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-            ListEmptyMessage={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Không có giao dịch</Text>
-              </View>
-            }
-          />
+          <Text style={styles.editHint}>Chạm vào giao dịch để chỉnh sửa</Text>
+
+          {loading ? (
+            <ActivityIndicator size="large" color="#075c09" style={{ marginTop: 30 }} />
+          ) : (
+            <FlatList
+              data={transactions}
+              renderItem={renderTransactionItem}
+              keyExtractor={(item) => String(item.id)}
+              scrollEnabled={false}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>Không có giao dịch</Text>
+                </View>
+              }
+            />
+          )}
         </View>
       </ScrollView>
+
+      <Modal visible={showEditModal} transparent animationType="fade" onRequestClose={closeEditModal}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Chỉnh sửa giao dịch</Text>
+
+            <Text style={styles.modalLabel}>Số tiền</Text>
+            <TextInput
+              style={styles.modalInput}
+              keyboardType="numeric"
+              value={editAmount}
+              onChangeText={setEditAmount}
+              placeholder="Nhập số tiền"
+              placeholderTextColor="#999"
+            />
+
+            <Text style={styles.modalLabel}>Ghi chú</Text>
+            <TextInput
+              style={[styles.modalInput, styles.modalNoteInput]}
+              value={editNote}
+              onChangeText={setEditNote}
+              placeholder="Nhập ghi chú"
+              placeholderTextColor="#999"
+              multiline
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.modalBtnCancel} onPress={closeEditModal} disabled={savingEdit}>
+                <Text style={styles.modalBtnCancelText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtnSave, savingEdit && { opacity: 0.7 }]} onPress={handleSaveEdit} disabled={savingEdit}>
+                {savingEdit ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalBtnSaveText}>Lưu</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} navigation={navigation} />
     </View>
@@ -169,6 +267,7 @@ const styles = StyleSheet.create({
   tabActive: { borderBottomColor: '#075c09', backgroundColor: 'rgba(7, 92, 9, 0.05)' },
   tabText: { fontSize: 16, color: '#999', fontWeight: '600' },
   tabTextActive: { color: '#075c09' },
+  editHint: { fontSize: 12, color: '#666', marginBottom: 8, marginTop: -4, marginLeft: 4 },
   transactionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -191,11 +290,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   transactionDate: {
     fontSize: 14,
     color: '#999',
+  },
+  transactionNote: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 4,
   },
   transactionAmount: {
     fontSize: 16,
@@ -217,5 +321,68 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
     fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 18,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222',
+    marginBottom: 12,
+  },
+  modalLabel: {
+    fontSize: 13,
+    color: '#555',
+    marginBottom: 6,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#222',
+    marginBottom: 12,
+  },
+  modalNoteInput: {
+    minHeight: 70,
+    textAlignVertical: 'top',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  modalBtnCancel: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: '#f1f1f1',
+    borderRadius: 8,
+  },
+  modalBtnCancelText: {
+    color: '#444',
+    fontWeight: '600',
+  },
+  modalBtnSave: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: '#075c09',
+    borderRadius: 8,
+    minWidth: 72,
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  modalBtnSaveText: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });

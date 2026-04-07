@@ -14,7 +14,7 @@ export async function login(email, password) {
     body: JSON.stringify({ email, password }),
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data?.detail || 'Đăng nhập thất bại');
   }
@@ -38,7 +38,7 @@ export async function register(fullName, email, password, phoneNumber) {
     }),
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data?.detail || 'Đăng ký thất bại');
   }
@@ -75,7 +75,7 @@ export async function getMyProfile() {
     headers: await getAuthHeaders(),
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data?.detail || 'Không lấy được hồ sơ người dùng');
   }
@@ -89,7 +89,7 @@ export async function updateMyProfile(payload) {
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data?.detail || 'Không cập nhật được hồ sơ người dùng');
   }

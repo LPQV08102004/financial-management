@@ -13,6 +13,8 @@ from app.core.security import (
 )
 from app.core.config import settings
 from app.modules.auth.models import User, RefreshToken
+from app.modules.categories.service import seed_default_categories
+from app.modules.accounts.service import create_account
 
 
 def get_user_by_email(db: Session, email: str) -> User | None:
@@ -37,6 +39,10 @@ def register_user(db: Session, email: str, password: str, full_name: str) -> Use
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    seed_default_categories(db, user.id)
+    create_account(db, user.id, {"name": "Tiền mặt", "type": "cash", "currency": "VND"})
+
     return user
 
 
@@ -57,7 +63,7 @@ def create_tokens_for_user(db: Session, user: User) -> tuple[str, str]:
 
     refresh_record = RefreshToken(
         user_id=user.id,
-        token=refresh_token,
+        token_hash=refresh_token,
         expires_at=datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
         is_revoked=False,
     )
@@ -82,7 +88,7 @@ def rotate_refresh_token(db: Session, refresh_token: str) -> tuple[User, str, st
 
     token_row = (
         db.query(RefreshToken)
-        .filter(RefreshToken.token == refresh_token, RefreshToken.is_revoked == False)
+        .filter(RefreshToken.token_hash == refresh_token, RefreshToken.is_revoked == False)
         .first()
     )
     if not token_row:

@@ -1,6 +1,94 @@
 from sqlalchemy.orm import Session
 from app.modules.categories.models import Category, CategoryGroup, Subcategory, Tag
 from app.core.exceptions import NotFoundError, ForbiddenError, BadRequestError
+from app.shared.enums import CategoryType
+
+
+# ── Default category seed ──────────────────────────────────────────────────────
+
+_DEFAULT_CATEGORIES = [
+    {
+        "group": "Chi tiêu thiết yếu",
+        "sort_order": 0,
+        "type": CategoryType.expense,
+        "items": [
+            {"name": "Ăn uống",          "icon": "🍔", "color": "#FF6B6B"},
+            {"name": "Nhà ở",             "icon": "🏠", "color": "#4ECDC4"},
+            {"name": "Di chuyển",         "icon": "🚗", "color": "#45B7D1"},
+            {"name": "Sức khỏe",          "icon": "🏥", "color": "#96CEB4"},
+            {"name": "Mua sắm",           "icon": "🛒", "color": "#FFEAA7"},
+        ],
+    },
+    {
+        "group": "Giải trí & Phong cách sống",
+        "sort_order": 1,
+        "type": CategoryType.expense,
+        "items": [
+            {"name": "Giải trí",          "icon": "🎬", "color": "#DDA0DD"},
+            {"name": "Cafe & Đồ uống",    "icon": "☕", "color": "#A0522D"},
+            {"name": "Giáo dục",          "icon": "📚", "color": "#6C5CE7"},
+            {"name": "Thể thao",          "icon": "⚽", "color": "#00B894"},
+            {"name": "Du lịch",           "icon": "✈️", "color": "#74B9FF"},
+        ],
+    },
+    {
+        "group": "Hóa đơn & Tiện ích",
+        "sort_order": 2,
+        "type": CategoryType.expense,
+        "items": [
+            {"name": "Điện & Nước",           "icon": "💡", "color": "#FD79A8"},
+            {"name": "Internet & Điện thoại", "icon": "📱", "color": "#55EFC4"},
+            {"name": "Bảo hiểm",              "icon": "🛡️", "color": "#FDCB6E"},
+        ],
+    },
+    {
+        "group": "Chi phí khác",
+        "sort_order": 3,
+        "type": CategoryType.expense,
+        "items": [
+            {"name": "Khác", "icon": "📌", "color": "#B2BEC3"},
+        ],
+    },
+    {
+        "group": "Thu nhập",
+        "sort_order": 4,
+        "type": CategoryType.income,
+        "items": [
+            {"name": "Lương",         "icon": "💼", "color": "#00B894"},
+            {"name": "Thưởng",        "icon": "🏆", "color": "#FDCB6E"},
+            {"name": "Quà tặng",      "icon": "🎁", "color": "#E17055"},
+            {"name": "Đầu tư",        "icon": "📈", "color": "#6C5CE7"},
+            {"name": "Thu nhập phụ",  "icon": "💰", "color": "#00CEC9"},
+            {"name": "Khác",          "icon": "📌", "color": "#B2BEC3"},
+        ],
+    },
+]
+
+
+def seed_default_categories(db: Session, user_id: int) -> None:
+    """Create default category groups and categories for a newly registered user."""
+    for group_def in _DEFAULT_CATEGORIES:
+        group = CategoryGroup(
+            user_id=user_id,
+            name=group_def["group"],
+            sort_order=group_def["sort_order"],
+            is_system=True,
+        )
+        db.add(group)
+        db.flush()  # get group.id before creating categories
+
+        for item in group_def["items"]:
+            db.add(Category(
+                user_id=user_id,
+                group_id=group.id,
+                name=item["name"],
+                type=group_def["type"],
+                icon=item["icon"],
+                color=item["color"],
+                is_active=True,
+            ))
+
+    db.commit()
 
 
 # ── Category Groups ────────────────────────────────────────────────────────────

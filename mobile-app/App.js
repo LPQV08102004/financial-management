@@ -6,6 +6,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import AddTransactionScreen from './src/screens/AddTransactionScreen';
 import Transaction from './src/screens/Transaction';
 import Chart from './src/screens/Chart';
+import CategoriesScreen from './src/screens/CategoriesScreen';
 import Notification from './src/screens/Notification';
 import AddNotification from './src/screens/AddNotification';
 import EditNotification from './src/screens/EditNotification';
@@ -31,6 +32,7 @@ export default function App() {
             <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
             <Stack.Screen name="Transaction" component={Transaction} />
             <Stack.Screen name="Chart" component={Chart} />
+            <Stack.Screen name="Categories" component={CategoriesScreen} />
             <Stack.Screen name="Notification" component={Notification} />
             <Stack.Screen name="AddNotification" component={AddNotification} />
             <Stack.Screen name="EditNotification" component={EditNotification} />

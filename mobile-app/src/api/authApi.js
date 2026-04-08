@@ -17,6 +17,7 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 const ACCESS_TOKEN_KEY = 'access_token';
+const REFRESH_TOKEN_KEY = 'refresh_token';
 
 export async function login(email, password) {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -32,6 +33,9 @@ export async function login(email, password) {
 
   if (data?.access_token) {
     await AsyncStorage.setItem(ACCESS_TOKEN_KEY, data.access_token);
+  }
+  if (data?.refresh_token) {
+    await AsyncStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
   }
 
   return data;
@@ -57,6 +61,9 @@ export async function register(fullName, email, password, phoneNumber) {
   if (data?.access_token) {
     await AsyncStorage.setItem(ACCESS_TOKEN_KEY, data.access_token);
   }
+  if (data?.refresh_token) {
+    await AsyncStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+  }
 
   return data;
 }
@@ -66,7 +73,49 @@ export async function getSavedToken() {
 }
 
 export async function logout() {
-  await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+  let refreshToken = null;
+  try {
+    refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch (_) {
+    refreshToken = null;
+  }
+
+  await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+
+  if (!refreshToken) {
+    return;
+  }
+
+  try {
+    await Promise.race([
+      fetch(`${API_BASE_URL}/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Logout timeout')), 4000)),
+    ]);
+  } catch (_) {
+    // best-effort server revoke
+  }
+}
+
+export async function changePassword(currentPassword, newPassword, confirmPassword) {
+  const response = await fetch(`${API_BASE_URL}/users/me/change-password`, {
+    method: 'POST',
+    headers: await getAuthHeaders(),
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.detail || 'Đổi mật khẩu thất bại');
+  }
+  return data;
 }
 
 async function getAuthHeaders() {

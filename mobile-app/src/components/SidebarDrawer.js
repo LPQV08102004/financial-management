@@ -70,7 +70,13 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
           >
             <Text style={styles.sidebarItemText}>📊 Biểu đồ</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.sidebarItem}>
+          <TouchableOpacity 
+            style={styles.sidebarItem}
+            onPress={() => {
+              navigation.navigate('Categories');
+              onClose();
+            }}
+          >
             <Text style={styles.sidebarItemText}>📑 Danh mục</Text>
           </TouchableOpacity>
           <TouchableOpacity 

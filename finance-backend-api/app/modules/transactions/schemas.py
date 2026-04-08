@@ -142,3 +142,10 @@ class TransactionWithWarnings(BaseModel):
     """Wraps a transaction response with optional overspend warnings."""
     transaction: TransactionOut
     warnings: List[str] = []
+
+
+class TransactionListResponse(BaseModel):
+    """Paginated transaction list with aggregate metadata for US-F."""
+    items: List[TransactionOut]
+    total_count: int
+    total_amount: Decimal

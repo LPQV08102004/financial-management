@@ -21,7 +21,8 @@ const _buildQuery = (params) =>
 
 /**
  * GET /transactions
- * params: { type?, account_id?, from_date?, to_date?, skip?, limit? }
+ * params: { type?, account_id?, category_id?, from_date?, to_date?, q?, skip?, limit? }
+ * Returns: { items, total_count, total_amount }
  */
 export async function listTransactions(params = {}) {
   const res = await fetch(

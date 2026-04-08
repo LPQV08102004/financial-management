@@ -1,4 +1,5 @@
 import React from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -10,23 +11,38 @@ import Notification from './src/screens/Notification';
 import AddNotification from './src/screens/AddNotification';
 import EditNotification from './src/screens/EditNotification';
 import Profile from './src/screens/Profile';
+import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
+import SavingsGoalsScreen from './src/screens/SavingsGoalsScreen';
+import AddSavingsGoalScreen from './src/screens/AddSavingsGoalScreen';
 import LoginScreen from './src/screens/LoginScreen';
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
+function RootNavigator() {
+  const { state } = useAuth();
+
+  if (state.isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#075c09" />
+      </View>
+    );
+  }
+
   return (
-    <AuthProvider>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <Stack.Navigator
-            initialRouteName="Login"
-            screenOptions={{
-              headerShown: false,
-            }}
-          >
+    <NavigationContainer key={state.userToken ? 'user-nav' : 'guest-nav'}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        {!state.userToken ? (
+          <Stack.Group navigationKey="guest">
             <Stack.Screen name="Login" component={LoginScreen} />
+          </Stack.Group>
+        ) : (
+          <Stack.Group navigationKey="user">
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="AddTransaction" component={AddTransactionScreen} />
             <Stack.Screen name="Transaction" component={Transaction} />
@@ -35,8 +51,21 @@ export default function App() {
             <Stack.Screen name="AddNotification" component={AddNotification} />
             <Stack.Screen name="EditNotification" component={EditNotification} />
             <Stack.Screen name="Profile" component={Profile} />
-          </Stack.Navigator>
-        </NavigationContainer>
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+            <Stack.Screen name="SavingsGoals" component={SavingsGoalsScreen} />
+            <Stack.Screen name="AddSavingsGoal" component={AddSavingsGoalScreen} />
+          </Stack.Group>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <SafeAreaProvider>
+        <RootNavigator />
       </SafeAreaProvider>
     </AuthProvider>
   );

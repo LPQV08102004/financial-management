@@ -9,6 +9,8 @@ from app.modules.auth.schemas import (
     LoginRequest,
     RefreshTokenRequest,
     TokenResponse,
+    LogoutRequest,
+    MessageResponse,
     UserOut,
 )
 from app.modules.auth import service
@@ -46,6 +48,12 @@ def refresh(body: RefreshTokenRequest, db: Session = Depends(get_db)):
         refresh_token=refresh_token,
         user=UserOut.model_validate(user),
     )
+
+
+@router.post("/logout", response_model=MessageResponse)
+def logout(body: LogoutRequest, db: Session = Depends(get_db)):
+    service.logout_user(db, body.refresh_token)
+    return MessageResponse(message="Đăng xuất thành công")
 
 
 @router.get("/me", response_model=UserOut)

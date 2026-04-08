@@ -38,7 +38,6 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
           <TouchableOpacity 
             style={styles.userProfileContainer}
             onPress={() => {
-              console.log('Profile click detected'); // Debug log
               navigation.navigate('Profile');
               onClose();
             }}
@@ -72,6 +71,15 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
           </TouchableOpacity>
           <TouchableOpacity style={styles.sidebarItem}>
             <Text style={styles.sidebarItemText}>📑 Danh mục</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.sidebarItem}
+            onPress={() => {
+              navigation.navigate('SavingsGoals');
+              onClose();
+            }}
+          >
+            <Text style={styles.sidebarItemText}>🎯 Mục tiêu tiết kiệm</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.sidebarItem}

@@ -132,9 +132,9 @@ export function AuthProvider({ children }) {
     },
 
     signOut: async () => {
+      dispatch({ type: 'SIGN_OUT' });
       try {
         await logout();
-        dispatch({ type: 'SIGN_OUT' });
         return { success: true };
       } catch (error) {
         return { success: false, message: error.message };

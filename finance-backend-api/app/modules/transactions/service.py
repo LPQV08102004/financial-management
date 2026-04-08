@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.modules.transactions.models import Transaction, SplitItem
@@ -241,22 +242,37 @@ def list_transactions(
     user_id: int,
     type_filter: Optional[str],
     account_id: Optional[int],
+    category_id: Optional[int],
     from_date: Optional[datetime],
     to_date: Optional[datetime],
+    q_search: Optional[str],
     skip: int,
     limit: int,
-) -> list[Transaction]:
+) -> tuple[list[Transaction], int, Decimal]:
+    """
+    Returns (items, total_count, total_amount) where total_count and total_amount
+    reflect all matching rows (before pagination) — used for US-F summary display.
+    """
     q = db.query(Transaction).filter(Transaction.user_id == user_id)
     if type_filter:
         q = q.filter(Transaction.type == type_filter)
     if account_id:
         q = q.filter(Transaction.account_id == account_id)
+    if category_id:
+        q = q.filter(Transaction.category_id == category_id)
     if from_date:
         q = q.filter(Transaction.transaction_date >= from_date.replace(hour=0, minute=0, second=0, microsecond=0))
     if to_date:
-        # Include the full to_date day
         q = q.filter(Transaction.transaction_date <= to_date.replace(hour=23, minute=59, second=59, microsecond=999999))
-    return q.order_by(Transaction.transaction_date.desc()).offset(skip).limit(limit).all()
+    if q_search:
+        q = q.filter(Transaction.note.ilike(f"%{q_search}%"))
+
+    total_count: int = q.count()
+    raw_sum = q.with_entities(func.sum(Transaction.amount)).scalar()
+    total_amount: Decimal = _to_decimal(raw_sum) if raw_sum is not None else Decimal("0")
+
+    items = q.order_by(Transaction.transaction_date.desc()).offset(skip).limit(limit).all()
+    return items, total_count, total_amount
 
 
 def get_transaction(db: Session, txn_id: int, user_id: int) -> Transaction:

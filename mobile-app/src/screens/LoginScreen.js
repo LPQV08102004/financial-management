@@ -4,7 +4,7 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View 
 
 import { useAuth } from '../context/AuthContext';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState('login');
   const [fullName, setFullName] = useState('');
@@ -39,7 +39,6 @@ export default function LoginScreen({ navigation }) {
         throw new Error(result?.message || (mode === 'register' ? 'Đăng ký thất bại' : 'Đăng nhập thất bại'));
       }
 
-      navigation.replace('Home');
     } catch (e) {
       setError(e.message || (mode === 'register' ? 'Đăng ký thất bại' : 'Đăng nhập thất bại'));
     } finally {

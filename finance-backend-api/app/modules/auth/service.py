@@ -106,22 +106,44 @@ def rotate_refresh_token(db: Session, refresh_token: str) -> tuple[User, str, st
     return user, access_token, new_refresh_token
 
 
+def logout_user(db: Session, refresh_token: str) -> None:
+    token_row = (
+        db.query(RefreshToken)
+        .filter(RefreshToken.token_hash == refresh_token, RefreshToken.is_revoked == False)
+        .first()
+    )
+    if token_row:
+        token_row.is_revoked = True
+        db.commit()
+
+
+def revoke_all_user_tokens(db: Session, user_id: int) -> None:
+    db.query(RefreshToken).filter(
+        RefreshToken.user_id == user_id,
+        RefreshToken.is_revoked == False,
+    ).update({"is_revoked": True})
+    db.commit()
+
+
+def change_password(db: Session, user: User, current_password: str, new_password: str) -> User:
+    if not verify_password(current_password, user.hashed_password):
+        raise UnauthorizedError("Mật khẩu hiện tại không đúng")
+    if current_password == new_password:
+        raise BadRequestError("Mật khẩu mới phải khác mật khẩu cũ")
+    user.hashed_password = hash_password(new_password)
+    db.commit()
+    db.refresh(user)
+    revoke_all_user_tokens(db, user.id)
+    return user
+
+
 def update_profile(
     db: Session,
     user: User,
     full_name: str | None,
-    current_password: str | None,
-    new_password: str | None,
 ) -> User:
     if full_name is not None:
         user.full_name = full_name
-
-    if new_password is not None:
-        if not current_password:
-            raise BadRequestError("current_password is required to set new_password")
-        if not verify_password(current_password, user.hashed_password):
-            raise UnauthorizedError("Current password is incorrect")
-        user.hashed_password = hash_password(new_password)
 
     db.commit()
     db.refresh(user)

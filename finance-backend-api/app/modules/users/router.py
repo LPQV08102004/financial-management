@@ -5,16 +5,15 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.shared.dependencies import get_current_user
 from app.modules.auth.models import User
-from app.modules.auth.schemas import UserOut
+from app.modules.auth.schemas import UserOut, ChangePasswordRequest, MessageResponse
 from app.modules.auth import service as auth_service
+from app.core.exceptions import BadRequestError
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
 class UpdateProfileRequest(BaseModel):
     full_name: str | None = Field(default=None, min_length=1, max_length=150)
-    current_password: str | None = Field(default=None, min_length=8, max_length=128)
-    new_password: str | None = Field(default=None, min_length=8, max_length=128)
 
 
 @router.get("/me", response_model=UserOut)
@@ -28,11 +27,16 @@ def update_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    updated_user = auth_service.update_profile(
-        db=db,
-        user=current_user,
-        full_name=body.full_name,
-        current_password=body.current_password,
-        new_password=body.new_password,
-    )
-    return updated_user
+    return auth_service.update_profile(db=db, user=current_user, full_name=body.full_name)
+
+
+@router.post("/me/change-password", response_model=MessageResponse)
+def change_password(
+    body: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if body.new_password != body.confirm_password:
+        raise BadRequestError("Mật khẩu mới và xác nhận mật khẩu không khớp")
+    auth_service.change_password(db, current_user, body.current_password, body.new_password)
+    return MessageResponse(message="Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")

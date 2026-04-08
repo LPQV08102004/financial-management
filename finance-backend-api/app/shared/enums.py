@@ -24,6 +24,12 @@ class ReconcileStatus(str, enum.Enum):
     reconciled = "reconciled"
 
 
+class GoalStatus(str, enum.Enum):
+    in_progress = "in_progress"
+    completed = "completed"
+    overdue = "overdue"
+
+
 class AuditAction(str, enum.Enum):
     assign_budget = "assign_budget"
     move_money = "move_money"

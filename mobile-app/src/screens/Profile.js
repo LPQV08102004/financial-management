@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal, InteractionManager } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,6 +8,8 @@ export default function Profile({ navigation }) {
   const { refreshProfile, signOut } = useAuth();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const loadProfile = async () => {
     try {
@@ -30,25 +32,24 @@ export default function Profile({ navigation }) {
     }, [])
   );
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Xác nhận đăng xuất',
-      'Bạn có chắc chắn muốn đăng xuất?',
-      [
-        { text: 'Hủy', onPress: () => {}, style: 'cancel' },
-        {
-          text: 'Đăng xuất',
-          onPress: async () => {
-            await signOut();
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Login' }],
-            });
-          },
-          style: 'destructive',
-        },
-      ]
-    );
+  const performLogout = async () => {
+    if (loggingOut) {
+      return;
+    }
+
+    setLoggingOut(true);
+    try {
+      const result = await signOut();
+      if (!result.success) {
+        Alert.alert('Lỗi', result.message || 'Đăng xuất thất bại');
+      }
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setShowLogoutModal(true);
   };
 
   if (loading) {
@@ -119,16 +120,62 @@ export default function Profile({ navigation }) {
               <Text style={styles.editButtonText}>Chỉnh sửa hồ sơ</Text>
             </TouchableOpacity>
 
-            {/* Logout Button */}
-            <TouchableOpacity 
-              style={styles.logoutButton}
-              onPress={handleLogout}
+            {/* Change Password Button */}
+            <TouchableOpacity
+              style={styles.changePasswordButton}
+              onPress={() => navigation.navigate('ChangePassword')}
             >
-              <Text style={styles.logoutButtonText}>Đăng xuất</Text>
+              <Text style={styles.changePasswordButtonText}>Đổi mật khẩu</Text>
+            </TouchableOpacity>
+
+            {/* Logout Button */}
+            <TouchableOpacity
+              style={[styles.logoutButton, loggingOut && styles.logoutButtonDisabled]}
+              onPress={handleLogout}
+              disabled={loggingOut}
+            >
+              <Text style={styles.logoutButtonText}>{loggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
+
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showLogoutModal}
+        onRequestClose={() => setShowLogoutModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Xác nhận đăng xuất</Text>
+            <Text style={styles.modalMessage}>Bạn có chắc chắn muốn đăng xuất?</Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowLogoutModal(false)}
+                disabled={loggingOut}
+              >
+                <Text style={styles.cancelButtonText}>Hủy</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton, loggingOut && styles.modalButtonDisabled]}
+                onPress={() => {
+                  setShowLogoutModal(false);
+                  InteractionManager.runAfterInteractions(() => {
+                    void performLogout();
+                  });
+                }}
+                disabled={loggingOut}
+              >
+                <Text style={styles.confirmButtonText}>{loggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -248,6 +295,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  changePasswordButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginTop: 10,
+    borderWidth: 1.5,
+    borderColor: '#075c09',
+  },
+  changePasswordButtonText: {
+    color: '#075c09',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   logoutButton: {
     backgroundColor: '#e74c3c',
     borderRadius: 8,
@@ -255,9 +316,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
+  logoutButtonDisabled: {
+    opacity: 0.7,
+  },
   logoutButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222',
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 15,
+    color: '#555',
+    lineHeight: 22,
+    marginBottom: 18,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    marginLeft: 10,
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  cancelButtonText: {
+    color: '#333',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  confirmButton: {
+    backgroundColor: '#e74c3c',
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  modalButtonDisabled: {
+    opacity: 0.75,
   },
 });

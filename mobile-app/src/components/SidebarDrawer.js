@@ -96,6 +96,15 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
           >
             <Text style={styles.sidebarItemText}>🔁 Giao dịch định kỳ</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.sidebarItem}
+            onPress={() => {
+              navigation.navigate('Chat');
+              onClose();
+            }}
+          >
+            <Text style={styles.sidebarItemText}>🤖 Trợ lý AI</Text>
+          </TouchableOpacity>
           <TouchableOpacity 
             style={styles.sidebarItem}
             onPress={() => {

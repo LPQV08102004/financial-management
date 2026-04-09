@@ -1,21 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { API_BASE_URL } from './config';
 
-const EXPO_HOST = Constants.expoConfig?.hostUri?.split(':')[0];
-// Android emulator: use 10.0.2.2 to reach host machine
-// Physical device or iOS: use EXPO_HOST or fallback to 192.168.1.213
-const getApiBaseUrl = () => {
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:8000/api/v1'; // Android emulator special address
-  }
-  if (EXPO_HOST) {
-    return `http://${EXPO_HOST}:8000/api/v1`;
-  }
-  return 'http://192.168.1.213:8000/api/v1'; // Change this to your host IP if different
-};
-
-const API_BASE_URL = getApiBaseUrl();
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 

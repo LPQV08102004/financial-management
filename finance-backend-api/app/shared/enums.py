@@ -30,6 +30,13 @@ class GoalStatus(str, enum.Enum):
     overdue = "overdue"
 
 
+class RecurringFrequency(str, enum.Enum):
+    daily = "daily"
+    weekly = "weekly"
+    monthly = "monthly"
+    yearly = "yearly"
+
+
 class AuditAction(str, enum.Enum):
     assign_budget = "assign_budget"
     move_money = "move_money"

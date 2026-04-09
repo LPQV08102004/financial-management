@@ -13,3 +13,5 @@ from app.modules.categories.models import (  # noqa: F401, E402
 )
 from app.modules.transactions.models import Transaction, SplitItem  # noqa: F401, E402
 from app.modules.budgets.models import BudgetEntry, BudgetAlert, AuditLog  # noqa: F401, E402
+from app.modules.savings_goals.models import SavingsGoal  # noqa: F401, E402
+from app.modules.recurring.models import RecurringTemplate  # noqa: F401, E402

@@ -18,6 +18,7 @@ from app.modules.analytics.router import (
     reports_router as analytics_reports_router,
 )
 from app.modules.savings_goals.router import router as savings_goals_router
+from app.modules.chat.router import router as chat_router
 
 
 @asynccontextmanager
@@ -57,6 +58,7 @@ app.include_router(budgets_router, prefix=PREFIX)
 app.include_router(analytics_dashboard_router, prefix=PREFIX)
 app.include_router(analytics_reports_router, prefix=PREFIX)
 app.include_router(savings_goals_router, prefix=PREFIX)
+app.include_router(chat_router, prefix=PREFIX)
 
 
 @app.get("/", tags=["Health"])

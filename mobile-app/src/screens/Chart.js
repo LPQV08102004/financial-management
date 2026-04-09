@@ -77,9 +77,12 @@ export default function Chart({ navigation }) {
 
   const chartHeight = 300;
   const maxPossibleBars = Math.max(chartData.length, 1);
-  const chartWidth = Math.max(400, maxPossibleBars * 120) + 300;
-  const barSpacing = chartWidth / maxPossibleBars;
-  const barWidth = Math.max(barSpacing * 0.25, 10);
+  const BAR_WIDTH = 22;
+  const GROUP_SPACING = 70;
+  const CHART_SIDE_PADDING = 60; // left axis (40) + right margin (20)
+  const chartWidth = Math.max(300, maxPossibleBars * GROUP_SPACING + CHART_SIDE_PADDING);
+  const barSpacing = (chartWidth - CHART_SIDE_PADDING) / maxPossibleBars;
+  const barWidth = BAR_WIDTH;
 
   // Get unique categories from all chart data for stacked charts
   const getAllCategories = () => {
@@ -134,7 +137,7 @@ export default function Chart({ navigation }) {
           })}
         </View>
 
-        <ScrollView horizontal scrollEnabled={true} showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingRight: 200 }}>
+        <ScrollView horizontal scrollEnabled={true} showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingRight: 20 }}>
           <Svg height={chartHeight + 30} width={chartWidth} style={{ marginVertical: 10 }}>
             {/* Y-axis */}
             <Line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#075c09" strokeWidth="2" />
@@ -220,7 +223,7 @@ export default function Chart({ navigation }) {
           })}
         </View>
 
-        <ScrollView horizontal scrollEnabled={true} showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingRight: 200 }}>
+        <ScrollView horizontal scrollEnabled={true} showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingRight: 20 }}>
           <Svg height={chartHeight + 30} width={chartWidth} style={{ marginVertical: 10 }}>
             {/* Y-axis */}
             <Line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#075c09" strokeWidth="2" />

@@ -15,8 +15,10 @@ import Profile from './src/screens/Profile';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import SavingsGoalsScreen from './src/screens/SavingsGoalsScreen';
 import AddSavingsGoalScreen from './src/screens/AddSavingsGoalScreen';
+import ChatScreen from './src/screens/ChatScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { ChatProvider } from './src/context/ChatContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -56,6 +58,7 @@ function RootNavigator() {
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
             <Stack.Screen name="SavingsGoals" component={SavingsGoalsScreen} />
             <Stack.Screen name="AddSavingsGoal" component={AddSavingsGoalScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
           </Stack.Group>
         )}
       </Stack.Navigator>
@@ -66,9 +69,11 @@ function RootNavigator() {
 export default function App() {
   return (
     <AuthProvider>
-      <SafeAreaProvider>
-        <RootNavigator />
-      </SafeAreaProvider>
+      <ChatProvider>
+        <SafeAreaProvider>
+          <RootNavigator />
+        </SafeAreaProvider>
+      </ChatProvider>
     </AuthProvider>
   );
 }

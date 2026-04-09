@@ -87,6 +87,15 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
           >
             <Text style={styles.sidebarItemText}>🎯 Mục tiêu tiết kiệm</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.sidebarItem}
+            onPress={() => {
+              navigation.navigate('Recurring');
+              onClose();
+            }}
+          >
+            <Text style={styles.sidebarItemText}>🔁 Giao dịch định kỳ</Text>
+          </TouchableOpacity>
           <TouchableOpacity 
             style={styles.sidebarItem}
             onPress={() => {

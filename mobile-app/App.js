@@ -15,6 +15,8 @@ import Profile from './src/screens/Profile';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import SavingsGoalsScreen from './src/screens/SavingsGoalsScreen';
 import AddSavingsGoalScreen from './src/screens/AddSavingsGoalScreen';
+import RecurringScreen from './src/screens/RecurringScreen';
+import AddRecurringScreen from './src/screens/AddRecurringScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
@@ -56,6 +58,8 @@ function RootNavigator() {
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
             <Stack.Screen name="SavingsGoals" component={SavingsGoalsScreen} />
             <Stack.Screen name="AddSavingsGoal" component={AddSavingsGoalScreen} />
+            <Stack.Screen name="Recurring" component={RecurringScreen} />
+            <Stack.Screen name="AddRecurring" component={AddRecurringScreen} />
           </Stack.Group>
         )}
       </Stack.Navigator>

@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BASE_URL } from './analyticsApi';
+import { API_BASE_URL } from './config';
+
+const BASE_URL = API_BASE_URL;
 
 const ACCESS_TOKEN_KEY = 'access_token';
 

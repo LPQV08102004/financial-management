@@ -17,8 +17,10 @@ import SavingsGoalsScreen from './src/screens/SavingsGoalsScreen';
 import AddSavingsGoalScreen from './src/screens/AddSavingsGoalScreen';
 import RecurringScreen from './src/screens/RecurringScreen';
 import AddRecurringScreen from './src/screens/AddRecurringScreen';
+import ChatScreen from './src/screens/ChatScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { ChatProvider } from './src/context/ChatContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -60,6 +62,7 @@ function RootNavigator() {
             <Stack.Screen name="AddSavingsGoal" component={AddSavingsGoalScreen} />
             <Stack.Screen name="Recurring" component={RecurringScreen} />
             <Stack.Screen name="AddRecurring" component={AddRecurringScreen} />
+            <Stack.Screen name="Chat" component={ChatScreen} />
           </Stack.Group>
         )}
       </Stack.Navigator>
@@ -70,10 +73,16 @@ function RootNavigator() {
 export default function App() {
   return (
     <AuthProvider>
-      <SafeAreaProvider>
+      {/* <SafeAreaProvider>
         <RootNavigator />
-      </SafeAreaProvider>
+      </SafeAreaProvider> */}
+      <ChatProvider>
+        <SafeAreaProvider>
+          <RootNavigator />
+        </SafeAreaProvider>
+      </ChatProvider>
     </AuthProvider>
+     
   );
 }
 

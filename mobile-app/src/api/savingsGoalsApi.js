@@ -1,10 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
+import { API_BASE_URL } from './config';
 
-const EXPO_HOST = Constants.expoConfig?.hostUri?.split(':')[0];
-const BASE_URL = EXPO_HOST
-  ? `http://${EXPO_HOST}:8000/api/v1`
-  : 'http://127.0.0.1:8000/api/v1';
+const BASE_URL = API_BASE_URL;
 
 const ACCESS_TOKEN_KEY = 'access_token';
 

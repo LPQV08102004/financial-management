@@ -3,6 +3,7 @@ import {
   StyleSheet, Text, View, TouchableOpacity, FlatList,
   ActivityIndicator, Alert, RefreshControl,
 } from 'react-native';
+import Footer from '../components/Footer';
 import { useFocusEffect } from '@react-navigation/native';
 import { listGoals, deleteGoal } from '../api/savingsGoalsApi';
 
@@ -196,6 +197,7 @@ export default function SavingsGoalsScreen({ navigation }) {
           )}
         />
       )}
+      <Footer />
     </View>
   );
 }

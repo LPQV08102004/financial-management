@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { changePassword } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
+import Footer from '../components/Footer';
 
 export default function ChangePasswordScreen({ navigation }) {
   const { signOut } = useAuth();
@@ -134,6 +135,7 @@ export default function ChangePasswordScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <Footer />
     </View>
   );
 }

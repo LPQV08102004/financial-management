@@ -3,7 +3,9 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, FlatList } from '
 import Svg, { Circle, G } from 'react-native-svg';
 import { useFocusEffect } from '@react-navigation/native';
 import SidebarDrawer from '../components/SidebarDrawer';
+import Header from '../components/Header';
 import HeaderIconButton from '../components/HeaderIconButton';
+import Footer from '../components/Footer';
 import DateTimeSelector from '../components/DateTimeSelector';
 import { getBalance, getStatsByCategory } from '../api/analyticsApi';
 import { listTransactions } from '../api/transactionsApi';
@@ -237,6 +239,7 @@ export default function HomeScreen({ navigation }) {
           )}
         </View>
       </ScrollView>
+      <Footer />
 
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} navigation={navigation} />
     </View>

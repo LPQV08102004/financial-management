@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, FlatList, Switch } from 'react-native';
 import SidebarDrawer from '../components/SidebarDrawer';
+import Header from '../components/Header';
 import HeaderIconButton from '../components/HeaderIconButton';
+import Footer from '../components/Footer';
 
 export default function Notification({ navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -103,6 +105,7 @@ export default function Notification({ navigation }) {
           )}
         </View>
       </ScrollView>
+      <Footer />
     </View>
   );
 }

@@ -3,6 +3,7 @@ import {
   StyleSheet, Text, View, TextInput, TouchableOpacity,
   ScrollView, Alert, ActivityIndicator, Modal,
 } from 'react-native';
+import Footer from '../components/Footer';
 import { createGoal, updateGoal, depositToGoal, withdrawFromGoal, getGoal } from '../api/savingsGoalsApi';
 import { listAccounts } from '../api/accountsApi';
 
@@ -375,6 +376,7 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
         </TouchableOpacity>
 
       </ScrollView>
+      <Footer />
 
       <ActionModal
         visible={actionModalVisible}

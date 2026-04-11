@@ -3,7 +3,9 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-nati
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 import { useFocusEffect } from '@react-navigation/native';
 import SidebarDrawer from '../components/SidebarDrawer';
+import Header from '../components/Header';
 import HeaderIconButton from '../components/HeaderIconButton';
+import Footer from '../components/Footer';
 import DateTimeSelector from '../components/DateTimeSelector';
 import { getOverTime, getStatsByCategory } from '../api/analyticsApi';
 
@@ -385,6 +387,7 @@ export default function Chart({ navigation }) {
           </View>
         )}
       </ScrollView>
+      <Footer />
 
       {/* Sidebar */}
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} navigation={navigation} />

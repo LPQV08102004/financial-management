@@ -3,6 +3,7 @@ import {
   StyleSheet, Text, View, TextInput, TouchableOpacity,
   ScrollView, Alert, ActivityIndicator,
 } from 'react-native';
+import Footer from '../components/Footer';
 import { createTemplate, updateTemplate } from '../api/recurringApi';
 import { listAccounts } from '../api/accountsApi';
 import { listCategories } from '../api/categoriesApi';
@@ -341,6 +342,7 @@ export default function AddRecurringScreen({ navigation, route }) {
         </TouchableOpacity>
 
       </ScrollView>
+      <Footer />
     </View>
   );
 }

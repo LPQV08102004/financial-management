@@ -5,7 +5,9 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import SidebarDrawer from '../components/SidebarDrawer';
+import Header from '../components/Header';
 import HeaderIconButton from '../components/HeaderIconButton';
+import Footer from '../components/Footer';
 import DateTimeSelector from '../components/DateTimeSelector';
 import { listTransactions, updateTransaction } from '../api/transactionsApi';
 import { listCategories } from '../api/categoriesApi';
@@ -392,6 +394,7 @@ export default function Transaction({ navigation }) {
           )}
         </View>
       </ScrollView>
+      <Footer />
 
       {/* ── Filter Modal ─────────────────────────────────────────── */}
       <Modal visible={showFilterModal} transparent animationType="slide" onRequestClose={() => setShowFilterModal(false)}>

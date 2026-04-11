@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 
 export default function SignupScreen({ navigation }) {
@@ -169,6 +170,7 @@ export default function SignupScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+      <Footer />
     </ScrollView>
   );
 }

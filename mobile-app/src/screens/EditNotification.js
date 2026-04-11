@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Modal, Alert } from 'react-native';
+import Footer from '../components/Footer';
 
 export default function EditNotification({ navigation, route }) {
   const { reminder } = route.params;
@@ -368,6 +369,7 @@ export default function EditNotification({ navigation, route }) {
           </View>
         </View>
       </ScrollView>
+      <Footer />
     </View>
   );
 }

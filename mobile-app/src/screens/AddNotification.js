@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Modal, FlatList } from 'react-native';
+import Footer from '../components/Footer';
 
 export default function AddNotification({ navigation }) {
   const [reminderName, setReminderName] = useState('');
@@ -336,6 +337,7 @@ export default function AddNotification({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <Footer />
     </View>
   );
 }

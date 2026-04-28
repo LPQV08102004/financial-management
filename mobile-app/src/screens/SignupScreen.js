@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { Image, StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 
 export default function SignupScreen({ navigation }) {
@@ -122,7 +123,10 @@ export default function SignupScreen({ navigation }) {
                 style={styles.eyeIcon}
                 onPress={() => setShowPassword(!showPassword)}
               >
-                <Text>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                <Image
+                  source={showPassword ? require('../../assets/hide.png') : require('../../assets/view.png')}
+                  style={styles.eyeImage}
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -144,7 +148,10 @@ export default function SignupScreen({ navigation }) {
                 style={styles.eyeIcon}
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
-                <Text>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                <Image
+                  source={showConfirmPassword ? require('../../assets/hide.png') : require('../../assets/view.png')}
+                  style={styles.eyeImage}
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -169,6 +176,7 @@ export default function SignupScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+      <Footer />
     </ScrollView>
   );
 }
@@ -239,6 +247,12 @@ const styles = StyleSheet.create({
   },
   eyeIcon: {
     paddingHorizontal: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  eyeImage: {
+    width: 24,
+    height: 24,
   },
   signupButton: {
     backgroundColor: '#075c09',

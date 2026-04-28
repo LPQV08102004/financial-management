@@ -3,6 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal, InteractionManager } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import Footer from '../components/Footer';
 
 export default function Profile({ navigation }) {
   const { refreshProfile, signOut } = useAuth();
@@ -139,6 +140,7 @@ export default function Profile({ navigation }) {
           </View>
         </View>
       </ScrollView>
+      <Footer />
 
       <Modal
         transparent

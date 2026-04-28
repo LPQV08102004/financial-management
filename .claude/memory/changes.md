@@ -1,67 +1,129 @@
-# Change Log
+Date: 2026-04-07
+File: finance-backend-api/app/main.py
+Changes:
+- Added analytics router imports from app.modules.analytics.router.
+- Registered analytics dashboard and reports routers with API v1 prefix.
+Reason:
+- Analytics endpoints were not mounted, causing /analytics/* requests to return 404 and breaking HomeScreen data loading.
 
-## Date: 2026-04-09
-- File: mobile-app/src/api/config.js
-  - Changes:
-    - Added centralized API base URL resolver with support for EXPO_PUBLIC_API_BASE_URL override.
-    - Added automatic Expo host detection for physical devices.
-    - Kept Android emulator fallback to 10.0.2.2.
-  - Reason:
-    - Fix network request failures on Expo physical devices while preserving emulator behavior.
+Date: 2026-04-07
+File: mobile-app/src/screens/HomeScreen.js
+Changes:
+- Replaced Promise.all with Promise.allSettled in fetchAll.
+- Applied independent state updates for balance, category stats, and recent transactions based on each request result.
+Reason:
+- Prevent a single failed request from hiding all HomeScreen data; keep available data visible and improve resilience.
 
-- File: mobile-app/src/api/authApi.js
-  - Changes:
-    - Removed per-file platform/host URL logic.
-    - Switched to shared API_BASE_URL from api config.
-  - Reason:
-    - Ensure login/register use the same, correct backend URL resolution.
+Date: 2026-04-08
+File: mobile-app/src/api/transactionsApi.js
+Changes:
+- Added updateTransaction(txnId, payload) for PATCH /transactions/:id.
+Reason:
+- Enable editing existing transactions from the mobile transaction list.
 
-- File: mobile-app/src/api/accountsApi.js
-  - Changes:
-    - Replaced local base URL logic with shared API_BASE_URL.
-  - Reason:
-    - Keep account endpoints consistent across emulator and physical devices.
+Date: 2026-04-08
+File: mobile-app/src/screens/Transaction.js
+Changes:
+- Added tap-to-edit flow with modal (amount + note) and save action calling updateTransaction.
+- Added handling for reconciled transactions to block editing with clear message.
+- Updated list item rendering to show category/title and note on separate lines.
+Reason:
+- Fix missing note visibility and allow users to edit transactions directly in the transaction screen.
 
-- File: mobile-app/src/api/analyticsApi.js
-  - Changes:
-    - Replaced local base URL logic with shared API_BASE_URL export.
-  - Reason:
-    - Prevent duplicated URL logic and future drift.
+Date: 2026-04-08
+File: mobile-app/src/screens/HomeScreen.js
+Changes:
+- Updated recent transaction item UI to render note on a dedicated line under date.
+Reason:
+- Ensure transaction notes are visible on the home recent-transactions section.
 
-- File: mobile-app/src/api/categoriesApi.js
-  - Changes:
-    - Replaced local base URL logic with shared API_BASE_URL.
-  - Reason:
-    - Keep category requests reachable on physical devices.
+Date: 2026-04-08
+File: mobile-app/App.js
+Changes:
+- Switched root navigation to auth-state-driven rendering using AuthContext state.userToken.
+- Added loading fallback while restoring token at app startup.
+- Included ChangePassword screen in authenticated stack.
+Reason:
+- Ensure logout/login transitions are controlled centrally and reliably reflect authentication state.
 
-- File: mobile-app/src/api/transactionsApi.js
-  - Changes:
-    - Replaced local base URL logic with shared API_BASE_URL.
-  - Reason:
-    - Keep transaction requests reachable on physical devices.
+Date: 2026-04-08
+File: mobile-app/src/context/AuthContext.js
+Changes:
+- Updated signOut to dispatch SIGN_OUT before awaiting API logout.
+Reason:
+- Prevent stale authenticated UI and make logout responsive even when network/API revoke is slow.
 
-- File: mobile-app/src/api/recurringApi.js
-  - Changes:
-    - Replaced EXPO_HOST/localhost logic with shared API_BASE_URL.
-  - Reason:
-    - Standardize recurring API URL behavior with other modules.
+Date: 2026-04-08
+File: mobile-app/src/api/authApi.js
+Changes:
+- Updated logout flow to clear local tokens first, then call /auth/logout as best-effort with timeout.
+Reason:
+- Avoid logout being blocked by slow/unavailable backend while still trying to revoke refresh token server-side.
 
-- File: mobile-app/src/api/savingsGoalsApi.js
-  - Changes:
-    - Replaced EXPO_HOST/localhost logic with shared API_BASE_URL.
-  - Reason:
-    - Standardize savings goals API URL behavior with other modules.
+Date: 2026-04-08
+File: mobile-app/src/screens/LoginScreen.js
+Changes:
+- Removed manual navigation.replace('Home') after successful sign-in/sign-up.
+Reason:
+- Navigation now follows auth state from App root; manual redirect is no longer needed and can cause race issues.
 
-- File: mobile-app/src/api/chatApi.js
-  - Changes:
-    - Removed dependency on analyticsApi for BASE_URL.
-    - Switched to shared API_BASE_URL.
-  - Reason:
-    - Avoid indirect URL coupling and keep chat requests consistent.
+Date: 2026-04-08
+File: mobile-app/src/screens/Profile.js
+Changes:
+- Replaced manual navigation.reset on logout with signOut result handling.
+Reason:
+- Let root navigator handle post-logout route switching consistently from auth state.
 
-- File: mobile-app/.env.example
-  - Changes:
-    - Added sample Expo public environment variables for backend URL override.
-    - Documented how to configure LAN IP based API endpoint for physical devices.
-  - Reason:
-    - Provide a reliable fallback setup when automatic host detection does not match the backend host.
+Date: 2026-04-08
+File: mobile-app/src/screens/ChangePasswordScreen.js
+Changes:
+- Replaced manual navigation.reset after signOut with signOut result handling.
+Reason:
+- Keep logout transition consistent with centralized auth-state-based navigation.
+
+Date: 2026-04-08
+File: mobile-app/App.js
+Changes:
+- Added keyed NavigationContainer and Stack.Group navigationKey for guest/user flows.
+Reason:
+- Force React Navigation to reset auth stack on token changes so logout always transitions to Login immediately.
+
+Date: 2026-04-08
+File: mobile-app/src/components/SidebarDrawer.js
+Changes:
+- Removed debug log "Profile click detected" from profile navigation tap.
+- Added sidebar logout action with confirmation dialog calling AuthContext signOut.
+Reason:
+- Eliminate confusing logs and provide a direct, reliable sign-out path from the side menu.
+
+Date: 2026-04-08
+File: mobile-app/src/components/SidebarDrawer.js
+Changes:
+- Removed sidebar logout action and related styles/imports.
+Reason:
+- Keep logout behavior focused on the dedicated logout button inside Profile screen per user preference.
+
+Date: 2026-04-08
+File: mobile-app/src/screens/Profile.js
+Changes:
+- Centralized logout execution in performLogout() with in-progress guard.
+- Updated confirm action to trigger performLogout via non-blocking callback.
+- Added disabled/loading state for logout button while request is running.
+Reason:
+- Make profile logout event handling more robust and avoid repeated taps/race conditions.
+
+Date: 2026-04-08
+File: mobile-app/src/screens/Profile.js
+Changes:
+- Replaced logout confirmation Alert with a custom React Native Modal.
+- Added modal actions for cancel/confirm and integrated existing logout loading state.
+Reason:
+- Improve confirmation dialog reliability on Android emulator where native Alert can appear delayed.
+
+Date: 2026-04-08
+File: mobile-app/src/screens/Profile.js
+Changes:
+- Sequenced logout flow to close Modal first, then run signOut via InteractionManager.runAfterInteractions.
+- Removed direct modal state update from performLogout to avoid modal/stack race.
+Reason:
+- Prevent lingering overlay/touch-block issues after logout that can make Login inputs appear unresponsive on Android.

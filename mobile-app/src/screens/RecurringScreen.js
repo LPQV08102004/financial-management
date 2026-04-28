@@ -3,6 +3,8 @@ import {
   StyleSheet, Text, View, TouchableOpacity, FlatList,
   ActivityIndicator, Alert, RefreshControl,
 } from 'react-native';
+import Footer from '../components/Footer';
+import SidebarDrawer from '../components/SidebarDrawer';
 import { useFocusEffect } from '@react-navigation/native';
 import { listTemplates, deleteTemplate, processAllDue, getUpcoming } from '../api/recurringApi';
 
@@ -239,6 +241,7 @@ export default function RecurringScreen({ navigation }) {
       ) : (
         activeTab === 'templates' ? renderTemplates() : renderUpcoming()
       )}
+      <Footer />
     </View>
   );
 }

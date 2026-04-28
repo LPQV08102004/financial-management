@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, Text, View, TextInput, TouchableOpacity,
-  ScrollView, Alert, ActivityIndicator,
+  ScrollView, Alert, ActivityIndicator, Modal,
 } from 'react-native';
+import Footer from '../components/Footer';
 import { createTemplate, updateTemplate } from '../api/recurringApi';
 import { listAccounts } from '../api/accountsApi';
 import { listCategories } from '../api/categoriesApi';
@@ -39,6 +40,45 @@ const _isoToDisplay = (iso) => {
 const _todayDisplay = () => {
   const d = new Date();
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+};
+
+const _todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Get calendar days for a specific month
+const _getCalendarDaysForMonth = (date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startingDayOfWeek = firstDay.getDay();
+  const days = [];
+  for (let i = 0; i < startingDayOfWeek; i++) {
+    days.push(null);
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(new Date(year, month, i));
+  }
+  return days;
+};
+
+// Check if date is in the past
+const _isPastDate = (date) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  return checkDate < today;
+};
+
+// Get month and year display
+const _getMonthYearDisplay = (date) => {
+  const months = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+                  'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+  return `${months[date.getMonth()]} ${date.getFullYear()}`;
 };
 
 function Section({ title, children }) {
@@ -101,6 +141,14 @@ export default function AddRecurringScreen({ navigation, route }) {
   const [categories, setCategories] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showStartDateModal, setShowStartDateModal] = useState(false);
+  const [showEndDateModal, setShowEndDateModal] = useState(false);
+  const [selectedStartDate, setSelectedStartDate] = useState(
+    existing && existing.start_date ? new Date(existing.start_date) : new Date()
+  );
+  const [selectedEndDate, setSelectedEndDate] = useState(
+    existing && existing.end_date ? new Date(existing.end_date) : new Date()
+  );
 
   useEffect(() => {
     Promise.all([
@@ -183,6 +231,18 @@ export default function AddRecurringScreen({ navigation, route }) {
     }
   };
 
+  const handleStartDateChange = (date) => {
+    setSelectedStartDate(date);
+    setStartDate(_isoToDisplay(date.toISOString().split('T')[0]));
+    setShowStartDateModal(false);
+  };
+
+  const handleEndDateChange = (date) => {
+    setSelectedEndDate(date);
+    setEndDate(_isoToDisplay(date.toISOString().split('T')[0]));
+    setShowEndDateModal(false);
+  };
+
   if (loadingData) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -193,6 +253,136 @@ export default function AddRecurringScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
+      {/* Start Date Picker Modal */}
+      <Modal visible={showStartDateModal} transparent animationType="fade" onRequestClose={() => setShowStartDateModal(false)}>
+        <TouchableOpacity style={styles.dateModalOverlay} activeOpacity={1} onPress={() => setShowStartDateModal(false)} />
+        <View style={styles.dateModalContent}>
+          <View style={styles.calendarHeader}>
+            <TouchableOpacity
+              style={styles.monthNavButton}
+              onPress={() => setSelectedStartDate(new Date(selectedStartDate.getFullYear(), selectedStartDate.getMonth() - 1))}
+            >
+              <Text style={styles.monthNavButtonText}>←</Text>
+            </TouchableOpacity>
+            <Text style={styles.monthYearText}>{_getMonthYearDisplay(selectedStartDate)}</Text>
+            <TouchableOpacity
+              style={styles.monthNavButton}
+              onPress={() => setSelectedStartDate(new Date(selectedStartDate.getFullYear(), selectedStartDate.getMonth() + 1))}
+            >
+              <Text style={styles.monthNavButtonText}>→</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.calendarDaysHeader}>
+            {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((day) => (
+              <Text key={day} style={styles.dayNameText}>{day}</Text>
+            ))}
+          </View>
+
+          <View style={styles.calendarGrid}>
+            {_getCalendarDaysForMonth(selectedStartDate).map((date, index) => {
+              const isSelected = date && selectedStartDate.toDateString() === date.toDateString();
+              const isDisabled = date && _isPastDate(date);
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.calendarDayCell,
+                    isSelected && styles.calendarDayCellSelected,
+                    isDisabled && styles.calendarDayCellDisabled,
+                  ]}
+                  onPress={() => {
+                    if (date && !isDisabled) {
+                      handleStartDateChange(date);
+                    }
+                  }}
+                  disabled={isDisabled}
+                >
+                  {date && (
+                    <Text style={[
+                      styles.calendarDayText,
+                      isSelected && styles.calendarDayTextSelected,
+                      isDisabled && styles.calendarDayTextDisabled,
+                    ]}>
+                      {date.getDate()}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity style={styles.datePickerCloseBtn} onPress={() => setShowStartDateModal(false)}>
+            <Text style={styles.datePickerCloseBtnText}>Đóng</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* End Date Picker Modal */}
+      <Modal visible={showEndDateModal} transparent animationType="fade" onRequestClose={() => setShowEndDateModal(false)}>
+        <TouchableOpacity style={styles.dateModalOverlay} activeOpacity={1} onPress={() => setShowEndDateModal(false)} />
+        <View style={styles.dateModalContent}>
+          <View style={styles.calendarHeader}>
+            <TouchableOpacity
+              style={styles.monthNavButton}
+              onPress={() => setSelectedEndDate(new Date(selectedEndDate.getFullYear(), selectedEndDate.getMonth() - 1))}
+            >
+              <Text style={styles.monthNavButtonText}>←</Text>
+            </TouchableOpacity>
+            <Text style={styles.monthYearText}>{_getMonthYearDisplay(selectedEndDate)}</Text>
+            <TouchableOpacity
+              style={styles.monthNavButton}
+              onPress={() => setSelectedEndDate(new Date(selectedEndDate.getFullYear(), selectedEndDate.getMonth() + 1))}
+            >
+              <Text style={styles.monthNavButtonText}>→</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.calendarDaysHeader}>
+            {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((day) => (
+              <Text key={day} style={styles.dayNameText}>{day}</Text>
+            ))}
+          </View>
+
+          <View style={styles.calendarGrid}>
+            {_getCalendarDaysForMonth(selectedEndDate).map((date, index) => {
+              const isSelected = date && selectedEndDate.toDateString() === date.toDateString();
+              const isDisabled = date && _isPastDate(date);
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.calendarDayCell,
+                    isSelected && styles.calendarDayCellSelected,
+                    isDisabled && styles.calendarDayCellDisabled,
+                  ]}
+                  onPress={() => {
+                    if (date && !isDisabled) {
+                      handleEndDateChange(date);
+                    }
+                  }}
+                  disabled={isDisabled}
+                >
+                  {date && (
+                    <Text style={[
+                      styles.calendarDayText,
+                      isSelected && styles.calendarDayTextSelected,
+                      isDisabled && styles.calendarDayTextDisabled,
+                    ]}>
+                      {date.getDate()}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity style={styles.datePickerCloseBtn} onPress={() => setShowEndDateModal(false)}>
+            <Text style={styles.datePickerCloseBtnText}>Đóng</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backText}>←</Text>
@@ -297,26 +487,42 @@ export default function AddRecurringScreen({ navigation, route }) {
           </Field>
 
           <Field label="Ngày bắt đầu" required>
-            <TextInput
-              style={[styles.input, isEdit && styles.inputDisabled]}
-              placeholder="DD/MM/YYYY"
-              value={startDate}
-              onChangeText={isEdit ? undefined : setStartDate}
-              keyboardType="numeric"
-              maxLength={10}
-              editable={!isEdit}
-            />
+            <View style={styles.dateInputContainer}>
+              <TextInput
+                style={[styles.dateInput, isEdit && styles.inputDisabled]}
+                placeholder="DD/MM/YYYY"
+                value={startDate}
+                editable={!isEdit}
+                maxLength={10}
+                keyboardType="numeric"
+              />
+              <TouchableOpacity
+                style={styles.datePickerBtn}
+                onPress={() => !isEdit && setShowStartDateModal(true)}
+                disabled={isEdit}
+              >
+                <Text style={styles.datePickerBtnText}>📅</Text>
+              </TouchableOpacity>
+            </View>
           </Field>
 
           <Field label="Ngày kết thúc (tuỳ chọn)">
-            <TextInput
-              style={styles.input}
-              placeholder="DD/MM/YYYY — để trống nếu không có hạn"
-              value={endDate}
-              onChangeText={setEndDate}
-              keyboardType="numeric"
-              maxLength={10}
-            />
+            <View style={styles.dateInputContainer}>
+              <TextInput
+                style={styles.dateInput}
+                placeholder="DD/MM/YYYY — để trống nếu không có hạn"
+                value={endDate}
+                onChangeText={setEndDate}
+                maxLength={10}
+                keyboardType="numeric"
+              />
+              <TouchableOpacity
+                style={styles.datePickerBtn}
+                onPress={() => setShowEndDateModal(true)}
+              >
+                <Text style={styles.datePickerBtnText}>📅</Text>
+              </TouchableOpacity>
+            </View>
           </Field>
         </Section>
 
@@ -341,6 +547,7 @@ export default function AddRecurringScreen({ navigation, route }) {
         </TouchableOpacity>
 
       </ScrollView>
+      <Footer />
     </View>
   );
 }
@@ -397,4 +604,125 @@ const styles = StyleSheet.create({
     backgroundColor: '#075c09', borderRadius: 12, paddingVertical: 14, alignItems: 'center',
   },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  // Date Picker Styles
+  dateInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#fafafa',
+  },
+  dateInput: {
+    flex: 1,
+    height: 44,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: '#333',
+  },
+  datePickerBtn: {
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 44,
+  },
+  datePickerBtnText: {
+    fontSize: 20,
+  },
+  dateModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  dateModalContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  monthNavButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    backgroundColor: '#075c09',
+    borderRadius: 6,
+  },
+  monthNavButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  monthYearText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#075c09',
+  },
+  calendarDaysHeader: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    paddingHorizontal: 5,
+  },
+  dayNameText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#075c09',
+    paddingVertical: 8,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 20,
+  },
+  calendarDayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    marginVertical: 5,
+  },
+  calendarDayCellSelected: {
+    backgroundColor: '#075c09',
+  },
+  calendarDayCellDisabled: {
+    opacity: 0.4,
+  },
+  calendarDayText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  calendarDayTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  calendarDayTextDisabled: {
+    color: '#999',
+  },
+  datePickerCloseBtn: {
+    marginTop: 15,
+    backgroundColor: '#075c09',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  datePickerCloseBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

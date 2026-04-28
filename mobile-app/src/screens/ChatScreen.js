@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import Footer from '../components/Footer';
 import { sendChatMessage, parseTransaction, parseSavingsAction } from '../api/chatApi';
 import { useChatContext } from '../context/ChatContext';
 import TransactionConfirmCard from '../components/TransactionConfirmCard';
@@ -278,6 +279,7 @@ export default function ChatScreen({ navigation }) {
           <Text style={styles.sendIcon}>➤</Text>
         </TouchableOpacity>
       </View>
+      <Footer />
     </KeyboardAvoidingView>
   );
 }

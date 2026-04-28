@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Modal, Image, Alert, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import Footer from '../components/Footer';
 import { listCategories } from '../api/categoriesApi';
 import { listAccounts } from '../api/accountsApi';
 import { createIncome, createExpense } from '../api/transactionsApi';
@@ -322,6 +323,7 @@ export default function AddTransactionScreen({ navigation }) {
             : <Text style={styles.addButtonText}>Thêm giao dịch</Text>}
         </TouchableOpacity>
       </ScrollView>
+      <Footer />
 
       {/* Date Picker Modal */}
       <Modal visible={showDatePicker} transparent={true} animationType="fade">

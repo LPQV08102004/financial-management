@@ -8,6 +8,12 @@ import { createGoal, updateGoal, depositToGoal, withdrawFromGoal, getGoal } from
 import { listAccounts } from '../api/accountsApi';
 
 const _fmtVND = (n) => Number(n).toLocaleString('vi-VN');
+const _formatMoneyInput = (str) => {
+  if (!str) return '';
+  const cleaned = str.replace(/\D/g, '');
+  if (!cleaned) return '';
+  return Number(cleaned).toLocaleString('vi-VN');
+};
 const _fmtDate = (dateStr) => {
   if (!dateStr) return '';
   const [y, m, d] = String(dateStr).split('-');
@@ -24,6 +30,50 @@ const _parseDate = (str) => {
   const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   if (isNaN(Date.parse(iso))) return null;
   return iso;
+};
+
+// Format date input DDMMYYYY → DD/MM/YYYY
+const _formatDateInput = (str) => {
+  if (!str) return '';
+  const cleaned = str.replace(/\D/g, '');
+  if (cleaned.length === 0) return '';
+  if (cleaned.length <= 2) return cleaned;
+  if (cleaned.length <= 4) return `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+  return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
+};
+
+// Get calendar days for a specific month
+const _getCalendarDaysForMonth = (date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startingDayOfWeek = firstDay.getDay();
+  const days = [];
+  for (let i = 0; i < startingDayOfWeek; i++) {
+    days.push(null);
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push(new Date(year, month, i));
+  }
+  return days;
+};
+
+// Check if date is in the past
+const _isPastDate = (date) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  return checkDate < today;
+};
+
+// Get month and year display
+const _getMonthYearDisplay = (date) => {
+  const months = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+                  'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+  return `${months[date.getMonth()]} ${date.getFullYear()}`;
 };
 
 function Section({ title, children }) {
@@ -229,6 +279,10 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
   const [loading, setLoading] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [currentGoal, setCurrentGoal] = useState(existingGoal);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [selectedDeadlineDate, setSelectedDeadlineDate] = useState(
+    existingGoal && existingGoal.deadline ? new Date(existingGoal.deadline) : new Date()
+  );
 
   // Live-compute monthly_needed when target/deadline change
   const [monthlyPreview, setMonthlyPreview] = useState(null);
@@ -280,8 +334,79 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
     }
   };
 
+  const handleDateChange = (date) => {
+    setSelectedDeadlineDate(date);
+    setDeadline(_fmtDate(date.toISOString().split('T')[0]));
+    setShowDateModal(false);
+  };
+
   return (
     <View style={styles.container}>
+      {/* Date Picker Modal */}
+      <Modal visible={showDateModal} transparent animationType="fade" onRequestClose={() => setShowDateModal(false)}>
+        <TouchableOpacity style={styles.dateModalOverlay} activeOpacity={1} onPress={() => setShowDateModal(false)} />
+        <View style={styles.dateModalContent}>
+          <View style={styles.calendarHeader}>
+            <TouchableOpacity
+              style={styles.monthNavButton}
+              onPress={() => setSelectedDeadlineDate(new Date(selectedDeadlineDate.getFullYear(), selectedDeadlineDate.getMonth() - 1))}
+            >
+              <Text style={styles.monthNavButtonText}>←</Text>
+            </TouchableOpacity>
+            <Text style={styles.monthYearText}>{_getMonthYearDisplay(selectedDeadlineDate)}</Text>
+            <TouchableOpacity
+              style={styles.monthNavButton}
+              onPress={() => setSelectedDeadlineDate(new Date(selectedDeadlineDate.getFullYear(), selectedDeadlineDate.getMonth() + 1))}
+            >
+              <Text style={styles.monthNavButtonText}>→</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.calendarDaysHeader}>
+            {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((day) => (
+              <Text key={day} style={styles.dayNameText}>{day}</Text>
+            ))}
+          </View>
+
+          <View style={styles.calendarGrid}>
+            {_getCalendarDaysForMonth(selectedDeadlineDate).map((date, index) => {
+              const isSelected = date && selectedDeadlineDate.toDateString() === date.toDateString();
+              const isDisabled = date && _isPastDate(date);
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.calendarDayCell,
+                    isSelected && styles.calendarDayCellSelected,
+                    isDisabled && styles.calendarDayCellDisabled,
+                  ]}
+                  onPress={() => {
+                    if (date && !isDisabled) {
+                      handleDateChange(date);
+                    }
+                  }}
+                  disabled={isDisabled}
+                >
+                  {date && (
+                    <Text style={[
+                      styles.calendarDayText,
+                      isSelected && styles.calendarDayTextSelected,
+                      isDisabled && styles.calendarDayTextDisabled,
+                    ]}>
+                      {date.getDate()}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity style={styles.datePickerCloseBtn} onPress={() => setShowDateModal(false)}>
+            <Text style={styles.datePickerCloseBtnText}>Đóng</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -333,19 +458,27 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
               placeholder="VD: 30000000"
               keyboardType="numeric"
               value={targetAmount}
-              onChangeText={setTargetAmount}
+              onChangeText={(val) => setTargetAmount(_formatMoneyInput(val))}
             />
           </Field>
 
           <Field label="Ngày mục tiêu *">
-            <TextInput
-              style={styles.input}
-              placeholder="DD/MM/YYYY"
-              value={deadline}
-              onChangeText={setDeadline}
-              maxLength={10}
-              keyboardType="numeric"
-            />
+            <View style={styles.dateInputContainer}>
+              <TextInput
+                style={styles.dateInput}
+                placeholder="Nhập: DDMMYYYY"
+                value={deadline}
+                onChangeText={(val) => setDeadline(_formatDateInput(val))}
+                maxLength={10}
+                keyboardType="numeric"
+              />
+              <TouchableOpacity
+                style={styles.datePickerBtn}
+                onPress={() => setShowDateModal(true)}
+              >
+                <Text style={styles.datePickerBtnText}>📅</Text>
+              </TouchableOpacity>
+            </View>
           </Field>
 
           <Field label="Ghi chú">
@@ -495,4 +628,125 @@ const styles = StyleSheet.create({
   },
   submitBtnRed: { backgroundColor: '#CC3300' },
   submitBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+
+  // Date Picker Styles
+  dateInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  dateInput: {
+    flex: 1,
+    height: 48,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    color: '#333',
+  },
+  datePickerBtn: {
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 48,
+  },
+  datePickerBtnText: {
+    fontSize: 22,
+  },
+  dateModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  dateModalContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '70%',
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+  },
+  calendarHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  monthNavButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    backgroundColor: '#075c09',
+    borderRadius: 6,
+  },
+  monthNavButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  monthYearText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#075c09',
+  },
+  calendarDaysHeader: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    paddingHorizontal: 5,
+  },
+  dayNameText: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#075c09',
+    paddingVertical: 8,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 20,
+  },
+  calendarDayCell: {
+    width: '14.28%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    marginVertical: 5,
+  },
+  calendarDayCellSelected: {
+    backgroundColor: '#075c09',
+  },
+  calendarDayCellDisabled: {
+    opacity: 0.4,
+  },
+  calendarDayText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+  },
+  calendarDayTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  calendarDayTextDisabled: {
+    color: '#999',
+  },
+  datePickerCloseBtn: {
+    marginTop: 15,
+    backgroundColor: '#075c09',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  datePickerCloseBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

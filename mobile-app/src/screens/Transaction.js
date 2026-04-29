@@ -275,7 +275,7 @@ export default function Transaction({ navigation }) {
 
   return (
     <View style={styles.screenContainer}>
-      <ScrollView style={styles.container} scrollEnabled keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerMenu} onPress={() => setSidebarOpen(true)}>
@@ -557,6 +557,7 @@ export default function Transaction({ navigation }) {
 const styles = StyleSheet.create({
   screenContainer: { flex: 1 },
   container: { flex: 1, backgroundColor: '#f8f9fa' },
+  scrollContent: { paddingBottom: 40 },
 
   // Header
   header: {

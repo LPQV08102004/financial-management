@@ -119,7 +119,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.screenContainer}>
-      <ScrollView style={styles.container} scrollEnabled={true}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerMenu} onPress={() => setSidebarOpen(true)}>
             <View style={styles.hamburgerLine}></View>
@@ -249,6 +249,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   screenContainer: { flex: 1, position: 'relative' },
   container: { flex: 1, backgroundColor: '#f8f9fa' },
+  scrollContent: { paddingBottom: 40 },
   header: { backgroundColor: '#075c09', padding: 20, paddingTop: 30, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
   headerMenu: { paddingHorizontal: 10, paddingVertical: 10 },
   hamburgerLine: { width: 24, height: 3, backgroundColor: '#fff', marginVertical: 4, marginTop: 3, borderRadius: 2 },

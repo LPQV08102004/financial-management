@@ -18,6 +18,7 @@ import AddSavingsGoalScreen from './src/screens/AddSavingsGoalScreen';
 import RecurringScreen from './src/screens/RecurringScreen';
 import AddRecurringScreen from './src/screens/AddRecurringScreen';
 import ChatScreen from './src/screens/ChatScreen';
+import AddCategories from './src/screens/AddCategories';
 import LoginScreen from './src/screens/LoginScreen';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ChatProvider } from './src/context/ChatContext';
@@ -53,6 +54,7 @@ function RootNavigator() {
             <Stack.Screen name="Transaction" component={Transaction} />
             <Stack.Screen name="Chart" component={Chart} />
             <Stack.Screen name="Categories" component={CategoriesScreen} />
+            <Stack.Screen name="AddCategories" component={AddCategories} />
             <Stack.Screen name="Notification" component={Notification} />
             <Stack.Screen name="AddNotification" component={AddNotification} />
             <Stack.Screen name="EditNotification" component={EditNotification} />

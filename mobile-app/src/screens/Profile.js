@@ -63,7 +63,7 @@ export default function Profile({ navigation }) {
 
   return (
     <View style={styles.screenContainer}>
-      <ScrollView style={styles.container} scrollEnabled={true}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerMenu} onPress={() => navigation.goBack()}>
@@ -190,6 +190,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF8F0',
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   header: {
     backgroundColor: '#075c09',

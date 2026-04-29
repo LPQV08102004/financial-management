@@ -174,7 +174,7 @@ export default function SavingsGoalsScreen({ navigation }) {
         <FlatList
           data={filtered}
           keyExtractor={(item) => String(item.id)}
-          contentContainerStyle={filtered.length === 0 ? styles.emptyContainer : styles.listContent}
+          contentContainerStyle={filtered.length === 0 ? [styles.emptyContainer, styles.flatListPadding] : [styles.listContent, styles.flatListPadding]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchGoals(true); }} />
           }
@@ -248,6 +248,7 @@ const styles = StyleSheet.create({
   tabTextActive: { color: '#075c09', fontWeight: '700' },
 
   listContent: { padding: 12 },
+  flatListPadding: { paddingBottom: 40 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyBox: { alignItems: 'center', marginTop: 60 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },

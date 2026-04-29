@@ -289,7 +289,7 @@ export default function Chart({ navigation }) {
 
   return (
     <View style={styles.screenContainer}>
-      <ScrollView style={styles.container} scrollEnabled={true}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerMenu} onPress={() => setSidebarOpen(true)}>
@@ -398,6 +398,7 @@ export default function Chart({ navigation }) {
 const styles = StyleSheet.create({
   screenContainer: { flex: 1, position: 'relative' },
   container: { flex: 1, backgroundColor: '#f8f9fa' },
+  scrollContent: { paddingBottom: 40 },
   header: { 
     backgroundColor: '#075c09', 
     padding: 20, 

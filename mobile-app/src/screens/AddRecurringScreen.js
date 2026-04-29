@@ -180,6 +180,21 @@ export default function AddRecurringScreen({ navigation, route }) {
     } catch (_) {}
   };
 
+  // Format amount with thousand separators (Vietnamese locale)
+  const handleAmountChange = (text) => {
+    // Remove all non-numeric characters
+    const numericOnly = text.replace(/\D/g, '');
+    
+    if (numericOnly === '') {
+      setAmount('');
+      return;
+    }
+    
+    // Format with thousand separators using Vietnamese locale
+    const formatted = Number(numericOnly).toLocaleString('vi-VN');
+    setAmount(formatted);
+  };
+
   const validate = () => {
     if (!name.trim()) { Alert.alert('Lỗi', 'Vui lòng nhập tên giao dịch'); return null; }
     const rawAmount = parseFloat(amount.replace(/\./g, '').replace(',', '.'));
@@ -424,7 +439,7 @@ export default function AddRecurringScreen({ navigation, route }) {
               placeholder="VD: 3000000"
               keyboardType="numeric"
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={handleAmountChange}
             />
           </Field>
         </Section>

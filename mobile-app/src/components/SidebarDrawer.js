@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { listAccounts } from '../api/accountsApi';
 
 export default function SidebarDrawer({ isOpen, onClose, navigation }) {
   const { state } = useAuth();
   const user = state.user;
   const displayName = user?.full_name || user?.fullname || user?.name || 'Người dùng';
   const sidebarAnimation = useRef(new Animated.Value(-240)).current;
+  const [totalBalance, setTotalBalance] = useState(null);
 
   useEffect(() => {
     Animated.timing(sidebarAnimation, {
@@ -14,6 +16,14 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
       duration: 300,
       useNativeDriver: true,
     }).start();
+    if (isOpen) {
+      listAccounts()
+        .then((accounts) => {
+          const total = (accounts || []).reduce((sum, acc) => sum + parseFloat(acc.current_balance || 0), 0);
+          setTotalBalance(total);
+        })
+        .catch(() => setTotalBalance(null));
+    }
   }, [isOpen]);
 
   return (
@@ -48,7 +58,11 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
             </View>
             <View style={styles.userInfoContainer} pointerEvents="none">
               <Text style={styles.userName}>{displayName}</Text>
-              <Text style={styles.userBalance}>Số dư: 5,000,000 đ</Text>
+              <Text style={styles.userBalance}>
+                {totalBalance === null
+                  ? 'Đang tải...'
+                  : `Số dư: ${totalBalance.toLocaleString('vi-VN')} đ`}
+              </Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity 

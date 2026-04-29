@@ -12,11 +12,11 @@ _DEFAULT_CATEGORIES = [
         "sort_order": 0,
         "type": CategoryType.expense,
         "items": [
-            {"name": "Ăn uống",          "icon": "🍔", "color": "#FF6B6B"},
-            {"name": "Nhà ở",             "icon": "🏠", "color": "#4ECDC4"},
-            {"name": "Di chuyển",         "icon": "🚗", "color": "#45B7D1"},
-            {"name": "Sức khỏe",          "icon": "🏥", "color": "#96CEB4"},
-            {"name": "Mua sắm",           "icon": "🛒", "color": "#FFEAA7"},
+            {"name": "Ăn uống",          "icon": "fast-food",      "color": "#FF6B6B"},
+            {"name": "Nhà ở",             "icon": "home",            "color": "#4ECDC4"},
+            {"name": "Di chuyển",         "icon": "car",             "color": "#45B7D1"},
+            {"name": "Sức khỏe",          "icon": "medical",         "color": "#96CEB4"},
+            {"name": "Mua sắm",           "icon": "cart",            "color": "#FFEAA7"},
         ],
     },
     {
@@ -24,11 +24,11 @@ _DEFAULT_CATEGORIES = [
         "sort_order": 1,
         "type": CategoryType.expense,
         "items": [
-            {"name": "Giải trí",          "icon": "🎬", "color": "#DDA0DD"},
-            {"name": "Cafe & Đồ uống",    "icon": "☕", "color": "#A0522D"},
-            {"name": "Giáo dục",          "icon": "📚", "color": "#6C5CE7"},
-            {"name": "Thể thao",          "icon": "⚽", "color": "#00B894"},
-            {"name": "Du lịch",           "icon": "✈️", "color": "#74B9FF"},
+            {"name": "Giải trí",          "icon": "film",            "color": "#DDA0DD"},
+            {"name": "Cafe & Đồ uống",    "icon": "cafe",            "color": "#A0522D"},
+            {"name": "Giáo dục",          "icon": "book",            "color": "#6C5CE7"},
+            {"name": "Thể thao",          "icon": "football",        "color": "#00B894"},
+            {"name": "Du lịch",           "icon": "airplane",        "color": "#74B9FF"},
         ],
     },
     {
@@ -36,9 +36,9 @@ _DEFAULT_CATEGORIES = [
         "sort_order": 2,
         "type": CategoryType.expense,
         "items": [
-            {"name": "Điện & Nước",           "icon": "💡", "color": "#FD79A8"},
-            {"name": "Internet & Điện thoại", "icon": "📱", "color": "#55EFC4"},
-            {"name": "Bảo hiểm",              "icon": "🛡️", "color": "#FDCB6E"},
+            {"name": "Điện & Nước",           "icon": "bulb",            "color": "#FD79A8"},
+            {"name": "Internet & Điện thoại", "icon": "phone-portrait",  "color": "#55EFC4"},
+            {"name": "Bảo hiểm",              "icon": "shield",          "color": "#FDCB6E"},
         ],
     },
     {
@@ -46,7 +46,7 @@ _DEFAULT_CATEGORIES = [
         "sort_order": 3,
         "type": CategoryType.expense,
         "items": [
-            {"name": "Khác", "icon": "📌", "color": "#B2BEC3"},
+            {"name": "Khác", "icon": "ellipsis-horizontal", "color": "#B2BEC3"},
         ],
     },
     {
@@ -54,12 +54,12 @@ _DEFAULT_CATEGORIES = [
         "sort_order": 4,
         "type": CategoryType.income,
         "items": [
-            {"name": "Lương",         "icon": "💼", "color": "#00B894"},
-            {"name": "Thưởng",        "icon": "🏆", "color": "#FDCB6E"},
-            {"name": "Quà tặng",      "icon": "🎁", "color": "#E17055"},
-            {"name": "Đầu tư",        "icon": "📈", "color": "#6C5CE7"},
-            {"name": "Thu nhập phụ",  "icon": "💰", "color": "#00CEC9"},
-            {"name": "Khác",          "icon": "📌", "color": "#B2BEC3"},
+            {"name": "Lương",         "icon": "briefcase",       "color": "#00B894"},
+            {"name": "Thưởng",        "icon": "trophy",          "color": "#FDCB6E"},
+            {"name": "Quà tặng",      "icon": "gift",            "color": "#E17055"},
+            {"name": "Đầu tư",        "icon": "trending-up",     "color": "#6C5CE7"},
+            {"name": "Thu nhập phụ",  "icon": "cash",            "color": "#00CEC9"},
+            {"name": "Khác",          "icon": "ellipsis-horizontal", "color": "#B2BEC3"},
         ],
     },
 ]
@@ -159,16 +159,16 @@ def list_categories(
 
 
 def update_category(db: Session, cat_id: int, user_id: int, data: dict) -> Category:
-    """Only color, icon, and group_id are mutable. Name and type are immutable."""
+    """Name, color, icon, and group_id are mutable. Type is immutable after creation."""
     cat = db.query(Category).filter(Category.id == cat_id, Category.user_id == user_id).first()
     if not cat:
         raise NotFoundError("Category not found")
     if not cat.is_active:
         raise BadRequestError("Cannot update an inactive category")
-    if "name" in data or "type" in data:
-        raise BadRequestError("Category name and type are immutable after creation")
+    if "type" in data:
+        raise BadRequestError("Category type is immutable after creation")
 
-    allowed = {"color", "icon", "group_id"}
+    allowed = {"name", "color", "icon", "group_id"}
     for k, v in data.items():
         if k in allowed:
             if k == "group_id" and v is not None:

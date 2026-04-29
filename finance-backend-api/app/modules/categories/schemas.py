@@ -33,7 +33,8 @@ class CategoryCreate(BaseModel):
 
 
 class CategoryUpdate(BaseModel):
-    """Only visual/grouping attributes are mutable. Name and type are immutable per YNAB rules."""
+    """Name, color, icon, and group_id are mutable. Type is immutable after creation."""
+    name: Optional[str] = None
     group_id: Optional[int] = None
     color: Optional[str] = None
     icon: Optional[str] = None

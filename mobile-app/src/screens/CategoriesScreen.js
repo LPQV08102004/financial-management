@@ -16,7 +16,6 @@ const PRESET_COLORS = [
   '#6A4C93', '#F72585', '#4CC9F0', '#7FB069', '#B5838D',
 ];
 
-// Ionicons names grouped by theme
 const ICON_LIST = [
   // Ăn uống
   'fast-food', 'cafe', 'restaurant', 'pizza', 'nutrition', 'beer', 'ice-cream', 'wine',
@@ -49,7 +48,6 @@ export default function CategoriesScreen({ navigation }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
 
-<<<<<<< Updated upstream
   const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
@@ -155,41 +153,6 @@ export default function CategoriesScreen({ navigation }) {
       </TouchableOpacity>
     );
   };
-=======
-  const categories = activeTab === 'expense' ? expenseCategories : incomeCategories;
-  const categoriesWithAdd = [...categories, { id: 'add', name: 'Tạo', isAdd: true }];
-
-  const renderCategoryItem = ({ item }) => {
-    if (item.isAdd) {
-      return (
-        <TouchableOpacity 
-          style={[styles.categoryCard, { backgroundColor: '#888888' }]}
-          onPress={() => navigation.navigate('AddCategories')}
-        >
-          <Image source={require('../../assets/plus.png')} style={styles.categoryIcon} />
-          <Text style={[styles.categoryName, { color: '#fff' }]}>Tạo</Text>
-        </TouchableOpacity>
-      );
-    }
-    
-    return (
-      <TouchableOpacity style={[styles.categoryCard, { backgroundColor: item.backgroundColor }]}>
-        <Image source={item.icon} style={styles.categoryIcon} />
-        <Text style={styles.categoryName}>{item.name}</Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderAddCategoryButton = () => (
-    <TouchableOpacity 
-      style={[styles.categoryCard, { backgroundColor: '#888888' }]}
-      onPress={() => navigation.navigate('AddCategories')}
-    >
-      <Image source={require('../../assets/plus.png')} style={styles.categoryIcon} />
-      <Text style={[styles.categoryName, { color: '#fff' }]}>Tạo</Text>
-    </TouchableOpacity>
-  );
->>>>>>> Stashed changes
 
   return (
     <View style={styles.screen}>
@@ -199,7 +162,6 @@ export default function CategoriesScreen({ navigation }) {
         onMenuPress={() => setSidebarOpen(true)}
         onRightPress={() => navigation.navigate('Transaction')}
       />
-<<<<<<< Updated upstream
 
       <View style={styles.tabBar}>
         {[['expense', 'Chi phí'], ['income', 'Thu nhập']].map(([key, label]) => (
@@ -226,29 +188,6 @@ export default function CategoriesScreen({ navigation }) {
         />
       )}
 
-=======
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
-        <View style={styles.tabContainer}>
-          <TouchableOpacity style={[styles.tab, activeTab === 'expense' && styles.tabActive]} onPress={() => setActiveTab('expense')}>
-            <Text style={[styles.tabText, activeTab === 'expense' && styles.tabTextActive]}>Chi phí</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.tab, activeTab === 'income' && styles.tabActive]} onPress={() => setActiveTab('income')}>
-            <Text style={[styles.tabText, activeTab === 'income' && styles.tabTextActive]}>Thu nhập</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.contentContainer}>
-          <FlatList
-            data={categoriesWithAdd}
-            renderItem={renderCategoryItem}
-            keyExtractor={(item) => item.id}
-            numColumns={3}
-            columnWrapperStyle={styles.columnWrapper}
-            scrollEnabled={false}
-          />
-        </View>
-      </ScrollView>
->>>>>>> Stashed changes
       <Footer />
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} navigation={navigation} />
 
@@ -268,7 +207,6 @@ export default function CategoriesScreen({ navigation }) {
           style={styles.sheetWrap}
         >
           <View style={styles.sheet}>
-            {/* Sheet header */}
             <View style={styles.sheetHeader}>
               <Text style={styles.sheetTitle}>
                 {editTarget ? 'Sửa danh mục' : 'Thêm danh mục'}
@@ -384,11 +322,9 @@ export default function CategoriesScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-<<<<<<< Updated upstream
   screen: { flex: 1, backgroundColor: '#f8f9fa' },
   loader: { marginTop: 48 },
 
-  // ── Tabs ──────────────────────────────────────────────────────────────────
   tabBar: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -402,33 +338,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
-=======
-  screenContainer: { flex: 1, backgroundColor: '#f8f9fa' },
-  content: { flex: 1, backgroundColor: '#f8f9fa' },
-  scrollContent: { paddingBottom: 40 },
-  tabContainer: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#ddd' },
-  tab: { flex: 1, paddingVertical: 15, paddingHorizontal: 20, alignItems: 'center', borderBottomWidth: 3, borderBottomColor: 'transparent' },
->>>>>>> Stashed changes
   tabActive: { borderBottomColor: '#075c09' },
   tabText: { fontSize: 15, color: '#999', fontWeight: '600' },
   tabTextActive: { color: '#075c09' },
 
-  // ── Grid ──────────────────────────────────────────────────────────────────
   listContent: { padding: 16 },
   row: { justifyContent: 'flex-start', marginBottom: 20 },
   categoryCard: {
-<<<<<<< Updated upstream
     width: 100,
     height: 100,
     borderRadius: 50,
     marginHorizontal: 8,
-=======
-    width: 85,
-    height: 85,
-    borderRadius: 42.5,
-    padding: 8,
-    marginHorizontal: 10,
->>>>>>> Stashed changes
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -437,16 +357,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-<<<<<<< Updated upstream
-  catIcon: { marginBottom: 4 },
   catName: { fontSize: 11, fontWeight: '600', color: '#fff', textAlign: 'center', paddingHorizontal: 6 },
 
-  // Add button card
   addCard: { backgroundColor: '#e8f5e9', borderWidth: 2, borderColor: '#075c09', borderStyle: 'dashed' },
   addPlus: { fontSize: 28, color: '#075c09', fontWeight: '300' },
   addLabel: { fontSize: 12, color: '#075c09', fontWeight: '600' },
 
-  // ── Modal / Bottom sheet ──────────────────────────────────────────────────
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
   sheetWrap: { justifyContent: 'flex-end' },
   sheet: {
@@ -465,23 +381,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     marginBottom: 8,
-=======
-  categoryIcon: {
-    width: 38,
-    height: 38,
-    marginBottom: 4,
-  },
-  categoryName: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#fff',
-    textAlign: 'center',
->>>>>>> Stashed changes
   },
   sheetTitle: { fontSize: 18, fontWeight: '700', color: '#222' },
   deleteLink: { fontSize: 15, color: '#e74c3c', fontWeight: '600' },
 
-  // Preview
   previewRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
   previewCircle: {
     width: 64,
@@ -491,10 +394,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
-
   previewName: { fontSize: 18, fontWeight: '700', color: '#333', flex: 1 },
 
-  // Type selector
   typeRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
   typeChip: {
     flex: 1,
@@ -508,7 +409,6 @@ const styles = StyleSheet.create({
   typeChipText: { fontSize: 14, color: '#999', fontWeight: '600' },
   typeChipTextActive: { color: '#075c09' },
 
-  // Name input
   fieldLabel: { fontSize: 13, fontWeight: '700', color: '#555', marginBottom: 8, marginTop: 4 },
   nameInput: {
     borderWidth: 1.5,
@@ -521,12 +421,10 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
 
-  // Color picker
   colorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 },
   colorDot: { width: 34, height: 34, borderRadius: 17 },
   colorDotActive: { borderWidth: 3, borderColor: '#333' },
 
-  // Ionicons picker grid
   iconGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
   iconCell: {
     width: 48,
@@ -538,7 +436,6 @@ const styles = StyleSheet.create({
   },
   iconCellActive: { backgroundColor: '#e8f5e9', borderWidth: 2, borderColor: '#075c09' },
 
-  // Action buttons
   actionRow: { flexDirection: 'row', gap: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#eee' },
   cancelBtn: {
     flex: 1,

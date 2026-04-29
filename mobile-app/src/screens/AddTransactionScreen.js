@@ -212,7 +212,7 @@ export default function AddTransactionScreen({ navigation }) {
       </View>
 
       {/* Form */}
-      <ScrollView style={styles.form}>
+      <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Số tiền</Text>
           <View style={styles.amountInputContainer}>
@@ -501,6 +501,9 @@ const styles = StyleSheet.create({
   },
   form: {
     padding: 20,
+  },
+  formContent: {
+    paddingBottom: 40,
   },
   inputGroup: {
     marginBottom: 20,

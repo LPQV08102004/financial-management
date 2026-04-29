@@ -48,7 +48,7 @@ export default function SignupScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.headerSection}>
@@ -185,6 +185,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF8F0',
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   content: {
     paddingHorizontal: 20,

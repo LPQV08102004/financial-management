@@ -49,6 +49,7 @@ export default function CategoriesScreen({ navigation }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
 
+<<<<<<< Updated upstream
   const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
@@ -154,6 +155,41 @@ export default function CategoriesScreen({ navigation }) {
       </TouchableOpacity>
     );
   };
+=======
+  const categories = activeTab === 'expense' ? expenseCategories : incomeCategories;
+  const categoriesWithAdd = [...categories, { id: 'add', name: 'Tạo', isAdd: true }];
+
+  const renderCategoryItem = ({ item }) => {
+    if (item.isAdd) {
+      return (
+        <TouchableOpacity 
+          style={[styles.categoryCard, { backgroundColor: '#888888' }]}
+          onPress={() => navigation.navigate('AddCategories')}
+        >
+          <Image source={require('../../assets/plus.png')} style={styles.categoryIcon} />
+          <Text style={[styles.categoryName, { color: '#fff' }]}>Tạo</Text>
+        </TouchableOpacity>
+      );
+    }
+    
+    return (
+      <TouchableOpacity style={[styles.categoryCard, { backgroundColor: item.backgroundColor }]}>
+        <Image source={item.icon} style={styles.categoryIcon} />
+        <Text style={styles.categoryName}>{item.name}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderAddCategoryButton = () => (
+    <TouchableOpacity 
+      style={[styles.categoryCard, { backgroundColor: '#888888' }]}
+      onPress={() => navigation.navigate('AddCategories')}
+    >
+      <Image source={require('../../assets/plus.png')} style={styles.categoryIcon} />
+      <Text style={[styles.categoryName, { color: '#fff' }]}>Tạo</Text>
+    </TouchableOpacity>
+  );
+>>>>>>> Stashed changes
 
   return (
     <View style={styles.screen}>
@@ -163,6 +199,7 @@ export default function CategoriesScreen({ navigation }) {
         onMenuPress={() => setSidebarOpen(true)}
         onRightPress={() => navigation.navigate('Transaction')}
       />
+<<<<<<< Updated upstream
 
       <View style={styles.tabBar}>
         {[['expense', 'Chi phí'], ['income', 'Thu nhập']].map(([key, label]) => (
@@ -189,6 +226,29 @@ export default function CategoriesScreen({ navigation }) {
         />
       )}
 
+=======
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity style={[styles.tab, activeTab === 'expense' && styles.tabActive]} onPress={() => setActiveTab('expense')}>
+            <Text style={[styles.tabText, activeTab === 'expense' && styles.tabTextActive]}>Chi phí</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.tab, activeTab === 'income' && styles.tabActive]} onPress={() => setActiveTab('income')}>
+            <Text style={[styles.tabText, activeTab === 'income' && styles.tabTextActive]}>Thu nhập</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.contentContainer}>
+          <FlatList
+            data={categoriesWithAdd}
+            renderItem={renderCategoryItem}
+            keyExtractor={(item) => item.id}
+            numColumns={3}
+            columnWrapperStyle={styles.columnWrapper}
+            scrollEnabled={false}
+          />
+        </View>
+      </ScrollView>
+>>>>>>> Stashed changes
       <Footer />
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} navigation={navigation} />
 
@@ -324,6 +384,7 @@ export default function CategoriesScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+<<<<<<< Updated upstream
   screen: { flex: 1, backgroundColor: '#f8f9fa' },
   loader: { marginTop: 48 },
 
@@ -341,6 +402,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
+=======
+  screenContainer: { flex: 1, backgroundColor: '#f8f9fa' },
+  content: { flex: 1, backgroundColor: '#f8f9fa' },
+  scrollContent: { paddingBottom: 40 },
+  tabContainer: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#ddd' },
+  tab: { flex: 1, paddingVertical: 15, paddingHorizontal: 20, alignItems: 'center', borderBottomWidth: 3, borderBottomColor: 'transparent' },
+>>>>>>> Stashed changes
   tabActive: { borderBottomColor: '#075c09' },
   tabText: { fontSize: 15, color: '#999', fontWeight: '600' },
   tabTextActive: { color: '#075c09' },
@@ -349,10 +417,18 @@ const styles = StyleSheet.create({
   listContent: { padding: 16 },
   row: { justifyContent: 'flex-start', marginBottom: 20 },
   categoryCard: {
+<<<<<<< Updated upstream
     width: 100,
     height: 100,
     borderRadius: 50,
     marginHorizontal: 8,
+=======
+    width: 85,
+    height: 85,
+    borderRadius: 42.5,
+    padding: 8,
+    marginHorizontal: 10,
+>>>>>>> Stashed changes
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -361,6 +437,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+<<<<<<< Updated upstream
   catIcon: { marginBottom: 4 },
   catName: { fontSize: 11, fontWeight: '600', color: '#fff', textAlign: 'center', paddingHorizontal: 6 },
 
@@ -388,6 +465,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     marginBottom: 8,
+=======
+  categoryIcon: {
+    width: 38,
+    height: 38,
+    marginBottom: 4,
+  },
+  categoryName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#fff',
+    textAlign: 'center',
+>>>>>>> Stashed changes
   },
   sheetTitle: { fontSize: 18, fontWeight: '700', color: '#222' },
   deleteLink: { fontSize: 15, color: '#e74c3c', fontWeight: '600' },

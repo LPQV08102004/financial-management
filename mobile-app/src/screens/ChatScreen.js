@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   backText: { color: '#fff', fontSize: 22 },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
 
-  listContent: { padding: 16, paddingBottom: 8 },
+  listContent: { padding: 16, paddingBottom: 40 },
   bubble: {
     maxWidth: '82%',
     borderRadius: 16,

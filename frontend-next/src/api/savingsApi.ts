@@ -80,9 +80,7 @@ export async function deleteGoal(goalId: string | number): Promise<void> {
 
 /** POST /savings-goals/:id/deposit — Nạp tiền vào mục tiêu */
 export async function depositToGoal(
-  goalId: string | number, 
-  payload: GoalTransactionPayload
-): Promise<SavingsGoal> {
+goalId: string | number, p0: number, payload: GoalTransactionPayload, isoDate: string): Promise<SavingsGoal> {
   const res = await fetch(`${API_BASE_URL}/savings-goals/${goalId}/deposit`, {
     method: 'POST',
     headers: await getAuthHeaders(),
@@ -95,9 +93,7 @@ export async function depositToGoal(
 
 /** POST /savings-goals/:id/withdraw — Rút tiền khỏi mục tiêu */
 export async function withdrawFromGoal(
-  goalId: string | number, 
-  payload: GoalTransactionPayload
-): Promise<SavingsGoal> {
+goalId: string | number, p0: number, payload: GoalTransactionPayload, isoDate: string): Promise<SavingsGoal> {
   const res = await fetch(`${API_BASE_URL}/savings-goals/${goalId}/withdraw`, {
     method: 'POST',
     headers: await getAuthHeaders(),

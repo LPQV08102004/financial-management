@@ -1,8 +1,7 @@
 // src/api/accountsApi.ts
 import Cookies from 'js-cookie'; // Bạn cần cài đặt: npm install js-cookie @types/js-cookie
+import { API_BASE_URL } from './config';
 import { Account, CreateAccountPayload } from '../types/account';
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const ACCESS_TOKEN_KEY = 'access_token';
 
 /**
@@ -25,7 +24,7 @@ async function getAuthHeaders(): Promise<HeadersInit> {
 
 /** GET /accounts — Lấy danh sách tài khoản */
 export async function listAccounts(): Promise<Account[]> {
-  const res = await fetch(`${BASE_URL}/accounts`, {
+  const res = await fetch(`${API_BASE_URL}/accounts`, {
     headers: await getAuthHeaders(),
   });
 
@@ -42,7 +41,7 @@ export async function listAccounts(): Promise<Account[]> {
  * POST /accounts — Tạo tài khoản mới
  */
 export async function createAccount(payload: CreateAccountPayload): Promise<Account> {
-  const res = await fetch(`${BASE_URL}/accounts`, {
+  const res = await fetch(`${API_BASE_URL}/accounts`, {
     method: 'POST',
     headers: await getAuthHeaders(),
     body: JSON.stringify(payload),

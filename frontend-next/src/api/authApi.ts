@@ -1,5 +1,6 @@
 // src/api/authApi.ts
 import Cookies from 'js-cookie';
+import { API_BASE_URL } from './config';
 import { 
   LoginPayload, 
   RegisterPayload, 
@@ -8,8 +9,6 @@ import {
   UserProfile,
   ChangePasswordPayload 
 } from '../types/auth';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 

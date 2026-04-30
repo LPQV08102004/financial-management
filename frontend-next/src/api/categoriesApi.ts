@@ -1,8 +1,7 @@
 // src/api/categoriesApi.ts
 import Cookies from 'js-cookie';
+import { API_BASE_URL } from './config';
 import { Category, CategoryPayload, CategoryType } from '../types/category';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const ACCESS_TOKEN_KEY = 'access_token';
 
 async function getAuthHeaders(): Promise<HeadersInit> {

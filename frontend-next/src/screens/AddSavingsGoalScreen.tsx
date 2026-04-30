@@ -1,0 +1,262 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import Footer from '../components/Footer';
+import { 
+  createGoal, 
+  updateGoal, 
+  depositToGoal, 
+  withdrawFromGoal, 
+  getGoal 
+} from '../api/savingsApi';
+import { listAccounts } from '../api/accountsApi';
+
+// Helper functions với TypeScript types
+const _fmtVND = (n: number | string) => Number(n).toLocaleString('vi-VN');
+
+const _fmtDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const [y, m, d] = String(dateStr).split('T')[0].split('-');
+  return `${d}/${m}/${y}`;
+};
+
+const _parseDate = (str: string) => {
+  if (!str) return null;
+  const parts = str.split('/');
+  if (parts.length !== 3) return null;
+  const [d, m, y] = parts;
+  const iso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  return isNaN(Date.parse(iso)) ? null : iso;
+};
+
+// Component con phụ trợ
+const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
+  <div className="bg-white rounded-xl p-4 mb-4 shadow-sm border border-gray-100">
+    <h3 className="text-xs font-bold text-[#075c09] uppercase tracking-widest mb-4">{title}</h3>
+    {children}
+  </div>
+);
+
+const Field = ({ label, children }: { label: string, children: React.ReactNode }) => (
+  <div className="mb-4">
+    <label className="block text-sm font-semibold text-gray-600 mb-1.5">{label}</label>
+    {children}
+  </div>
+);
+
+// --- Sub-component: Action Modal (Nạp/Rút tiền) ---
+function ActionModal({ visible, onClose, goal, onDone }: any) {
+  const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit');
+  const [amount, setAmount] = useState('');
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      listAccounts().then(data => {
+        const list = data || [];
+        setAccounts(list);
+        setSelectedAccount(list[0] ?? null);
+      });
+    }
+  }, [visible]);
+
+  if (!visible || !goal) return null;
+
+  const handleSubmit = async () => {
+    const num = parseFloat(amount.replace(/\./g, ''));
+    if (!num || !selectedAccount) return alert("Vui lòng nhập đủ thông tin");
+    
+    setSubmitting(true);
+    try {
+      const isoDate = new Date().toISOString();
+      if (mode === 'deposit') {
+        await depositToGoal(goal.id, num, selectedAccount.id, isoDate);
+      } else {
+        await withdrawFromGoal(goal.id, num, selectedAccount.id, isoDate);
+      }
+      onDone();
+      onClose();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white w-full max-w-md rounded-t-3xl p-6 animate-slide-up">
+        <h4 className="text-lg font-bold text-gray-800 mb-1">Cập nhật tích lũy</h4>
+        <p className="text-sm text-gray-500 mb-4">{goal.name}</p>
+
+        <div className="flex gap-3 mb-6">
+          <button 
+            onClick={() => setMode('deposit')}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${mode === 'deposit' ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]' : 'border-gray-100 text-gray-400'}`}
+          >Nạp tiền</button>
+          <button 
+            onClick={() => setMode('withdraw')}
+            className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${mode === 'withdraw' ? 'border-red-600 bg-red-50 text-red-600' : 'border-gray-100 text-gray-400'}`}
+          >Rút tiền</button>
+        </div>
+
+        <Field label="Số tiền (đ)">
+          <input 
+            type="text" 
+            value={amount} 
+            onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setAmount(val ? Number(val).toLocaleString('vi-VN') : '');
+            }}
+            className="w-full border-2 border-gray-100 rounded-xl p-3 focus:border-[#075c09] outline-none font-bold"
+          />
+        </Field>
+
+        <button 
+          onClick={handleSubmit}
+          disabled={submitting}
+          className={`w-full py-4 rounded-xl text-white font-bold shadow-lg active:scale-95 transition-all ${mode === 'deposit' ? 'bg-[#075c09]' : 'bg-red-600'}`}
+        >
+          {submitting ? "Đang xử lý..." : (mode === 'deposit' ? "Xác nhận nạp" : "Xác nhận rút")}
+        </button>
+        <button onClick={onClose} className="w-full py-3 text-gray-400 text-sm font-medium mt-2">Hủy bỏ</button>
+      </div>
+    </div>
+  );
+}
+
+// --- Main Screen ---
+export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: any }) {
+  const isEdit = !!existingGoal;
+  const [currentGoal, setCurrentGoal] = useState(existingGoal);
+  const [name, setName] = useState(existingGoal?.name ?? '');
+  const [targetAmount, setTargetAmount] = useState(existingGoal ? _fmtVND(existingGoal.target_amount) : '');
+  const [deadline, setDeadline] = useState(existingGoal ? _fmtDate(existingGoal.deadline) : '');
+  const [note, setNote] = useState(existingGoal?.note ?? '');
+  const [loading, setLoading] = useState(false);
+  const [actionModalVisible, setActionModalVisible] = useState(false);
+
+  const handleSave = async () => {
+    const raw = parseFloat(targetAmount.replace(/\./g, ''));
+    const isoDate = _parseDate(deadline);
+    if (!name || !raw || !isoDate) return alert("Vui lòng điền đủ các trường có dấu *");
+
+    setLoading(true);
+    try {
+      const payload = { name, target_amount: raw, deadline: isoDate, note };
+      if (isEdit) {
+        await updateGoal(currentGoal.id, payload);
+      } else {
+        await createGoal(payload);
+      }
+      window.history.back();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col bg-[#f8f9fa] relative font-sans text-gray-800">
+      {/* Header */}
+      <header className="bg-[#075c09] pt-12 pb-5 px-5 flex items-center justify-between text-white sticky top-0 z-40">
+        <button onClick={() => window.history.back()} className="text-2xl font-light">←</button>
+        <h1 className="text-lg font-bold tracking-tight">{isEdit ? 'Chỉnh sửa mục tiêu' : 'Tạo mục tiêu mới'}</h1>
+        <div className="w-6"></div>
+      </header>
+
+      <main className="flex-1 p-5 pb-28 space-y-5 overflow-y-auto">
+        {/* Progress Box (Chỉ hiện khi Edit) */}
+        {isEdit && currentGoal && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+            <div className="h-2.5 w-full bg-gray-100 rounded-full mb-3 overflow-hidden">
+              <div 
+                className="h-full bg-[#075c09] transition-all duration-500" 
+                style={{ width: `${Math.min(currentGoal.progress_pct, 100)}%` }}
+              />
+            </div>
+            <div className="flex justify-between items-end mb-5">
+              <span className="text-sm font-bold text-[#075c09]">{_fmtVND(currentGoal.saved_amount)} đ</span>
+              <span className="text-xs font-medium text-gray-400">{_fmtVND(currentGoal.target_amount)} đ</span>
+            </div>
+            <button 
+              onClick={() => setActionModalVisible(true)}
+              className="w-full py-3 bg-[#075c09]/10 text-[#075c09] rounded-xl font-bold text-sm active:bg-[#075c09]/20 transition-colors"
+            >
+              Nạp / Rút tiền tiết kiệm
+            </button>
+          </div>
+        )}
+
+        <Section title="Thông tin mục tiêu">
+          <Field label="Tên mục tiêu *">
+            <input 
+              type="text" value={name} onChange={(e) => setName(e.target.value)}
+              placeholder="VD: Mua MacBook, Du lịch..."
+              className="w-full border border-gray-200 rounded-xl p-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-[#075c09]/20 outline-none transition-all"
+            />
+          </Field>
+
+          <Field label="Số tiền cần đạt *">
+            <input 
+              type="text" value={targetAmount} 
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setTargetAmount(val ? Number(val).toLocaleString('vi-VN') : '');
+              }}
+              placeholder="VD: 30.000.000"
+              className="w-full border border-gray-200 rounded-xl p-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-[#075c09]/20 outline-none font-bold"
+            />
+          </Field>
+
+          <Field label="Ngày mục tiêu *">
+            <div className="relative group">
+              <input 
+                type="text" value={deadline} 
+                onChange={(e) => {
+                    let val = e.target.value.replace(/\D/g, '');
+                    if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
+                    if (val.length > 5) val = val.slice(0, 5) + '/' + val.slice(5, 9);
+                    setDeadline(val);
+                }}
+                placeholder="DD/MM/YYYY"
+                maxLength={10}
+                className="w-full border border-gray-200 rounded-xl p-3.5 bg-gray-50/50 focus:bg-white outline-none"
+              />
+              <span className="absolute right-4 top-3.5 text-xl grayscale group-focus-within:grayscale-0">📅</span>
+            </div>
+          </Field>
+        </Section>
+
+        <Section title="Ghi chú">
+          <textarea 
+            value={note} onChange={(e) => setNote(e.target.value)}
+            placeholder="Kế hoạch tiết kiệm của bạn..."
+            className="w-full border border-gray-200 rounded-xl p-3.5 bg-gray-50/50 h-28 resize-none outline-none focus:ring-2 focus:ring-[#075c09]/20"
+          />
+        </Section>
+
+        <button 
+          onClick={handleSave}
+          disabled={loading}
+          className="w-full bg-[#075c09] text-white py-4 rounded-2xl font-bold shadow-xl shadow-[#075c09]/20 active:scale-[0.98] transition-all disabled:bg-gray-300"
+        >
+          {loading ? "Đang lưu..." : (isEdit ? "Cập nhật mục tiêu" : "Bắt đầu tiết kiệm")}
+        </button>
+      </main>
+
+            <ActionModal 
+        visible={actionModalVisible} 
+        onClose={() => setActionModalVisible(false)}
+        goal={currentGoal}
+        onDone={async () => {
+          const updated = await getGoal(currentGoal.id);
+          setCurrentGoal(updated);
+        }}
+      />
+    </div>
+  );
+}

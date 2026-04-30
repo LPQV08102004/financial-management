@@ -1,13 +1,12 @@
 // src/api/analyticsApi.ts
 import Cookies from 'js-cookie';
+import { API_BASE_URL } from './config';
 import { 
   AnalyticsParams, 
   BalanceResponse, 
   CategoryStat, 
   OverTimeStat 
 } from '../types/analytics';
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const ACCESS_TOKEN_KEY = 'access_token';
 
 async function _headers(): Promise<HeadersInit> {
@@ -31,7 +30,7 @@ const _buildQuery = (params: AnalyticsParams): string =>
 export async function getBalance(params: AnalyticsParams = {}): Promise<BalanceResponse> {
   const query = _buildQuery(params);
   const res = await fetch(
-    `${BASE_URL}/analytics/dashboard/balance${query ? `?${query}` : ''}`,
+    `${API_BASE_URL}/analytics/dashboard/balance${query ? `?${query}` : ''}`,
     { headers: await _headers() }
   );
   if (!res.ok) throw new Error(`getBalance failed: ${res.status}`);
@@ -44,7 +43,7 @@ export async function getBalance(params: AnalyticsParams = {}): Promise<BalanceR
 export async function getStatsByCategory(params: AnalyticsParams = {}): Promise<CategoryStat[]> {
   const query = _buildQuery(params);
   const res = await fetch(
-    `${BASE_URL}/analytics/reports/by-category${query ? `?${query}` : ''}`,
+    `${API_BASE_URL}/analytics/reports/by-category${query ? `?${query}` : ''}`,
     { headers: await _headers() }
   );
   if (!res.ok) throw new Error(`getStatsByCategory failed: ${res.status}`);
@@ -57,7 +56,7 @@ export async function getStatsByCategory(params: AnalyticsParams = {}): Promise<
 export async function getOverTime(params: AnalyticsParams = {}): Promise<OverTimeStat[]> {
   const query = _buildQuery(params);
   const res = await fetch(
-    `${BASE_URL}/analytics/reports/over-time${query ? `?${query}` : ''}`,
+    `${API_BASE_URL}/analytics/reports/over-time${query ? `?${query}` : ''}`,
     { headers: await _headers() }
   );
   if (!res.ok) throw new Error(`getOverTime failed: ${res.status}`);

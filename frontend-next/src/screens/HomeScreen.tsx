@@ -3,9 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import SidebarDrawer from '../components/SidebarDrawer';
-import Header from '../components/Header';
 import HeaderIconButton from '../components/HeaderIconButton';
-import Footer from '../components/Footer';
 import DateTimeSelector from '../components/DateTimeSelector';
 import { getBalance, getStatsByCategory } from '../api/analyticsApi';
 import { listTransactions } from '../api/transactionApi';
@@ -74,7 +72,7 @@ export default function HomeScreen() {
   let pieOffset = 0;
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex flex-col relative pb-24">
+    <div className="bg-[#f8f9fa] flex flex-col relative">
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
       <div className="bg-[#075c09] p-6 pt-10 text-white rounded-b-[32px] shadow-lg">
@@ -183,8 +181,6 @@ export default function HomeScreen() {
           </div>
         ))}
       </div>
-
-      <Footer />
     </div>
   );
 }

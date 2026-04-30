@@ -1,13 +1,12 @@
 // src/api/chatApi.ts
 import Cookies from 'js-cookie';
+import { API_BASE_URL } from './config';
 import { 
   ChatMessage, 
   ChatResponse, 
   SavingsParseResponse, 
   TransactionParseResponse 
 } from '../types/chat';
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const ACCESS_TOKEN_KEY = 'access_token';
 
 async function _headers(): Promise<HeadersInit> {
@@ -21,7 +20,7 @@ async function _headers(): Promise<HeadersInit> {
 /** Gửi tin nhắn đến trợ lý tài chính AI */
 export async function sendChatMessage(message: string, history: ChatMessage[] = []): Promise<string> {
   const headers = await _headers();
-  const res = await fetch(`${BASE_URL}/chat`, {
+  const res = await fetch(`${API_BASE_URL}/chat`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ message, history }),
@@ -39,7 +38,7 @@ export async function sendChatMessage(message: string, history: ChatMessage[] = 
 /** Phân tích ngôn ngữ tự nhiên cho các thao tác tiết kiệm */
 export async function parseSavingsAction(message: string): Promise<SavingsParseResponse> {
   const headers = await _headers();
-  const res = await fetch(`${BASE_URL}/chat/parse-savings`, {
+  const res = await fetch(`${API_BASE_URL}/chat/parse-savings`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ message }),
@@ -56,7 +55,7 @@ export async function parseSavingsAction(message: string): Promise<SavingsParseR
 /** Phân tích ngôn ngữ tự nhiên cho các mô tả giao dịch */
 export async function parseTransaction(message: string): Promise<TransactionParseResponse> {
   const headers = await _headers();
-  const res = await fetch(`${BASE_URL}/chat/parse-transaction`, {
+  const res = await fetch(`${API_BASE_URL}/chat/parse-transaction`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ message }),

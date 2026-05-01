@@ -4,6 +4,49 @@ import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity
 
 import { useAuth } from '../context/AuthContext';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^(0|\+84)\d{9}$/;
+const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+function validateAuthForm({ mode, email, password, fullName, phoneNumber }) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedFullName = fullName.trim();
+  const normalizedPhone = phoneNumber.trim();
+
+  if (!normalizedEmail || !password) {
+    return { error: 'Vui lòng nhập email và mật khẩu' };
+  }
+
+  if (!EMAIL_REGEX.test(normalizedEmail)) {
+    return { error: 'Email không đúng định dạng' };
+  }
+
+  if (mode === 'register') {
+    if (!normalizedFullName || normalizedFullName.length < 2) {
+      return { error: 'Họ và tên phải có ít nhất 2 ký tự' };
+    }
+
+    if (!normalizedPhone) {
+      return { error: 'Vui lòng nhập số điện thoại' };
+    }
+
+    if (!PHONE_REGEX.test(normalizedPhone)) {
+      return { error: 'Số điện thoại không đúng định dạng (0xxxxxxxxx hoặc +84xxxxxxxxx)' };
+    }
+
+    if (!STRONG_PASSWORD_REGEX.test(password)) {
+      return { error: 'Mật khẩu tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt' };
+    }
+  }
+
+  return {
+    error: '',
+    normalizedEmail,
+    normalizedFullName,
+    normalizedPhone,
+  };
+}
+
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState('login');
@@ -17,13 +60,9 @@ export default function LoginScreen() {
 
   const handleSubmit = async () => {
     setError('');
-    if (!email || !password) {
-      setError('Vui lòng nhập email và mật khẩu');
-      return;
-    }
-
-    if (mode === 'register' && !fullName.trim()) {
-      setError('Vui lòng nhập họ và tên');
+    const form = validateAuthForm({ mode, email, password, fullName, phoneNumber });
+    if (form.error) {
+      setError(form.error);
       return;
     }
 
@@ -31,9 +70,9 @@ export default function LoginScreen() {
       setLoading(true);
       let result;
       if (mode === 'register') {
-        result = await signUp(email.trim(), password, fullName.trim(), phoneNumber.trim());
+        result = await signUp(form.normalizedEmail, password, form.normalizedFullName, form.normalizedPhone);
       } else {
-        result = await signIn(email.trim(), password);
+        result = await signIn(form.normalizedEmail, password);
       }
 
       if (!result?.success) {

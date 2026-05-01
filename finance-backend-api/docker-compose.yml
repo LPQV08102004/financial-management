@@ -16,10 +16,10 @@ services:
       - mysql_data:/var/lib/mysql
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "finuser", "-pfinpass" ]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 12
+      start_period: 45s
 
   api:
     build: .
@@ -36,7 +36,35 @@ services:
         condition: service_healthy
     volumes:
       - .:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command:
+      - sh
+      - -c
+      - |
+        python - <<'PY'
+        import sys
+        import time
+
+        import pymysql
+
+        deadline = time.time() + 90
+
+        while True:
+            try:
+                connection = pymysql.connect(
+                    host="mysql",
+                    user="finuser",
+                    password="finpass",
+                    database="financedb",
+                )
+                connection.close()
+                break
+            except Exception as exc:
+                if time.time() >= deadline:
+                    print(f"MySQL did not become ready: {exc}", file=sys.stderr)
+                    sys.exit(1)
+                time.sleep(2)
+        PY
+        exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   mysql_data:

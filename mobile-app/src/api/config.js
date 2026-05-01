@@ -22,21 +22,37 @@ function getExpoHost() {
 }
 
 export function getApiBaseUrl() {
+  return getApiBaseUrlCandidates()[0];
+}
+
+export function getApiBaseUrlCandidates() {
+  const candidates = [];
+
   const envBaseUrl = sanitizeBaseUrl(process.env.EXPO_PUBLIC_API_BASE_URL);
   if (envBaseUrl) {
-    return envBaseUrl;
+    candidates.push(envBaseUrl);
   }
 
   const expoHost = getExpoHost();
-  if (expoHost && expoHost !== 'localhost' && expoHost !== '127.0.0.1') {
-    return `http://${expoHost}:${API_PORT}${API_PREFIX}`;
-  }
+  const expoHostBase = expoHost && expoHost !== 'localhost' && expoHost !== '127.0.0.1'
+    ? `http://${expoHost}:${API_PORT}${API_PREFIX}`
+    : null;
 
   if (Platform.OS === 'android') {
-    return `http://10.0.2.2:${API_PORT}${API_PREFIX}`;
+    if (expoHostBase) {
+      candidates.push(expoHostBase);
+    }
+    candidates.push(`http://10.0.2.2:${API_PORT}${API_PREFIX}`);
+    candidates.push(`http://127.0.0.1:${API_PORT}${API_PREFIX}`);
+  } else {
+    if (expoHostBase) {
+      candidates.push(expoHostBase);
+    }
+    candidates.push(`http://127.0.0.1:${API_PORT}${API_PREFIX}`);
   }
 
-  return `http://127.0.0.1:${API_PORT}${API_PREFIX}`;
+  return [...new Set(candidates.filter(Boolean))];
 }
 
 export const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL_CANDIDATES = getApiBaseUrlCandidates();

@@ -127,3 +127,25 @@ Changes:
 - Removed direct modal state update from performLogout to avoid modal/stack race.
 Reason:
 - Prevent lingering overlay/touch-block issues after logout that can make Login inputs appear unresponsive on Android.
+
+Date: 2026-04-30
+File: frontend-next/package.json
+Changes:
+- Changed the default dev script to `next dev --webpack` to avoid Turbopack startup issues.
+Reason:
+- Keep the standard frontend run command stable and compatible with the current project setup.
+
+Date: 2026-04-30
+File: .vscode/tasks.json
+Changes:
+- Added a VS Code task to run `frontend-next` from its project directory with the standard npm dev command.
+Reason:
+- Provide a one-click, repeatable frontend run task for local development.
+
+Date: 2026-04-30
+File: finance-backend-api/docker-compose.yml
+Changes:
+- Increased MySQL healthcheck wait time before API startup.
+- Added an API startup wait loop that polls MySQL before launching Uvicorn.
+Reason:
+- Prevent the backend from failing on first boot when MySQL is still initializing.

@@ -39,12 +39,13 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
   // Menu items để render linh hoạt
   const menuItems = [
     { name: '🏠 Trang chủ', path: '/home' },
+    { name: '� Giao dịch', path: '/transactions' },
     { name: '📊 Biểu đồ', path: '/chart' },
     { name: '📑 Danh mục', path: '/categories' },
     { name: '🎯 Mục tiêu tiết kiệm', path: '/savings-goals' },
     { name: '🔁 Giao dịch định kỳ', path: '/recurring' },
     { name: '🤖 Trợ lý AI', path: '/chat' },
-    { name: '🔔 Nhắc nhở', path: '/notification' },
+    { name: '🔔 Nhắc nhở', path: '/notifications' },
   ];
 
   return (

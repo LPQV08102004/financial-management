@@ -1,42 +1,51 @@
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.security import hash_password, verify_password
 from app.db.session import get_db
+from app.modules.auth.models import RefreshToken
+from app.modules.users.models import User
+from app.modules.users.schemas import ChangePasswordRequest, MessageResponse, UserRead, UserUpdate
 from app.shared.dependencies import get_current_user
-from app.modules.auth.models import User
-from app.modules.auth.schemas import UserOut, ChangePasswordRequest, MessageResponse
-from app.modules.auth import service as auth_service
-from app.core.exceptions import BadRequestError
-
-router = APIRouter(prefix="/users", tags=["Users"])
 
 
-class UpdateProfileRequest(BaseModel):
-    full_name: str | None = Field(default=None, min_length=1, max_length=150)
+router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.get("/me", response_model=UserOut)
-def get_profile(current_user: User = Depends(get_current_user)):
-    return current_user
+def serialize_user(user: User) -> UserRead:
+    return UserRead.model_validate(user)
 
 
-@router.patch("/me", response_model=UserOut)
-def update_profile(
-    body: UpdateProfileRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    return auth_service.update_profile(db=db, user=current_user, full_name=body.full_name)
+@router.get("/me", response_model=UserRead)
+def get_me(current_user: User = Depends(get_current_user)):
+    return serialize_user(current_user)
+
+
+@router.patch("/me", response_model=UserRead)
+def update_me(payload: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if payload.full_name is not None:
+        current_user.full_name = payload.full_name
+    if payload.phone_number is not None:
+        current_user.phone_number = payload.phone_number
+    if payload.avatar_url is not None:
+        current_user.avatar_url = payload.avatar_url
+    db.commit()
+    db.refresh(current_user)
+    return serialize_user(current_user)
 
 
 @router.post("/me/change-password", response_model=MessageResponse)
 def change_password(
-    body: ChangePasswordRequest,
+    payload: ChangePasswordRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if body.new_password != body.confirm_password:
-        raise BadRequestError("Mật khẩu mới và xác nhận mật khẩu không khớp")
-    auth_service.change_password(db, current_user, body.current_password, body.new_password)
-    return MessageResponse(message="Đổi mật khẩu thành công. Vui lòng đăng nhập lại.")
+    if payload.new_password != payload.confirm_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match")
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+
+    current_user.hashed_password = hash_password(payload.new_password)
+    db.query(RefreshToken).filter(RefreshToken.user_id == current_user.id).update({"is_revoked": True})
+    db.commit()
+    return MessageResponse(message="Password changed successfully")

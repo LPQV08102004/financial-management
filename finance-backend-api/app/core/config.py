@@ -1,40 +1,20 @@
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
-from typing import List
-import json
+from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # App
-    APP_NAME: str = "Financial Management API"
-    DEBUG: bool = True
-    API_V1_PREFIX: str = "/api/v1"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    # Database
-    DATABASE_URL: str
-
-    # JWT
-    SECRET_KEY: str
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-
-    # Groq AI
-    GROQ_API_KEY: str = ""
-
-    # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
-
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors(cls, v):
-        if isinstance(v, str):
-            return json.loads(v)
-        return v
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    database_url: str = "mysql+pymysql://finuser:finpass@mysql:3306/financedb"
+    secret_key: str = "change-me-in-production"
+    access_token_expire_minutes: int = 60 * 24
+    refresh_token_expire_days: int = 30
 
 
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

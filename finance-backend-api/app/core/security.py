@@ -1,44 +1,30 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Any
 from uuid import uuid4
-from jose import JWTError, jwt
+
+from jose import jwt
 from passlib.context import CryptContext
+
 from app.core.config import settings
 
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+ALGORITHM = "HS256"
 
-
-# ── Password Utilities ─────────────────────────────────────────────────────────
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
 
-# ── JWT Token Utilities ────────────────────────────────────────────────────────
-
-def _create_token(data: dict, expires_delta: timedelta) -> str:
+def create_access_token(data: dict, expires_minutes: int | None = None) -> str:
     payload = data.copy()
-    expire = datetime.now(timezone.utc) + expires_delta
+    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes or settings.access_token_expire_minutes)
     payload.update({"exp": expire})
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
 
 
-def create_access_token(subject: Any, extra: Optional[dict] = None) -> str:
-    data = {"sub": str(subject), "type": "access"}
-    if extra:
-        data.update(extra)
-    return _create_token(data, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-
-
-def create_refresh_token(subject: Any) -> str:
-    data = {"sub": str(subject), "type": "refresh", "jti": str(uuid4())}
-    return _create_token(data, timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
-
-
-def decode_token(token: str) -> dict:
-    """Decode and return JWT payload. Raises JWTError on failure."""
-    return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+def create_refresh_token() -> str:
+    return str(uuid4())

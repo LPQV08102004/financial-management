@@ -84,7 +84,7 @@ export default function Profile({ navigation }) {
             </View>
             <TouchableOpacity 
               style={styles.editAvatarButton}
-              onPress={() => console.log('Change avatar')}
+              onPress={() => navigation.navigate('EditProfile')}
             >
               <Text style={styles.editAvatarIcon}>✏️</Text>
             </TouchableOpacity>
@@ -117,7 +117,10 @@ export default function Profile({ navigation }) {
             </View>
 
             {/* Edit Button */}
-            <TouchableOpacity style={styles.editButton}>
+            <TouchableOpacity 
+              style={styles.editButton}
+              onPress={() => navigation.navigate('EditProfile')}
+            >
               <Text style={styles.editButtonText}>Chỉnh sửa hồ sơ</Text>
             </TouchableOpacity>
 

@@ -1,32 +1,36 @@
-from fastapi import Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from jose import JWTError
 
+from app.core.config import settings
+from app.core.security import ALGORITHM
 from app.db.session import get_db
-from app.core.security import decode_token
-from app.core.exceptions import UnauthorizedError
-from app.modules.auth.models import User
+from app.modules.users.models import User
 
-security = HTTPBearer()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> User:
-    """Extract and validate Bearer JWT token; return authenticated User."""
-    token = credentials.credentials
-    try:
-        payload = decode_token(token)
-        user_id: str = payload.get("sub")
-        token_type: str = payload.get("type")
-        if user_id is None or token_type != "access":
-            raise UnauthorizedError("Invalid token")
-    except JWTError:
-        raise UnauthorizedError("Could not validate credentials")
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
-    user = db.query(User).filter(User.id == int(user_id), User.is_active == True).first()
-    if user is None:
-        raise UnauthorizedError("User not found or inactive")
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError as exc:
+        raise credentials_exception from exc
+
+    user = db.get(User, int(user_id))
+    if user is None or not user.is_active:
+        raise credentials_exception
     return user

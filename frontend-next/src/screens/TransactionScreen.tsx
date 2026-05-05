@@ -41,8 +41,15 @@ interface TransactionItem {
 export default function TransactionScreen() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
-  const [timePeriod, setTimePeriod] = useState('day');
+  const [timePeriod, setTimePeriod] = useState<'day' | 'month' | 'year' | 'week' | 'custom'>('day');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [confirmedStartDate, setConfirmedStartDate] = useState<Date | null>(null);
+  const [confirmedEndDate, setConfirmedEndDate] = useState<Date | null>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [currentCalendarMonth, setCurrentCalendarMonth] = useState(new Date());
+  const [selectingStartDate, setSelectingStartDate] = useState(true);
+  const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
+  const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
   
   // Filter & Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -174,6 +181,28 @@ export default function TransactionScreen() {
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">✕</button>
           )}
+        </div>
+
+        {/* Date Time Selector */}
+        <div className="mb-4">
+          <DateTimeSelector
+            timePeriod={timePeriod}
+            selectedDate={selectedDate}
+            setTimePeriod={setTimePeriod}
+            setSelectedDate={setSelectedDate}
+            setConfirmedStartDate={setConfirmedStartDate}
+            setConfirmedEndDate={setConfirmedEndDate}
+            showCalendar={showCalendar}
+            setShowCalendar={setShowCalendar}
+            currentCalendarMonth={currentCalendarMonth}
+            setCurrentCalendarMonth={setCurrentCalendarMonth}
+            selectingStartDate={selectingStartDate}
+            setSelectingStartDate={setSelectingStartDate}
+            customStartDate={customStartDate}
+            setCustomStartDate={setCustomStartDate}
+            customEndDate={customEndDate}
+            setCustomEndDate={setCustomEndDate}
+          />
         </div>
 
         {/* Summary Bar */}

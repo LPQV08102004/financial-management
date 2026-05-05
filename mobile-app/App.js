@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
+import { generateNotifications, getUnreadCount } from './src/api/notificationApi';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from './src/screens/HomeScreen';
 import AddTransactionScreen from './src/screens/AddTransactionScreen';
@@ -78,6 +79,19 @@ function RootNavigator() {
 function AppNavigationShell() {
   const { state } = useAuth();
   const navigationRef = React.useRef(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!state.userToken) {
+      setUnreadCount(0);
+      return;
+    }
+    // Sinh thông báo mới rồi lấy số chưa đọc khi user đăng nhập
+    generateNotifications()
+      .then(() => getUnreadCount())
+      .then(setUnreadCount)
+      .catch(() => {});
+  }, [state.userToken]);
 
   if (state.isLoading) {
     return (
@@ -87,8 +101,14 @@ function AppNavigationShell() {
     );
   }
 
+  const refreshUnread = () => {
+    if (state.userToken) {
+      getUnreadCount().then(setUnreadCount).catch(() => {});
+    }
+  };
+
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} onStateChange={refreshUnread}>
       <View style={{ flex: 1 }}>
         <RootNavigator />
         {state.userToken && (
@@ -96,7 +116,7 @@ function AppNavigationShell() {
             size={50}
             color="#075c09"
             navigation={navigationRef}
-            unreadCount={2}
+            unreadCount={unreadCount}
           />
         )}
       </View>

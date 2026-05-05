@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Modal, FlatList } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Modal, FlatList, Alert, ActivityIndicator } from 'react-native';
 import Footer from '../components/Footer';
+import { createReminder } from '../api/notificationApi';
 
 export default function AddNotification({ navigation }) {
   const [reminderName, setReminderName] = useState('');
@@ -12,6 +13,7 @@ export default function AddNotification({ navigation }) {
   const [selectedMinute, setSelectedMinute] = useState('00');
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const frequencyOptions = [
     { label: 'Hàng ngày', value: 'daily' },
@@ -66,11 +68,29 @@ export default function AddNotification({ navigation }) {
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
-  const handleCreateReminder = () => {
-    if (reminderName.trim()) {
-      const time = `${selectedHour}:${selectedMinute}`;
-      console.log('Tạo lời nhắc:', { reminderName, frequency, startDate: formatDate(selectedDate), time, notes });
+  const toISODate = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const handleCreateReminder = async () => {
+    if (!reminderName.trim()) return;
+    try {
+      setSubmitting(true);
+      await createReminder({
+        name: reminderName.trim(),
+        frequency,
+        start_date: toISODate(selectedDate),
+        reminder_time: `${selectedHour}:${selectedMinute}`,
+        note: notes.trim() || null,
+      });
       navigation.goBack();
+    } catch (err) {
+      Alert.alert('Lỗi', err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -328,12 +348,14 @@ export default function AddNotification({ navigation }) {
             />
           </View>
 
-          <TouchableOpacity 
-            style={[styles.submitButton, !reminderName.trim() && styles.submitButtonDisabled]}
+          <TouchableOpacity
+            style={[styles.submitButton, (!reminderName.trim() || submitting) && styles.submitButtonDisabled]}
             onPress={handleCreateReminder}
-            disabled={!reminderName.trim()}
+            disabled={!reminderName.trim() || submitting}
           >
-            <Text style={styles.submitButtonText}>Tạo</Text>
+            {submitting
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.submitButtonText}>Tạo</Text>}
           </TouchableOpacity>
         </View>
       </ScrollView>

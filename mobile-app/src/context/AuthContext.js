@@ -61,11 +61,24 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        const user = await getMyProfile();
-        dispatch({
-          type: 'RESTORE_TOKEN',
-          payload: { token, user },
-        });
+        try {
+          const user = await getMyProfile();
+          dispatch({
+            type: 'RESTORE_TOKEN',
+            payload: { token, user },
+          });
+        } catch (profileError) {
+          // Token không hợp lệ hoặc hết hạn - đây là trường hợp bình thường khi user chưa đăng nhập
+          if (profileError.message.includes('401') || 
+              profileError.message.includes('Could not validate') ||
+              profileError.message.includes('Unauthorized')) {
+            await logout();
+            dispatch({ type: 'RESTORE_TOKEN', payload: null });
+          } else {
+            // Các lỗi khác (network, server) thì throw để xử lý
+            throw profileError;
+          }
+        }
       } catch (e) {
         console.error('Failed to restore token:', e);
         await logout();

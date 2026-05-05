@@ -1,11 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from './config';
+import { API_BASE_URL, API_BASE_URL_CANDIDATES } from './config';
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 
 export async function login(email, password) {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response = await fetchWithNetworkGuard(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -13,7 +13,8 @@ export async function login(email, password) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.detail || 'Đăng nhập thất bại');
+    const msg = formatErrorDetail(data) || 'Đăng nhập thất bại';
+    throw new Error(msg);
   }
 
   if (data?.access_token) {
@@ -27,7 +28,7 @@ export async function login(email, password) {
 }
 
 export async function register(fullName, email, password, phoneNumber) {
-  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+  const response = await fetchWithNetworkGuard(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -40,7 +41,8 @@ export async function register(fullName, email, password, phoneNumber) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.detail || 'Đăng ký thất bại');
+    const msg = formatErrorDetail(data) || 'Đăng ký thất bại';
+    throw new Error(msg);
   }
 
   if (data?.access_token) {
@@ -61,7 +63,8 @@ export async function logout() {
   let refreshToken = null;
   try {
     refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
-  } catch (_) {
+  } catch (error) {
+    console.warn('Cannot read refresh token from storage:', error);
     refreshToken = null;
   }
 
@@ -73,20 +76,21 @@ export async function logout() {
 
   try {
     await Promise.race([
-      fetch(`${API_BASE_URL}/auth/logout`, {
+      fetchWithNetworkGuard(`${API_BASE_URL}/auth/logout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: refreshToken }),
       }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Logout timeout')), 4000)),
     ]);
-  } catch (_) {
+  } catch (error) {
     // best-effort server revoke
+    console.warn('Logout revoke request failed:', error);
   }
 }
 
 export async function changePassword(currentPassword, newPassword, confirmPassword) {
-  const response = await fetch(`${API_BASE_URL}/users/me/change-password`, {
+  const response = await fetchWithNetworkGuard(`${API_BASE_URL}/users/me/change-password`, {
     method: 'POST',
     headers: await getAuthHeaders(),
     body: JSON.stringify({
@@ -98,7 +102,8 @@ export async function changePassword(currentPassword, newPassword, confirmPasswo
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.detail || 'Đổi mật khẩu thất bại');
+    const msg = formatErrorDetail(data) || 'Đổi mật khẩu thất bại';
+    throw new Error(msg);
   }
   return data;
 }
@@ -115,20 +120,21 @@ async function getAuthHeaders() {
 }
 
 export async function getMyProfile() {
-  const response = await fetch(`${API_BASE_URL}/users/me`, {
+  const response = await fetchWithNetworkGuard(`${API_BASE_URL}/users/me`, {
     method: 'GET',
     headers: await getAuthHeaders(),
   });
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.detail || 'Không lấy được hồ sơ người dùng');
+    const msg = formatErrorDetail(data) || 'Không lấy được hồ sơ người dùng';
+    throw new Error(msg);
   }
   return data;
 }
 
 export async function updateMyProfile(payload) {
-  const response = await fetch(`${API_BASE_URL}/users/me`, {
+  const response = await fetchWithNetworkGuard(`${API_BASE_URL}/users/me`, {
     method: 'PATCH',
     headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
@@ -136,7 +142,59 @@ export async function updateMyProfile(payload) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.detail || 'Không cập nhật được hồ sơ người dùng');
+    const msg = formatErrorDetail(data) || 'Không cập nhật được hồ sơ người dùng';
+    throw new Error(msg);
   }
   return data;
+}
+
+function formatErrorDetail(data) {
+  if (!data) return '';
+  const detail = data.detail ?? data.message ?? data.errors ?? null;
+  if (!detail) return '';
+
+  if (Array.isArray(detail)) {
+    return detail
+      .map((d) => {
+        if (typeof d === 'string') return d;
+        return d?.msg || d?.message || JSON.stringify(d);
+      })
+      .join(', ');
+  }
+
+  if (typeof detail === 'object') {
+    return detail.message || Object.values(detail).map((v) => (typeof v === 'string' ? v : JSON.stringify(v))).join(', ');
+  }
+
+  return String(detail);
+}
+
+async function fetchWithNetworkGuard(url, options) {
+  const candidateUrls = buildCandidateUrls(url);
+  let lastError = null;
+
+  for (const candidateUrl of candidateUrls) {
+    try {
+      return await fetch(candidateUrl, options);
+    } catch (error) {
+      lastError = error;
+      const raw = String(error?.message || '');
+      if (!/Network request failed|Failed to fetch/i.test(raw)) {
+        throw error;
+      }
+    }
+  }
+
+  const attempted = candidateUrls.join(' | ');
+  throw new Error(`Không kết nối được máy chủ. Đã thử: ${attempted}`);
+}
+
+function buildCandidateUrls(url) {
+  if (!url.startsWith(API_BASE_URL)) {
+    return [url];
+  }
+
+  const suffix = url.slice(API_BASE_URL.length);
+  const baseCandidates = API_BASE_URL_CANDIDATES?.length ? API_BASE_URL_CANDIDATES : [API_BASE_URL];
+  return [...new Set(baseCandidates.map((base) => `${base}${suffix}`))];
 }

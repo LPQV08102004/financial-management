@@ -9,12 +9,15 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import Footer from '../components/Footer';
-import { sendChatMessage, parseTransaction, parseSavingsAction } from '../api/chatApi';
+import { sendChatMessage, parseTransaction, parseSavingsAction, parseReceipt } from '../api/chatApi';
 import { useChatContext } from '../context/ChatContext';
 import TransactionConfirmCard from '../components/TransactionConfirmCard';
 import SavingsConfirmCard from '../components/SavingsConfirmCard';
+import ReceiptConfirmCard from '../components/ReceiptConfirmCard';
 
 const SUGGESTED = [
   'Tháng này tôi chi tiêu bao nhiêu?',
@@ -24,11 +27,12 @@ const SUGGESTED = [
 ];
 
 export default function ChatScreen({ navigation }) {
-  const { messages, setMessages } = useChatContext();
+  const { messages, setMessages, resetMessages } = useChatContext();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [nlpMode, setNlpMode] = useState(false);       // true = typing a transaction
-  const [savingsMode, setSavingsMode] = useState(false); // true = typing a savings action
+  const [nlpMode, setNlpMode] = useState(false);
+  const [savingsMode, setSavingsMode] = useState(false);
+  const [ocrMode, setOcrMode] = useState(false);
   const [parsedTxn, setParsedTxn] = useState(null);
   const [parsedSavings, setParsedSavings] = useState(null);
   const listRef = useRef(null);
@@ -138,6 +142,89 @@ export default function ChatScreen({ navigation }) {
     setParsedSavings(null);
   };
 
+  const handleOCRScan = () => {
+    Alert.alert(
+      'Quét hóa đơn',
+      'Chọn nguồn ảnh',
+      [
+        {
+          text: 'Chụp ảnh',
+          onPress: async () => {
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ['images'],
+              quality: 0.5,
+              base64: true,
+            });
+            if (!result.canceled) _processOCRForChat(result.assets[0]);
+          },
+        },
+        {
+          text: 'Chọn từ thư viện',
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              quality: 0.5,
+              base64: true,
+            });
+            if (!result.canceled) _processOCRForChat(result.assets[0]);
+          },
+        },
+        { text: 'Huỷ', style: 'cancel' },
+      ]
+    );
+    setOcrMode(false);
+  };
+
+  const _processOCRForChat = async (asset) => {
+    setLoading(true);
+    const placeholderId = Date.now().toString();
+    setMessages((prev) => [
+      ...prev,
+      { id: placeholderId, role: 'user', content: '📸 [Hóa đơn đã gửi]' },
+    ]);
+    try {
+      const result = await parseReceipt(asset.base64);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          type: 'receipt-card',
+          content: '__receipt-card__',
+          parsed: result,
+          imageUri: asset.uri,
+        },
+      ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { id: (Date.now() + 1).toString(), role: 'assistant', content: `❌ ${err.message}` },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReceiptCardConfirmed = (msgId) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === msgId
+          ? { ...m, confirmed: true, content: '✅ Giao dịch từ hóa đơn đã được lưu!' }
+          : m
+      )
+    );
+  };
+
+  const handleReceiptCardCancel = (msgId) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === msgId
+          ? { ...m, confirmed: true, content: '🚫 Đã huỷ hóa đơn.' }
+          : m
+      )
+    );
+  };
+
   const renderItem = ({ item }) => {
     const isUser = item.role === 'user';
 
@@ -163,6 +250,18 @@ export default function ChatScreen({ navigation }) {
       );
     }
 
+    // Render OCR receipt confirmation card
+    if (item.type === 'receipt-card' && !item.confirmed) {
+      return (
+        <ReceiptConfirmCard
+          parsed={item.parsed}
+          imageUri={item.imageUri}
+          onConfirmed={() => handleReceiptCardConfirmed(item.id)}
+          onCancel={() => handleReceiptCardCancel(item.id)}
+        />
+      );
+    }
+
     return (
       <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAI]}>
         <Text style={[styles.bubbleText, isUser ? styles.bubbleTextUser : styles.bubbleTextAI]}>
@@ -184,6 +283,17 @@ export default function ChatScreen({ navigation }) {
           <Text style={styles.backText}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>🤖 Trợ lý tài chính</Text>
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert('Xoá cuộc trò chuyện', 'Bạn có chắc muốn xoá toàn bộ tin nhắn?', [
+              { text: 'Huỷ', style: 'cancel' },
+              { text: 'Xoá', style: 'destructive', onPress: resetMessages },
+            ]);
+          }}
+          style={styles.clearBtn}
+        >
+          <Text style={styles.clearBtnText}>🗑</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Message list */}
@@ -201,7 +311,7 @@ export default function ChatScreen({ navigation }) {
         <View style={styles.loadingRow}>
           <ActivityIndicator size="small" color="#075c09" />
           <Text style={styles.loadingText}>
-            {nlpMode ? 'Đang phân tích giao dịch...' : savingsMode ? 'Đang phân tích tiết kiệm...' : 'Đang trả lời...'}
+            {nlpMode ? 'Đang phân tích giao dịch...' : savingsMode ? 'Đang phân tích tiết kiệm...' : ocrMode ? 'Đang đọc hóa đơn...' : 'Đang trả lời...'}
           </Text>
         </View>
       )}
@@ -246,7 +356,7 @@ export default function ChatScreen({ navigation }) {
         {/* NLP transaction button */}
         <TouchableOpacity
           style={[styles.nlpBtn, nlpMode && styles.nlpBtnActive]}
-          onPress={() => { setNlpMode((v) => !v); setSavingsMode(false); }}
+          onPress={() => { setNlpMode((v) => !v); setSavingsMode(false); setOcrMode(false); }}
           disabled={loading}
         >
           <Text style={styles.nlpBtnIcon}>🧾</Text>
@@ -254,10 +364,18 @@ export default function ChatScreen({ navigation }) {
         {/* Savings mode button */}
         <TouchableOpacity
           style={[styles.nlpBtn, savingsMode && styles.savingsBtnActive]}
-          onPress={() => { setSavingsMode((v) => !v); setNlpMode(false); }}
+          onPress={() => { setSavingsMode((v) => !v); setNlpMode(false); setOcrMode(false); }}
           disabled={loading}
         >
           <Text style={styles.nlpBtnIcon}>🏦</Text>
+        </TouchableOpacity>
+        {/* OCR receipt button */}
+        <TouchableOpacity
+          style={[styles.nlpBtn, ocrMode && styles.ocrBtnActive]}
+          onPress={() => { setOcrMode(true); setNlpMode(false); setSavingsMode(false); handleOCRScan(); }}
+          disabled={loading}
+        >
+          <Text style={styles.nlpBtnIcon}>📸</Text>
         </TouchableOpacity>
 
         <TextInput
@@ -296,7 +414,9 @@ const styles = StyleSheet.create({
   },
   backBtn: { marginRight: 12 },
   backText: { color: '#fff', fontSize: 22 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700', flex: 1 },
+  clearBtn: { padding: 4 },
+  clearBtnText: { fontSize: 20 },
 
   listContent: { padding: 16, paddingBottom: 40 },
   bubble: {
@@ -408,4 +528,5 @@ const styles = StyleSheet.create({
   savingsBanner: { backgroundColor: '#e3f2fd', borderTopColor: '#90caf9' },
   savingsBannerText: { color: '#1565c0' },
   savingsBtnActive: { backgroundColor: '#1565c0', borderColor: '#1565c0' },
+  ocrBtnActive: { backgroundColor: '#6a1b9a', borderColor: '#6a1b9a' },
 });

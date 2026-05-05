@@ -3,9 +3,11 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Modal,
 import * as ImagePicker from 'expo-image-picker';
 import Footer from '../components/Footer';
 import CategoryIcon from '../components/CategoryIcon';
+import ReceiptConfirmCard from '../components/ReceiptConfirmCard';
 import { listCategories } from '../api/categoriesApi';
 import { listAccounts } from '../api/accountsApi';
 import { createIncome, createExpense } from '../api/transactionsApi';
+import { parseReceipt } from '../api/chatApi';
 
 export default function AddTransactionScreen({ navigation }) {
   const [amount, setAmount] = useState('');
@@ -22,6 +24,9 @@ export default function AddTransactionScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrResult, setOcrResult] = useState(null);
+  const [ocrImageUri, setOcrImageUri] = useState(null);
 
   useEffect(() => {
     listAccounts().then(setAccounts).catch(() => {});
@@ -89,7 +94,7 @@ export default function AddTransactionScreen({ navigation }) {
     if (images.length >= 3) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       aspect: [4, 3],
       quality: 0.7,
     });
@@ -101,6 +106,51 @@ export default function AddTransactionScreen({ navigation }) {
 
   const handleRemoveImage = (index) => {
     setImages(images.filter((_, i) => i !== index));
+  };
+
+  const handleScanReceipt = async () => {
+    Alert.alert(
+      'Quét hóa đơn',
+      'Chọn nguồn ảnh',
+      [
+        {
+          text: 'Chụp ảnh',
+          onPress: async () => {
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ['images'],
+              quality: 0.5,
+              base64: true,
+            });
+            if (!result.canceled) _processOCR(result.assets[0]);
+          },
+        },
+        {
+          text: 'Chọn từ thư viện',
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              quality: 0.5,
+              base64: true,
+            });
+            if (!result.canceled) _processOCR(result.assets[0]);
+          },
+        },
+        { text: 'Huỷ', style: 'cancel' },
+      ]
+    );
+  };
+
+  const _processOCR = async (asset) => {
+    setOcrLoading(true);
+    setOcrImageUri(asset.uri);
+    try {
+      const result = await parseReceipt(asset.base64);
+      setOcrResult(result);
+    } catch (err) {
+      Alert.alert('Lỗi OCR', err.message || 'Không thể đọc hóa đơn. Vui lòng thử lại.');
+    } finally {
+      setOcrLoading(false);
+    }
   };
 
   const handleCalculatorInput = (value) => {
@@ -284,7 +334,19 @@ export default function AddTransactionScreen({ navigation }) {
 
         {/* Image Upload Section */}
         <View style={styles.imageSection}>
-          <Text style={styles.label}>Ảnh (Tùy chọn)</Text>
+          <View style={styles.imageSectionHeader}>
+            <Text style={styles.label}>Ảnh (Tùy chọn)</Text>
+            <TouchableOpacity
+              style={styles.scanReceiptBtn}
+              onPress={handleScanReceipt}
+              disabled={ocrLoading}
+            >
+              {ocrLoading
+                ? <ActivityIndicator size="small" color="#1565c0" />
+                : <Text style={styles.scanReceiptText}>📸 Quét hóa đơn</Text>
+              }
+            </TouchableOpacity>
+          </View>
           <View style={styles.imageGrid}>
             {[0, 1, 2].map((index) => (
               <View key={index} style={styles.imageBox}>
@@ -325,6 +387,29 @@ export default function AddTransactionScreen({ navigation }) {
         </TouchableOpacity>
       </ScrollView>
       <Footer />
+
+      {/* OCR Receipt Confirmation Modal */}
+      <Modal visible={!!ocrResult} animationType="slide" onRequestClose={() => setOcrResult(null)}>
+        <View style={styles.ocrModalContainer}>
+          <View style={styles.ocrModalHeader}>
+            <TouchableOpacity onPress={() => setOcrResult(null)} style={styles.backButton}>
+              <Text style={styles.backButtonText}>←</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Xác nhận hóa đơn</Text>
+          </View>
+          {ocrResult && (
+            <ReceiptConfirmCard
+              parsed={ocrResult}
+              imageUri={ocrImageUri}
+              onConfirmed={() => {
+                setOcrResult(null);
+                navigation.goBack();
+              }}
+              onCancel={() => setOcrResult(null)}
+            />
+          )}
+        </View>
+      </Modal>
 
       {/* Date Picker Modal */}
       <Modal visible={showDatePicker} transparent={true} animationType="fade">
@@ -848,5 +933,39 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  imageSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  scanReceiptBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e3f2fd',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#90caf9',
+  },
+  scanReceiptText: {
+    color: '#1565c0',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  ocrModalContainer: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  ocrModalHeader: {
+    backgroundColor: '#1565c0',
+    paddingTop: 30,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
 });

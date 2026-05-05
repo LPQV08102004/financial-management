@@ -66,3 +66,24 @@ export async function parseTransaction(message) {
   }
   return res.json();
 }
+
+/**
+ * Extract transaction data from a receipt image via OCR.
+ * @param {string} imageBase64 - Raw base64 string (no data URI prefix)
+ * @param {string|null} hint - Optional store-type hint
+ * Returns: { amount, merchant_name, date, raw_text, type, note, category_suggestions,
+ *            confidence_level, missing_fields, warnings }
+ */
+export async function parseReceipt(imageBase64, hint = null) {
+  const headers = await _headers();
+  const res = await fetch(`${BASE_URL}/chat/parse-receipt`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ image_base64: imageBase64, hint }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Không thể đọc hóa đơn');
+  }
+  return res.json();
+}

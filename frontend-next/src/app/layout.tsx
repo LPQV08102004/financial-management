@@ -11,13 +11,12 @@ export const metadata: Metadata = {
   description: "Hệ thống quản lý tài chính thông minh tích hợp Agentic AI",
 };
 
-export default function RootLayout({
-  children,
-}: {
+export default function RootLayout(props: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
+  const { children } = props;
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
       <body className={inter.className}>
         {/* AuthProvider bọc ngoài cùng để xác định danh tính người dùng trước */}
         <AuthProvider>

@@ -9,6 +9,7 @@ from app.modules.chat.schemas import (
     ChatRequest, ChatResponse,
     ParseTransactionRequest, ParseTransactionResponse,
     ParseSavingsRequest, ParseSavingsResponse,
+    ReceiptOCRRequest, OCRReceiptResponse,
 )
 
 router = APIRouter(prefix="/chat", tags=["Chat AI"])
@@ -43,3 +44,13 @@ async def parse_savings(
 ):
     """Extract structured deposit/withdraw fields from a natural language message."""
     return await service.parse_savings_action(db, current_user, body.message)
+
+
+@router.post("/parse-receipt", response_model=OCRReceiptResponse)
+async def parse_receipt(
+    body: ReceiptOCRRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Extract structured transaction data from a receipt image via OCR."""
+    return await service.extract_receipt_ocr(body.image_base64, body.hint, current_user.id, db)

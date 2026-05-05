@@ -17,11 +17,13 @@ from app.shared.enums import TransactionType
 from app.modules.chat.schemas import (
     ChatMessage, ParseTransactionResponse, CategorySuggestion,
     ParseSavingsResponse, GoalSuggestion,
+    OCRReceiptResponse, ReceiptItem,
 )
 from app.modules.savings_goals.models import SavingsGoal
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 
 def _get_financial_context(db: Session, user_id: int) -> str:
@@ -350,4 +352,287 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
         note=parsed.get("note"),
         goal_suggestions=suggestions,
         missing_fields=missing,
+    )
+
+
+# ── OCR Receipt Parsing ────────────────────────────────────────────────────────
+
+async def _call_groq_vision(image_base64: str, hint: str | None) -> dict:
+    """Call Groq Vision API to extract receipt data. Returns parsed dict."""
+    if not settings.GROQ_API_KEY:
+        raise BadRequestError("GROQ_API_KEY chưa được cấu hình.")
+
+    hint_text = f"\nGợi ý loại cửa hàng: {hint}" if hint else ""
+    prompt = f"""Phân tích hóa đơn/biên lai trong ảnh và trả về JSON với các trường sau (không giải thích, chỉ JSON thuần):
+{{
+  "merchant": "<tên cửa hàng hoặc null>",
+  "date": "<ngày định dạng DD/MM/YYYY hoặc YYYY-MM-DD hoặc null>",
+  "total_amount": "<số tiền cuối cùng phải trả, chỉ gồm chữ số, hoặc null>",
+  "items": [
+    {{"name": "<tên sản phẩm>", "qty": <số lượng hoặc null>, "price": <giá từng dòng hoặc đơn giá chỉ gồm chữ số, hoặc null>}}
+  ],
+  "currency": "VND",
+  "raw_text": "<toàn bộ văn bản trích xuất được từ ảnh>"
+}}{hint_text}
+
+Nếu không đọc được một trường, đặt null. Chỉ trả về JSON, không có markdown."""
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(
+            GROQ_API_URL,
+            headers={
+                "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": GROQ_VISION_MODEL,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{image_base64}"
+                                },
+                            },
+                            {"type": "text", "text": prompt},
+                        ],
+                    }
+                ],
+                "max_tokens": 1024,
+                "temperature": 0.1,
+            },
+        )
+
+    if resp.status_code != 200:
+        raise BadRequestError(f"Groq Vision API lỗi: {resp.status_code} - {resp.text[:200]}")
+
+    raw = resp.json()["choices"][0]["message"]["content"].strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    raw = raw.strip()
+
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return {"merchant": None, "date": None, "total_amount": None, "items": [], "raw_text": raw}
+
+
+def _parse_ocr_amount(raw_amount: str | None) -> float | None:
+    """Convert raw amount string to float. Handles Vietnamese formats."""
+    if not raw_amount:
+        return None
+    # Strip everything except digits and dots/commas
+    cleaned = str(raw_amount).replace(",", "").replace(".", "").replace(" ", "")
+    cleaned = ''.join(c for c in cleaned if c.isdigit())
+    if not cleaned:
+        return None
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
+
+def _parse_ocr_date(raw_date: str | None) -> str | None:
+    """Normalize date string to YYYY-MM-DD. Accepts DD/MM/YYYY or YYYY-MM-DD."""
+    if not raw_date:
+        return None
+    raw_date = raw_date.strip()
+    # Already ISO format
+    if len(raw_date) == 10 and raw_date[4] == '-':
+        return raw_date
+    # DD/MM/YYYY
+    parts = raw_date.replace('-', '/').split('/')
+    if len(parts) == 3:
+        try:
+            if len(parts[2]) == 4:
+                # DD/MM/YYYY
+                d, m, y = parts
+            else:
+                # YYYY/MM/DD
+                y, m, d = parts
+            return f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
+        except (ValueError, IndexError):
+            return None
+    return None
+
+
+def _assess_ocr_quality(amount: float | None, date: str | None, merchant: str | None) -> tuple[str, list[str]]:
+    """Return (confidence_level, warnings) based on how many fields were extracted."""
+    extracted = sum(1 for v in [amount, date, merchant] if v is not None)
+    warnings = []
+    if amount is None:
+        warnings.append("Không xác định được số tiền — vui lòng nhập thủ công")
+    if date is None:
+        warnings.append("Không xác định được ngày — vui lòng nhập thủ công")
+    if merchant is None:
+        warnings.append("Không xác định được tên cửa hàng")
+
+    if extracted == 3:
+        level = "high"
+    elif extracted >= 1:
+        level = "medium"
+    else:
+        level = "low"
+    return level, warnings
+
+
+async def _suggest_categories_for_receipt(
+    user_id: int,
+    context: str,
+    db: Session,
+) -> list[CategorySuggestion]:
+    """Suggest top-3 expense categories for a receipt given merchant + items context."""
+    if not settings.GROQ_API_KEY:
+        return []
+
+    categories = db.query(Category).filter(
+        Category.user_id == user_id,
+        Category.is_active == True,
+    ).all()
+    if not categories:
+        return []
+
+    cat_list = [{"id": c.id, "name": c.name} for c in categories]
+
+    prompt = f"""Dựa trên hóa đơn sau: {context}
+
+Đây là danh mục chi tiêu của người dùng:
+{json.dumps(cat_list, ensure_ascii=False)}
+
+Gợi ý top 3 danh mục chi tiêu phù hợp nhất. Trả về JSON (không có markdown):
+[
+  {{"id": <id>, "confidence": <0-100>}},
+  ...
+]
+Chỉ dùng id từ danh sách trên. Nếu không phù hợp, trả về []."""
+
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        resp = await client.post(
+            GROQ_API_URL,
+            headers={
+                "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 256,
+                "temperature": 0.1,
+            },
+        )
+
+    if resp.status_code != 200:
+        return []
+
+    raw = resp.json()["choices"][0]["message"]["content"].strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    raw = raw.strip()
+
+    try:
+        suggestions_raw = json.loads(raw)
+        if not isinstance(suggestions_raw, list):
+            return []
+    except json.JSONDecodeError:
+        return []
+
+    cat_map = {c.id: c.name for c in categories}
+    result = []
+    for s in suggestions_raw:
+        cat_id = s.get("id")
+        if cat_id and cat_id in cat_map:
+            result.append(CategorySuggestion(
+                id=cat_id,
+                name=cat_map[cat_id],
+                confidence=max(0, min(100, int(s.get("confidence", 0)))),
+            ))
+    return result[:3]
+
+
+async def extract_receipt_ocr(
+    image_base64: str,
+    hint: str | None,
+    user_id: int,
+    db: Session,
+) -> OCRReceiptResponse:
+    """
+    Full OCR pipeline:
+    1. Groq Vision → extract merchant, date, amount, raw_text
+    2. Parse & normalize extracted fields
+    3. Groq NLP → suggest categories for this receipt
+    4. Assess extraction quality → confidence_level + warnings
+    """
+    # Step 1: Vision extraction
+    vision_data = await _call_groq_vision(image_base64, hint)
+
+    raw_text = vision_data.get("raw_text") or ""
+    merchant = vision_data.get("merchant") or None
+    amount = _parse_ocr_amount(vision_data.get("total_amount"))
+    date = _parse_ocr_date(vision_data.get("date"))
+    raw_items = vision_data.get("items") or []
+
+    # Parse structured items (each item may be a dict or a plain string)
+    parsed_items: list[ReceiptItem] = []
+    for it in raw_items:
+        if isinstance(it, dict):
+            name = it.get("name") or ""
+            if not name:
+                continue
+            qty_raw = it.get("qty")
+            price_raw = it.get("price")
+            try:
+                qty = float(qty_raw) if qty_raw is not None else None
+            except (ValueError, TypeError):
+                qty = None
+            try:
+                price = float(str(price_raw).replace(",", "").replace(".", "")) if price_raw is not None else None
+            except (ValueError, TypeError):
+                price = None
+            parsed_items.append(ReceiptItem(name=name, qty=qty, price=price))
+        elif isinstance(it, str) and it.strip():
+            parsed_items.append(ReceiptItem(name=it.strip()))
+
+    # Step 2: Build context string for category suggestion
+    context_parts = []
+    if merchant:
+        context_parts.append(merchant)
+    if parsed_items:
+        context_parts.append(", ".join(i.name for i in parsed_items[:5]))
+    if amount:
+        context_parts.append(f"{amount:,.0f} VND")
+    context = " - ".join(context_parts) if context_parts else "hóa đơn mua hàng"
+
+    # Step 3: Category suggestions
+    suggestions = await _suggest_categories_for_receipt(user_id, context, db)
+
+    # Step 4: Quality assessment
+    confidence_level, warnings = _assess_ocr_quality(amount, date, merchant)
+
+    # Step 5: Determine missing fields
+    missing = []
+    if amount is None:
+        missing.append("amount")
+    if date is None:
+        missing.append("date")
+    if not suggestions:
+        missing.append("category")
+
+    return OCRReceiptResponse(
+        amount=amount,
+        merchant_name=merchant,
+        date=date or datetime.today().strftime("%Y-%m-%d"),
+        raw_text=raw_text,
+        type="expense",
+        note=merchant,
+        items=parsed_items,
+        category_suggestions=suggestions,
+        confidence_level=confidence_level,
+        missing_fields=missing,
+        warnings=warnings,
     )

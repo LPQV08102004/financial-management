@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 
 export default function DateTimeSelector({
   timePeriod,
@@ -265,38 +265,44 @@ export default function DateTimeSelector({
 
   return (
     <>
-      <View style={styles.timePeriodContainer}>
-        <TouchableOpacity 
-          style={[styles.timePeriodButton, timePeriod === 'day' && styles.timePeriodButtonActive]}
-          onPress={selectDay}
-        >
-          <Text style={[styles.timePeriodText, timePeriod === 'day' && styles.timePeriodTextActive]}>Ngày</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.timePeriodButton, timePeriod === 'week' && styles.timePeriodButtonActive]}
-          onPress={selectWeek}
-        >
-          <Text style={[styles.timePeriodText, timePeriod === 'week' && styles.timePeriodTextActive]}>Tuần</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.timePeriodButton, timePeriod === 'month' && styles.timePeriodButtonActive]}
-          onPress={selectMonth}
-        >
-          <Text style={[styles.timePeriodText, timePeriod === 'month' && styles.timePeriodTextActive]}>Tháng</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.timePeriodButton, timePeriod === 'year' && styles.timePeriodButtonActive]}
-          onPress={selectYear}
-        >
-          <Text style={[styles.timePeriodText, timePeriod === 'year' && styles.timePeriodTextActive]}>Năm</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.timePeriodButton, timePeriod === 'custom' && styles.timePeriodButtonActive]}
-          onPress={selectCustomDateRange}
-        >
-          <Text style={[styles.timePeriodText, timePeriod === 'custom' && styles.timePeriodTextActive]}>Tùy chọn</Text>
-        </TouchableOpacity>
-      </View>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={true}
+        style={styles.timePeriodScrollContainer}
+      >
+        <View style={styles.timePeriodContainer}>
+          <TouchableOpacity 
+            style={[styles.timePeriodButton, timePeriod === 'day' && styles.timePeriodButtonActive]}
+            onPress={selectDay}
+          >
+            <Text style={[styles.timePeriodText, timePeriod === 'day' && styles.timePeriodTextActive]}>Ngày</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.timePeriodButton, timePeriod === 'week' && styles.timePeriodButtonActive]}
+            onPress={selectWeek}
+          >
+            <Text style={[styles.timePeriodText, timePeriod === 'week' && styles.timePeriodTextActive]}>Tuần</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.timePeriodButton, timePeriod === 'month' && styles.timePeriodButtonActive]}
+            onPress={selectMonth}
+          >
+            <Text style={[styles.timePeriodText, timePeriod === 'month' && styles.timePeriodTextActive]}>Tháng</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.timePeriodButton, timePeriod === 'year' && styles.timePeriodButtonActive]}
+            onPress={selectYear}
+          >
+            <Text style={[styles.timePeriodText, timePeriod === 'year' && styles.timePeriodTextActive]}>Năm</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.timePeriodButton, timePeriod === 'custom' && styles.timePeriodButtonActive]}
+            onPress={selectCustomDateRange}
+          >
+            <Text style={[styles.timePeriodText, timePeriod === 'custom' && styles.timePeriodTextActive]}>Tùy chọn</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       <View style={styles.dateRangeContainer}>
         <View style={styles.arrowContainer}>
@@ -396,8 +402,9 @@ export default function DateTimeSelector({
 }
 
 const styles = StyleSheet.create({
-  timePeriodContainer: { flexDirection: 'row', backgroundColor: '#fff', paddingVertical: 12, paddingHorizontal: 8, borderRadius: 8, marginBottom: 15, justifyContent: 'space-between', alignItems: 'center' },
-  timePeriodButton: { flex: 1, paddingVertical: 8, paddingHorizontal: 6, marginHorizontal: 3, borderRadius: 20, borderWidth: 1, borderColor: '#ddd', backgroundColor: '#fff', alignItems: 'center' },
+  timePeriodScrollContainer: { marginBottom: 15 },
+  timePeriodContainer: { flexDirection: 'row', backgroundColor: '#fff', paddingVertical: 12, paddingHorizontal: 8, borderRadius: 8, gap: 6 },
+  timePeriodButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, borderColor: '#ddd', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', minWidth: 70 },
   timePeriodButtonActive: { backgroundColor: '#075c09', borderColor: '#075c09' },
   timePeriodText: { fontSize: 14, color: '#666', fontWeight: '500' },
   timePeriodTextActive: { color: '#fff' },

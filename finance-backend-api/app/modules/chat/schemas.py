@@ -68,6 +68,12 @@ class ReceiptOCRRequest(BaseModel):
     hint: Optional[str] = None  # Optional store-type hint (e.g. "restaurant")
 
 
+class ReceiptItem(BaseModel):
+    name: str
+    qty: Optional[float] = None          # quantity
+    price: Optional[float] = None        # unit price or line total
+
+
 class OCRReceiptResponse(BaseModel):
     amount: Optional[float] = None
     merchant_name: Optional[str] = None
@@ -75,6 +81,7 @@ class OCRReceiptResponse(BaseModel):
     raw_text: str = ""                   # Full extracted text for transparency
     type: str = "expense"
     note: Optional[str] = None
+    items: List[ReceiptItem] = []        # line items extracted from receipt
     category_suggestions: List[CategorySuggestion] = []
     confidence_level: str = "low"        # "high" | "medium" | "low"
     missing_fields: List[str] = []

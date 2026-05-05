@@ -33,6 +33,8 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [showRaw, setShowRaw] = useState(false);
+  const [showItems, setShowItems] = useState(true);
+  const [itemsAppended, setItemsAppended] = useState(false);
 
   const [zoomVisible, setZoomVisible] = useState(false);
 
@@ -167,6 +169,70 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
             placeholder="Tên cửa hàng hoặc mô tả"
           />
         </View>
+
+        {/* Product items from receipt */}
+        {parsed.items?.length > 0 && (
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.itemsToggleRow}
+              onPress={() => setShowItems((v) => !v)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.label}>Sản phẩm ({parsed.items.length})</Text>
+              <Text style={styles.itemsToggleIcon}>{showItems ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+
+            {showItems && (
+              <>
+                <View style={styles.itemsTable}>
+                  <View style={styles.itemsHeader}>
+                    <Text style={[styles.itemsCell, styles.itemsCellName, styles.itemsHeaderText]}>Tên</Text>
+                    <Text style={[styles.itemsCell, styles.itemsCellQty, styles.itemsHeaderText]}>Số lượng</Text>
+                    <Text style={[styles.itemsCell, styles.itemsCellPrice, styles.itemsHeaderText]}>Giá</Text>
+                  </View>
+                  {parsed.items.map((item, idx) => (
+                    <View
+                      key={idx}
+                      style={[styles.itemsRow, idx % 2 === 0 && styles.itemsRowEven]}
+                    >
+                      <Text style={[styles.itemsCell, styles.itemsCellName]} numberOfLines={2}>{item.name}</Text>
+                      <Text style={[styles.itemsCell, styles.itemsCellQty]}>
+                        {item.qty != null ? item.qty : '—'}
+                      </Text>
+                      <Text style={[styles.itemsCell, styles.itemsCellPrice]}>
+                        {item.price != null
+                          ? Number(item.price).toLocaleString('vi-VN')
+                          : '—'}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.appendItemsBtn, itemsAppended && styles.appendItemsBtnDone]}
+                  onPress={() => {
+                    if (itemsAppended) return;
+                    const lines = parsed.items
+                      .map((it) => {
+                        let line = it.name;
+                        if (it.qty != null) line += ` x${it.qty}`;
+                        if (it.price != null) line += ` (${Number(it.price).toLocaleString('vi-VN')})`;
+                        return line;
+                      })
+                      .join('; ');
+                    setNote((prev) => (prev ? `${prev} | ${lines}` : lines));
+                    setItemsAppended(true);
+                  }}
+                  disabled={itemsAppended}
+                >
+                  <Text style={[styles.appendItemsBtnText, itemsAppended && styles.appendItemsBtnTextDone]}>
+                    {itemsAppended ? '✓ Đã thêm vào ghi chú' : '⬇️ Thêm vào ghi chú'}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
 
         {/* Category suggestions */}
         {type === 'expense' && (
@@ -333,6 +399,27 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, color: '#444' },
   chipTextSelected: { color: '#fff', fontWeight: '600' },
   hint: { fontSize: 12, color: '#e6a800', fontStyle: 'italic' },
+  itemsToggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  itemsToggleIcon: { fontSize: 11, color: '#888' },
+  itemsTable: { borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 8, overflow: 'hidden', marginBottom: 8 },
+  itemsHeader: { flexDirection: 'row', backgroundColor: '#e8eaf6', paddingVertical: 6, paddingHorizontal: 4 },
+  itemsHeaderText: { fontWeight: '700', color: '#3949ab', fontSize: 11 },
+  itemsRow: { flexDirection: 'row', paddingVertical: 6, paddingHorizontal: 4 },
+  itemsRowEven: { backgroundColor: '#f9f9ff' },
+  itemsCell: { fontSize: 12, color: '#333', textAlignVertical: 'center' },
+  itemsCellName: { flex: 3, paddingRight: 4 },
+  itemsCellQty: { flex: 1, textAlign: 'center' },
+  itemsCellPrice: { flex: 2, textAlign: 'right', paddingRight: 4 },
+  appendItemsBtn: {
+    alignSelf: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#e8eaf6',
+    borderRadius: 8,
+  },
+  appendItemsBtnText: { fontSize: 12, color: '#3949ab', fontWeight: '600' },
+  appendItemsBtnDone: { backgroundColor: '#e8f5e9' },
+  appendItemsBtnTextDone: { color: '#2e7d32' },
   rawToggle: { paddingVertical: 4 },
   rawToggleText: { fontSize: 12, color: '#888', fontWeight: '600' },
   rawText: {

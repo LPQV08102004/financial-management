@@ -17,7 +17,7 @@ from app.shared.enums import TransactionType
 from app.modules.chat.schemas import (
     ChatMessage, ParseTransactionResponse, CategorySuggestion,
     ParseSavingsResponse, GoalSuggestion,
-    OCRReceiptResponse,
+    OCRReceiptResponse, ReceiptItem,
 )
 from app.modules.savings_goals.models import SavingsGoal
 
@@ -368,7 +368,9 @@ async def _call_groq_vision(image_base64: str, hint: str | None) -> dict:
   "merchant": "<tên cửa hàng hoặc null>",
   "date": "<ngày định dạng DD/MM/YYYY hoặc YYYY-MM-DD hoặc null>",
   "total_amount": "<số tiền cuối cùng phải trả, chỉ gồm chữ số, hoặc null>",
-  "items": ["<hàng hóa/dịch vụ 1>", "<hàng hóa/dịch vụ 2>"],
+  "items": [
+    {{"name": "<tên sản phẩm>", "qty": <số lượng hoặc null>, "price": <giá từng dòng hoặc đơn giá chỉ gồm chữ số, hoặc null>}}
+  ],
   "currency": "VND",
   "raw_text": "<toàn bộ văn bản trích xuất được từ ảnh>"
 }}{hint_text}
@@ -573,14 +575,35 @@ async def extract_receipt_ocr(
     merchant = vision_data.get("merchant") or None
     amount = _parse_ocr_amount(vision_data.get("total_amount"))
     date = _parse_ocr_date(vision_data.get("date"))
-    items = vision_data.get("items") or []
+    raw_items = vision_data.get("items") or []
+
+    # Parse structured items (each item may be a dict or a plain string)
+    parsed_items: list[ReceiptItem] = []
+    for it in raw_items:
+        if isinstance(it, dict):
+            name = it.get("name") or ""
+            if not name:
+                continue
+            qty_raw = it.get("qty")
+            price_raw = it.get("price")
+            try:
+                qty = float(qty_raw) if qty_raw is not None else None
+            except (ValueError, TypeError):
+                qty = None
+            try:
+                price = float(str(price_raw).replace(",", "").replace(".", "")) if price_raw is not None else None
+            except (ValueError, TypeError):
+                price = None
+            parsed_items.append(ReceiptItem(name=name, qty=qty, price=price))
+        elif isinstance(it, str) and it.strip():
+            parsed_items.append(ReceiptItem(name=it.strip()))
 
     # Step 2: Build context string for category suggestion
     context_parts = []
     if merchant:
         context_parts.append(merchant)
-    if items:
-        context_parts.append(", ".join(items[:5]))
+    if parsed_items:
+        context_parts.append(", ".join(i.name for i in parsed_items[:5]))
     if amount:
         context_parts.append(f"{amount:,.0f} VND")
     context = " - ".join(context_parts) if context_parts else "hóa đơn mua hàng"
@@ -607,6 +630,7 @@ async def extract_receipt_ocr(
         raw_text=raw_text,
         type="expense",
         note=merchant,
+        items=parsed_items,
         category_suggestions=suggestions,
         confidence_level=confidence_level,
         missing_fields=missing,

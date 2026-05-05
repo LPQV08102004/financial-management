@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import SidebarDrawer from '../components/SidebarDrawer';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -39,6 +40,7 @@ interface TransactionItem {
 }
 
 export default function TransactionScreen() {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
   const [timePeriod, setTimePeriod] = useState<'day' | 'month' | 'year' | 'week' | 'custom'>('day');
@@ -150,7 +152,7 @@ export default function TransactionScreen() {
           >
             {filterCategoryId ? '🔽' : '⚙️'}
           </button>
-          <button className="text-xl" onClick={() => window.location.href = '/transactions/add'}>➕</button>
+          <button className="text-xl" onClick={() => router.push('/add-transaction')}>➕</button>
         </div>
       </header>
 

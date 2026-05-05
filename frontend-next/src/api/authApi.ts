@@ -35,8 +35,8 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data?.detail || 'Đăng nhập thất bại');
+  const data = await parseResponseBody(response);
+  if (!response.ok) throw new Error(formatApiError(response, data, 'Đăng nhập thất bại'));
 
   if (data?.access_token) Cookies.set(ACCESS_TOKEN_KEY, data.access_token, { expires: 7 }); // Hết hạn sau 7 ngày
   if (data?.refresh_token) Cookies.set(REFRESH_TOKEN_KEY, data.refresh_token, { expires: 30 });
@@ -52,8 +52,8 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse> 
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data?.detail || 'Đăng ký thất bại');
+  const data = await parseResponseBody(response);
+  if (!response.ok) throw new Error(formatApiError(response, data, 'Đăng ký thất bại'));
 
   if (data?.access_token) Cookies.set(ACCESS_TOKEN_KEY, data.access_token);
   if (data?.refresh_token) Cookies.set(REFRESH_TOKEN_KEY, data.refresh_token);
@@ -80,8 +80,8 @@ export async function logout(): Promise<void> {
       }),
       new Promise((_, reject) => setTimeout(() => reject(new Error('Logout timeout')), 4000)),
     ]);
-  } catch (_) {
-    // Bỏ qua lỗi nếu server không revoke kịp
+  } catch (error) {
+    console.warn('Logout revoke request failed:', error);
   }
 }
 
@@ -92,8 +92,8 @@ export async function getMyProfile(): Promise<UserProfile> {
     headers: await getAuthHeaders(),
   });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data?.detail || 'Không lấy được hồ sơ');
+  const data = await parseResponseBody(response);
+  if (!response.ok) throw new Error(formatApiError(response, data, 'Không lấy được hồ sơ'));
   return data;
 }
 
@@ -105,8 +105,8 @@ export async function updateMyProfile(payload: UserUpdatePayload): Promise<UserP
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data?.detail || 'Không cập nhật được hồ sơ');
+  const data = await parseResponseBody(response);
+  if (!response.ok) throw new Error(formatApiError(response, data, 'Không cập nhật được hồ sơ'));
   return data;
 }
 
@@ -118,7 +118,35 @@ export async function changePassword(payload: ChangePasswordPayload): Promise<an
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data?.detail || 'Đổi mật khẩu thất bại');
+  const data = await parseResponseBody(response);
+  if (!response.ok) throw new Error(formatApiError(response, data, 'Đổi mật khẩu thất bại'));
   return data;
+}
+
+async function parseResponseBody(response: Response) {
+  const text = await response.text().catch(() => '');
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { detail: text };
+  }
+}
+
+function formatApiError(response: Response, data: any, fallbackMessage: string) {
+  const detail = data?.detail || data?.message || data?.error || '';
+  const normalizedDetail = typeof detail === 'string' ? detail.trim() : '';
+
+  if (normalizedDetail) {
+    return normalizedDetail;
+  }
+
+  if (response.status) {
+    return `${fallbackMessage} (HTTP ${response.status})`;
+  }
+
+  return fallbackMessage;
 }

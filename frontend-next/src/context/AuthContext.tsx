@@ -1,8 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useReducer, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
 // Sử dụng đường dẫn tương đối theo yêu cầu của bạn
 import { 
   getMyProfile, 
@@ -13,7 +12,6 @@ import {
 } from '../api/authApi';
 import { 
   UserProfile, 
-  LoginPayload, 
   RegisterPayload 
 } from '../types/auth';
 
@@ -77,7 +75,8 @@ const authReducer = (prevState: AuthState, action: AuthAction): AuthState => {
   }
 };
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
+  const { children } = props;
   const router = useRouter();
   const [state, dispatch] = useReducer(authReducer, {
     isLoading: true,
@@ -98,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const user = await getMyProfile(); // Lấy profile từ backend
         dispatch({ type: 'RESTORE_TOKEN', payload: { token, user } });
       } catch (e) {
+        console.error('Failed to restore token:', e);
         dispatch({ type: 'RESTORE_TOKEN', payload: null });
       }
     };
@@ -105,64 +105,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     bootstrapAsync();
   }, []);
 
+  const signIn = useCallback(async (email: string, password: string) => {
+    try {
+      const data = await apiLogin({ email, password }); // Gửi payload login[cite: 1, 2]
+      const token = data.access_token;
+      const user = data.user || await getMyProfile();
+
+      dispatch({ type: 'SIGN_IN', payload: { token, user } });
+      router.push('/dashboard');
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }, [router]);
+
+  const signUp = useCallback(async (payload: RegisterPayload) => {
+    try {
+      const registerData = await apiRegister(payload); // Gửi payload đăng ký[cite: 1, 2]
+      let token = registerData.access_token;
+
+      if (!token) {
+        const loginData = await apiLogin({ email: payload.email, password: payload.password });
+        token = loginData.access_token;
+      }
+
+      const user = registerData.user || await getMyProfile();
+      dispatch({ type: 'SIGN_UP', payload: { token, user } });
+      router.push('/dashboard');
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }, [router]);
+
+  const refreshProfile = useCallback(async () => {
+    try {
+      const user = await getMyProfile();
+      dispatch({ type: 'UPDATE_USER', payload: user });
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    dispatch({ type: 'SIGN_OUT' });
+    try {
+      await apiLogout(); // Thực hiện logout và xóa cookie
+      router.push('/login');
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  }, [router]);
+
   const authActions = useMemo(() => ({
-    signIn: async (email: string, password: string) => {
-      try {
-        const data = await apiLogin({ email, password }); // Gửi payload login[cite: 1, 2]
-        const token = data.access_token;
-        const user = await getMyProfile();
+    signIn,
+    signUp,
+    refreshProfile,
+    signOut,
+  }), [signIn, signUp, refreshProfile, signOut]);
 
-        dispatch({ type: 'SIGN_IN', payload: { token, user } });
-        router.push('/dashboard');
-        return { success: true };
-      } catch (error: any) {
-        return { success: false, message: error.message };
-      }
-    },
-
-    signUp: async (payload: RegisterPayload) => {
-      try {
-        const registerData = await apiRegister(payload); // Gửi payload đăng ký[cite: 1, 2]
-        let token = registerData.access_token;
-
-        if (!token) {
-          const loginData = await apiLogin({ email: payload.email, password: payload.password });
-          token = loginData.access_token;
-        }
-
-        const user = await getMyProfile();
-        dispatch({ type: 'SIGN_UP', payload: { token, user } });
-        router.push('/dashboard');
-        return { success: true };
-      } catch (error: any) {
-        return { success: false, message: error.message };
-      }
-    },
-
-    refreshProfile: async () => {
-      try {
-        const user = await getMyProfile();
-        dispatch({ type: 'UPDATE_USER', payload: user });
-        return { success: true };
-      } catch (error: any) {
-        return { success: false, message: error.message };
-      }
-    },
-
-    signOut: async () => {
-      dispatch({ type: 'SIGN_OUT' });
-      try {
-        await apiLogout(); // Thực hiện logout và xóa cookie
-        router.push('/login');
-        return { success: true };
-      } catch (error: any) {
-        return { success: false, message: error.message };
-      }
-    },
-  }), [router]);
+  const contextValue = useMemo(() => ({ state, ...authActions }), [state, authActions]);
 
   return (
-    <AuthContext.Provider value={{ state, ...authActions }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

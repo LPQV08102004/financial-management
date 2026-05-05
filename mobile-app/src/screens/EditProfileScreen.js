@@ -12,6 +12,7 @@ import {
   Modal,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { useAuth } from '../context/AuthContext';
 import { updateMyProfile } from '../api/authApi';
 
@@ -75,19 +76,30 @@ export default function EditProfileScreen({ navigation }) {
 
   const convertImageToBase64 = async (imageUri) => {
     try {
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          resolve(reader.result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
+      // Handle case where it's already a data URI or URL
+      if (imageUri.startsWith('data:') || imageUri.startsWith('http')) {
+        return imageUri;
+      }
+      
+      // Read local file and convert to base64
+      const base64String = await FileSystem.readAsStringAsync(imageUri, {
+        encoding: FileSystem.EncodingType.Base64,
       });
+      
+      // Determine MIME type based on file extension
+      let mimeType = 'image/jpeg';
+      if (imageUri.toLowerCase().endsWith('.png')) {
+        mimeType = 'image/png';
+      } else if (imageUri.toLowerCase().endsWith('.gif')) {
+        mimeType = 'image/gif';
+      } else if (imageUri.toLowerCase().endsWith('.webp')) {
+        mimeType = 'image/webp';
+      }
+      
+      return `data:${mimeType};base64,${base64String}`;
     } catch (error) {
       console.error('Error converting image to base64:', error);
-      throw error;
+      throw new Error(`Không thể xử lý ảnh: ${error.message}`);
     }
   };
 

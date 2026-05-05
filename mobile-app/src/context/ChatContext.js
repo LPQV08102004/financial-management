@@ -13,8 +13,10 @@ const INITIAL_MESSAGES = [
 export function ChatProvider({ children }) {
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
 
+  const resetMessages = () => setMessages(INITIAL_MESSAGES);
+
   return (
-    <ChatContext.Provider value={{ messages, setMessages }}>
+    <ChatContext.Provider value={{ messages, setMessages, resetMessages }}>
       {children}
     </ChatContext.Provider>
   );

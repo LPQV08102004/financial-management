@@ -12,6 +12,7 @@ import Notification from './src/screens/Notification';
 import AddNotification from './src/screens/AddNotification';
 import EditNotification from './src/screens/EditNotification';
 import Profile from './src/screens/Profile';
+import EditProfileScreen from './src/screens/EditProfileScreen';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
 import SavingsGoalsScreen from './src/screens/SavingsGoalsScreen';
 import AddSavingsGoalScreen from './src/screens/AddSavingsGoalScreen';
@@ -59,6 +60,7 @@ function RootNavigator() {
             <Stack.Screen name="AddNotification" component={AddNotification} />
             <Stack.Screen name="EditNotification" component={EditNotification} />
             <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
             <Stack.Screen name="SavingsGoals" component={SavingsGoalsScreen} />
             <Stack.Screen name="AddSavingsGoal" component={AddSavingsGoalScreen} />

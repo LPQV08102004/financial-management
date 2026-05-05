@@ -1,0 +1,177 @@
+"use client";
+
+import React, { createContext, useContext, useEffect, useReducer, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+// Sử dụng đường dẫn tương đối theo yêu cầu của bạn
+import { 
+  getMyProfile, 
+  getSavedToken, 
+  login as apiLogin, 
+  logout as apiLogout, 
+  register as apiRegister 
+} from '../api/authApi';
+import { 
+  UserProfile, 
+  LoginPayload, 
+  RegisterPayload 
+} from '../types/auth';
+
+// --- Types ---
+interface AuthState {
+  isLoading: boolean;
+  isSignout: boolean;
+  userToken: string | null;
+  user: UserProfile | null;
+}
+
+type AuthAction =
+  | { type: 'RESTORE_TOKEN'; payload: { token: string | null; user: UserProfile | null } | null }
+  | { type: 'SIGN_IN'; payload: { token: string; user: UserProfile } }
+  | { type: 'SIGN_UP'; payload: { token: string; user: UserProfile } }
+  | { type: 'SIGN_OUT' }
+  | { type: 'UPDATE_USER'; payload: UserProfile | null };
+
+interface AuthContextType {
+  state: AuthState;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  signUp: (payload: RegisterPayload) => Promise<{ success: boolean; message?: string }>;
+  refreshProfile: () => Promise<{ success: boolean; message?: string }>;
+  signOut: () => Promise<{ success: boolean; message?: string }>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// --- Reducer ---
+const authReducer = (prevState: AuthState, action: AuthAction): AuthState => {
+  switch (action.type) {
+    case 'RESTORE_TOKEN':
+      return {
+        ...prevState,
+        userToken: action.payload?.token || null,
+        user: action.payload?.user || null,
+        isLoading: false,
+      };
+    case 'SIGN_IN':
+    case 'SIGN_UP':
+      return {
+        ...prevState,
+        isSignout: false,
+        userToken: action.payload.token,
+        user: action.payload.user,
+      };
+    case 'SIGN_OUT':
+      return {
+        ...prevState,
+        isSignout: true,
+        userToken: null,
+        user: null,
+      };
+    case 'UPDATE_USER':
+      return {
+        ...prevState,
+        user: action.payload,
+      };
+    default:
+      return prevState;
+  }
+};
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const [state, dispatch] = useReducer(authReducer, {
+    isLoading: true,
+    isSignout: false,
+    userToken: null,
+    user: null,
+  });
+
+  useEffect(() => {
+    const bootstrapAsync = async () => {
+      try {
+        const token = getSavedToken(); // Lấy từ Cookie thông qua api
+        if (!token) {
+          dispatch({ type: 'RESTORE_TOKEN', payload: null });
+          return;
+        }
+
+        const user = await getMyProfile(); // Lấy profile từ backend
+        dispatch({ type: 'RESTORE_TOKEN', payload: { token, user } });
+      } catch (e) {
+        dispatch({ type: 'RESTORE_TOKEN', payload: null });
+      }
+    };
+
+    bootstrapAsync();
+  }, []);
+
+  const authActions = useMemo(() => ({
+    signIn: async (email: string, password: string) => {
+      try {
+        const data = await apiLogin({ email, password }); // Gửi payload login[cite: 1, 2]
+        const token = data.access_token;
+        const user = await getMyProfile();
+
+        dispatch({ type: 'SIGN_IN', payload: { token, user } });
+        router.push('/dashboard');
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, message: error.message };
+      }
+    },
+
+    signUp: async (payload: RegisterPayload) => {
+      try {
+        const registerData = await apiRegister(payload); // Gửi payload đăng ký[cite: 1, 2]
+        let token = registerData.access_token;
+
+        if (!token) {
+          const loginData = await apiLogin({ email: payload.email, password: payload.password });
+          token = loginData.access_token;
+        }
+
+        const user = await getMyProfile();
+        dispatch({ type: 'SIGN_UP', payload: { token, user } });
+        router.push('/dashboard');
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, message: error.message };
+      }
+    },
+
+    refreshProfile: async () => {
+      try {
+        const user = await getMyProfile();
+        dispatch({ type: 'UPDATE_USER', payload: user });
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, message: error.message };
+      }
+    },
+
+    signOut: async () => {
+      dispatch({ type: 'SIGN_OUT' });
+      try {
+        await apiLogout(); // Thực hiện logout và xóa cookie
+        router.push('/login');
+        return { success: true };
+      } catch (error: any) {
+        return { success: false, message: error.message };
+      }
+    },
+  }), [router]);
+
+  return (
+    <AuthContext.Provider value={{ state, ...authActions }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

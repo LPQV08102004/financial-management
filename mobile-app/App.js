@@ -11,6 +11,7 @@ import CategoriesScreen from './src/screens/CategoriesScreen';
 import Notification from './src/screens/Notification';
 import AddNotification from './src/screens/AddNotification';
 import EditNotification from './src/screens/EditNotification';
+import NotificationScreen from './src/screens/NotificationScreen';
 import Profile from './src/screens/Profile';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import ChangePasswordScreen from './src/screens/ChangePasswordScreen';
@@ -57,6 +58,7 @@ function RootNavigator() {
           <Stack.Screen name="Categories" component={CategoriesScreen} />
           <Stack.Screen name="AddCategories" component={AddCategories} />
           <Stack.Screen name="Notification" component={Notification} />
+          <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
           <Stack.Screen name="AddNotification" component={AddNotification} />
           <Stack.Screen name="EditNotification" component={EditNotification} />
           <Stack.Screen name="Profile" component={Profile} />
@@ -75,6 +77,7 @@ function RootNavigator() {
 
 function AppNavigationShell() {
   const { state } = useAuth();
+  const navigationRef = React.useRef(null);
 
   if (state.isLoading) {
     return (
@@ -85,10 +88,19 @@ function AppNavigationShell() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <RootNavigator />
-      {state.userToken && <DraggableBellIcon size={50} color="#075c09" />}
-    </View>
+    <NavigationContainer ref={navigationRef}>
+      <View style={{ flex: 1 }}>
+        <RootNavigator />
+        {state.userToken && (
+          <DraggableBellIcon
+            size={50}
+            color="#075c09"
+            navigation={navigationRef}
+            unreadCount={2}
+          />
+        )}
+      </View>
+    </NavigationContainer>
   );
 }
 
@@ -97,9 +109,7 @@ export default function App() {
     <AuthProvider>
       <ChatProvider>
         <SafeAreaProvider>
-          <NavigationContainer>
-            <AppNavigationShell />
-          </NavigationContainer>
+          <AppNavigationShell />
         </SafeAreaProvider>
       </ChatProvider>
     </AuthProvider>

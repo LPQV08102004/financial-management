@@ -7,36 +7,60 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
+  Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const DraggableBellIcon = ({
-  size = 50,
+  size = 70,
   color = '#007AFF',
+  navigation,
+  unreadCount = 0,
 }) => {
   const { width, height } = Dimensions.get('window');
   const pan = useRef(new Animated.ValueXY({ x: width - size - 20, y: height / 2 - size / 2 })).current;
   const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const TAP_THRESHOLD = 10; // threshold for tap detection
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        setIsDragging(true);
+      onPanResponderGrant: (evt, gestureState) => {
+        dragStartPos.current = { x: gestureState.x0, y: gestureState.y0 };
+        setIsDragging(false);
       },
       onPanResponderMove: (evt, gestureState) => {
-        const newX = gestureState.x0 - size / 2 + gestureState.dx;
-        const newY = gestureState.y0 - size / 2 + gestureState.dy;
+        // Check if this is a real drag (not just a tap)
+        const distance = Math.sqrt(gestureState.dx * gestureState.dx + gestureState.dy * gestureState.dy);
+        
+        if (distance > TAP_THRESHOLD) {
+          setIsDragging(true);
+          const newX = gestureState.x0 - size / 2 + gestureState.dx;
+          const newY = gestureState.y0 - size / 2 + gestureState.dy;
 
-        // Constrain within bounds
-        const constrainedX = Math.max(0, Math.min(newX, width - size));
-        const constrainedY = Math.max(0, Math.min(newY, height - size - 50));
+          // Constrain within bounds
+          const constrainedX = Math.max(0, Math.min(newX, width - size));
+          const constrainedY = Math.max(0, Math.min(newY, height - size - 50));
 
-        pan.x.setValue(constrainedX);
-        pan.y.setValue(constrainedY);
+          pan.x.setValue(constrainedX);
+          pan.y.setValue(constrainedY);
+        }
       },
       onPanResponderRelease: (evt, gestureState) => {
+        // Check if this was a tap or a drag
+        const distance = Math.sqrt(gestureState.dx * gestureState.dx + gestureState.dy * gestureState.dy);
+        
+        if (distance <= TAP_THRESHOLD) {
+          // This is a tap - trigger navigation
+          setIsDragging(false);
+          if (navigation && navigation.current) {
+            navigation.current.navigate('NotificationScreen');
+          }
+          return;
+        }
+
         setIsDragging(false);
 
         // Get current position
@@ -76,6 +100,12 @@ const DraggableBellIcon = ({
     })
   ).current;
 
+  const handlePress = () => {
+    if (navigation && navigation.current && !isDragging) {
+      navigation.current.navigate('NotificationScreen');
+    }
+  };
+
   return (
     <Animated.View
       style={[
@@ -99,13 +129,19 @@ const DraggableBellIcon = ({
             opacity: isDragging ? 0.9 : 1,
           },
         ]}
+        onPress={handlePress}
       >
         <Ionicons
           name="notifications"
-          size={size * 0.6}
+          size={size * 0.5}
           color={color}
           style={{ marginTop: 2 }}
         />
+        {unreadCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+          </View>
+        )}
       </TouchableOpacity>
     </Animated.View>
   );
@@ -128,6 +164,24 @@ const styles = StyleSheet.create({
     elevation: 10,
     borderWidth: 2,
     borderColor: '#f0f0f0',
+  },
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#EF4444',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
 });
 

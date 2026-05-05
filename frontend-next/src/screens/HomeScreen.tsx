@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import SidebarDrawer from '../components/SidebarDrawer';
 import HeaderIconButton from '../components/HeaderIconButton';
@@ -14,7 +15,25 @@ const toDateStr = (d: Date | null) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
+const formatCompactVND = (num: number | string): string => {
+  const n = Number(num);
+  if (n >= 1_000_000_000) {
+    const result = (n / 1_000_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 3 });
+    return result.replace(/,/g, '.') + 'B';
+  }
+  if (n >= 1_000_000) {
+    const result = (n / 1_000_000).toLocaleString('vi-VN', { maximumFractionDigits: 3 });
+    return result.replace(/,/g, '.') + 'M';
+  }
+  if (n >= 1_000) {
+    const result = (n / 1_000).toLocaleString('vi-VN', { maximumFractionDigits: 3 });
+    return result.replace(/,/g, '.') + 'K';
+  }
+  return n.toLocaleString('vi-VN');
+};
+
 export default function HomeScreen() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'expense' | 'income'>('expense');
   const [timePeriod, setTimePeriod] = useState<AnalyticsPeriod>('day');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -85,10 +104,10 @@ export default function HomeScreen() {
           <div className="text-center">
             <p className="text-xs opacity-80 uppercase tracking-widest mb-1">Tổng số dư</p>
             <h1 className="text-3xl font-black">
-              {totalBalance ? Number(totalBalance.balance).toLocaleString('vi-VN') : '0'} <span className="text-sm font-normal">đ</span>
+              {totalBalance ? formatCompactVND(totalBalance.balance) : '0'} <span className="text-sm font-normal">đ</span>
             </h1>
           </div>
-          <HeaderIconButton icon="📋" onPress={() => {}} />
+          <HeaderIconButton icon="📋" onPress={() => router.push('/transactions')} />
         </div>
       </div>
 
@@ -151,7 +170,7 @@ export default function HomeScreen() {
         </svg>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
           <p className="text-2xl font-black text-[#075c09]">
-            {balance ? (activeTab === 'expense' ? Number(balance.total_expense).toLocaleString('vi-VN') : Number(balance.total_income).toLocaleString('vi-VN')) : '0'}
+            {balance ? (activeTab === 'expense' ? formatCompactVND(balance.total_expense) : formatCompactVND(balance.total_income)) : '0'}
           </p>
           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Tổng {activeTab === 'expense' ? 'chi' : 'thu'}</p>
         </div>
@@ -176,7 +195,7 @@ export default function HomeScreen() {
               </div>
             </div>
             <span className={`font-black text-sm ${txn.type === 'income' ? 'text-green-500' : 'text-red-500'}`}>
-              {txn.type === 'income' ? '+' : '-'}{Number(txn.amount).toLocaleString('vi-VN')}
+              {txn.type === 'income' ? '+' : '-'}{formatCompactVND(txn.amount)}
             </span>
           </div>
         ))}

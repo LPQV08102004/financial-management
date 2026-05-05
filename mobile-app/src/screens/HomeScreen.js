@@ -15,6 +15,23 @@ const _toDateStr = (d) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
+const _formatCompactVND = (num) => {
+  const n = Number(num);
+  if (n >= 1_000_000_000) {
+    const result = (n / 1_000_000_000).toFixed(3).replace(/\.?0+$/, '');
+    return result + 'B';
+  }
+  if (n >= 1_000_000) {
+    const result = (n / 1_000_000).toFixed(3).replace(/\.?0+$/, '');
+    return result + 'M';
+  }
+  if (n >= 1_000) {
+    const result = (n / 1_000).toFixed(3).replace(/\.?0+$/, '');
+    return result + 'K';
+  }
+  return n.toLocaleString('vi-VN');
+};
+
 export default function HomeScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('expense');
   const [timePeriod, setTimePeriod] = useState('day');
@@ -111,7 +128,7 @@ export default function HomeScreen({ navigation }) {
           {note ? <Text style={styles.txnNote}>{note}</Text> : null}
         </View>
         <Text style={[styles.txnAmount, item.type === 'income' ? styles.amountIncome : styles.amountExpense]}>
-          {item.type === 'income' ? '+' : '-'}{amount.toLocaleString('vi-VN')} đ
+          {item.type === 'income' ? '+' : '-'}{_formatCompactVND(amount)} đ
         </Text>
       </View>
     );
@@ -132,7 +149,7 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.headerText}>Tổng số dư</Text>
             </View>
             <Text style={styles.balanceText}>
-              {totalBalance ? Number(totalBalance.balance).toLocaleString('vi-VN') + ' đ' : '—'}
+              {totalBalance ? _formatCompactVND(totalBalance.balance) + ' đ' : '—'}
             </Text>
           </View>
           <HeaderIconButton icon="📋" onPress={() => navigation.navigate('Transaction')} />
@@ -191,8 +208,8 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.chartAmount}>
               {balance
                 ? (activeTab === 'expense'
-                    ? Number(balance.total_expense).toLocaleString('vi-VN')
-                    : Number(balance.total_income).toLocaleString('vi-VN')) + ' đ'
+                    ? _formatCompactVND(balance.total_expense)
+                    : _formatCompactVND(balance.total_income)) + ' đ'
                 : '—'}
             </Text>
           </View>
@@ -210,7 +227,7 @@ export default function HomeScreen({ navigation }) {
                 <Text style={styles.categoryName}>{item.category}</Text>
                 <View style={styles.categoryRight}>
                   <Text style={styles.categoryPct}>{item.percentage}%</Text>
-                  <Text style={styles.categoryAmount}>{Number(item.amount).toLocaleString('vi-VN')} đ</Text>
+                  <Text style={styles.categoryAmount}>{_formatCompactVND(item.amount)} đ</Text>
                 </View>
               </View>
             ))

@@ -16,3 +16,4 @@ from app.modules.budgets.models import BudgetEntry, BudgetAlert, AuditLog  # noq
 from app.modules.savings_goals.models import SavingsGoal  # noqa: F401, E402
 from app.modules.recurring.models import RecurringTemplate  # noqa: F401, E402
 from app.modules.notifications.models import Notification, CustomReminder  # noqa: F401, E402
+from app.modules.admin.models import DefaultCategoryTemplate  # noqa: F401, E402

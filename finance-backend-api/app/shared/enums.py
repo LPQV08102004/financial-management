@@ -43,3 +43,6 @@ class AuditAction(str, enum.Enum):
     create_transaction = "create_transaction"
     update_transaction = "update_transaction"
     delete_transaction = "delete_transaction"
+    # admin actions
+    admin_toggle_user_status = "admin_toggle_user_status"
+    admin_reset_password = "admin_reset_password"

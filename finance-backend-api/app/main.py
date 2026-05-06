@@ -21,12 +21,18 @@ from app.modules.savings_goals.router import router as savings_goals_router
 from app.modules.recurring.router import router as recurring_router
 from app.modules.chat.router import router as chat_router
 from app.modules.notifications.router import router as notifications_router, reminders_router
+from app.modules.admin.router import router as admin_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create all tables (use Alembic in production)
     Base.metadata.create_all(bind=engine)
+    # Seed default category templates if table is empty
+    from sqlalchemy.orm import Session as DBSession
+    with DBSession(engine) as db:
+        from app.modules.admin.service import seed_default_templates_if_empty
+        seed_default_templates_if_empty(db)
     yield
 
 
@@ -64,6 +70,7 @@ app.include_router(recurring_router, prefix=PREFIX)
 app.include_router(chat_router, prefix=PREFIX)
 app.include_router(notifications_router, prefix=PREFIX)
 app.include_router(reminders_router, prefix=PREFIX)
+app.include_router(admin_router, prefix=PREFIX)
 
 @app.get("/", tags=["Health"])
 def root():

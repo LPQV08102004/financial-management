@@ -66,7 +66,44 @@ _DEFAULT_CATEGORIES = [
 
 
 def seed_default_categories(db: Session, user_id: int) -> None:
-    """Create default category groups and categories for a newly registered user."""
+    """Create default category groups/categories for a new user using DB templates."""
+    from app.modules.admin.models import DefaultCategoryTemplate
+    templates = (
+        db.query(DefaultCategoryTemplate)
+        .filter(DefaultCategoryTemplate.is_active == True)
+        .order_by(DefaultCategoryTemplate.group_sort_order, DefaultCategoryTemplate.id)
+        .all()
+    )
+
+    # Fall back to hardcoded list if DB has no templates yet
+    if not templates:
+        _seed_from_hardcoded(db, user_id)
+        return
+
+    # Group by group_name
+    groups: dict = {}
+    for t in templates:
+        if t.group_name not in groups:
+            groups[t.group_name] = {"sort_order": t.group_sort_order, "items": []}
+        groups[t.group_name]["items"].append(t)
+
+    for group_name, gdata in groups.items():
+        group = CategoryGroup(
+            user_id=user_id, name=group_name,
+            sort_order=gdata["sort_order"], is_system=True,
+        )
+        db.add(group)
+        db.flush()
+        for t in gdata["items"]:
+            db.add(Category(
+                user_id=user_id, group_id=group.id,
+                name=t.name, type=t.type, icon=t.icon, color=t.color, is_active=True,
+            ))
+    db.commit()
+
+
+def _seed_from_hardcoded(db: Session, user_id: int) -> None:
+    """Fallback: use the hardcoded list (used before DB templates are seeded)."""
     for group_def in _DEFAULT_CATEGORIES:
         group = CategoryGroup(
             user_id=user_id,
@@ -75,8 +112,7 @@ def seed_default_categories(db: Session, user_id: int) -> None:
             is_system=True,
         )
         db.add(group)
-        db.flush()  # get group.id before creating categories
-
+        db.flush()
         for item in group_def["items"]:
             db.add(Category(
                 user_id=user_id,
@@ -87,7 +123,6 @@ def seed_default_categories(db: Session, user_id: int) -> None:
                 color=item["color"],
                 is_active=True,
             ))
-
     db.commit()
 
 

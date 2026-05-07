@@ -5,7 +5,7 @@ from jose import JWTError
 
 from app.db.session import get_db
 from app.core.security import decode_token
-from app.core.exceptions import UnauthorizedError
+from app.core.exceptions import UnauthorizedError, ForbiddenError
 from app.modules.auth.models import User
 
 security = HTTPBearer()
@@ -30,3 +30,10 @@ def get_current_user(
     if user is None:
         raise UnauthorizedError("User not found or inactive")
     return user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Require the authenticated user to be an admin."""
+    if not current_user.is_admin:
+        raise ForbiddenError("Admin access required")
+    return current_user

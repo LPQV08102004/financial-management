@@ -10,13 +10,14 @@ export default function SignupScreen() {
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSignup = async () => {
-    if (!email || !fullName || !password || !passwordConfirm) {
+    if (!email || !fullName || !phone || !password || !passwordConfirm) {
       setError('Vui lòng điền đầy đủ thông tin');
       return;
     }
@@ -37,6 +38,7 @@ export default function SignupScreen() {
       const result = await signUp({
         email,
         full_name: fullName,
+        phone_number: phone,
         password,
       });
       if (!result.success) {
@@ -74,7 +76,7 @@ export default function SignupScreen() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Nguyen Van A"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09]"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
             />
           </div>
 
@@ -85,7 +87,18 @@ export default function SignupScreen() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="example@gmail.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09]"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">Số điện thoại</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="0123456789"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
             />
           </div>
 
@@ -96,7 +109,7 @@ export default function SignupScreen() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09]"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
             />
           </div>
 
@@ -107,7 +120,7 @@ export default function SignupScreen() {
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09]"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
               onKeyPress={(e) => e.key === 'Enter' && handleSignup()}
             />
           </div>

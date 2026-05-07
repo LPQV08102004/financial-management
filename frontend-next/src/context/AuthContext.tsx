@@ -94,8 +94,15 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
           return;
         }
 
-        const user = await getMyProfile(); // Lấy profile từ backend
-        dispatch({ type: 'RESTORE_TOKEN', payload: { token, user } });
+        try {
+          const user = await getMyProfile(); // Lấy profile từ backend
+          dispatch({ type: 'RESTORE_TOKEN', payload: { token, user } });
+        } catch (profileError: any) {
+          // Token hết hạn hoặc không hợp lệ, xóa token và logout
+          console.error('Token validation failed:', profileError);
+          await apiLogout().catch(() => {}); // Gọi logout để xóa token từ server
+          dispatch({ type: 'RESTORE_TOKEN', payload: null });
+        }
       } catch (e) {
         console.error('Failed to restore token:', e);
         dispatch({ type: 'RESTORE_TOKEN', payload: null });

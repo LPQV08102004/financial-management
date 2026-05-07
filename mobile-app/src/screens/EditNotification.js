@@ -1,19 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Modal, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
 import Footer from '../components/Footer';
+import { updateReminder, deleteReminder } from '../api/notificationApi';
 
 export default function EditNotification({ navigation, route }) {
   const { reminder } = route.params;
 
-  const [reminderName, setReminderName] = useState(reminder?.title || '');
+  const parseTime = (t) => (t ? t.split(':') : ['08', '00']);
+  const [timeH, timeM] = parseTime(reminder?.reminder_time);
+
+  const [reminderName, setReminderName] = useState(reminder?.name || '');
   const [frequency, setFrequency] = useState(reminder?.frequency || 'weekly');
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(reminder?.startDate ? new Date(reminder.startDate) : new Date());
+  const [selectedDate, setSelectedDate] = useState(reminder?.start_date ? new Date(reminder.start_date) : new Date());
   const [showDateModal, setShowDateModal] = useState(false);
-  const [selectedHour, setSelectedHour] = useState(reminder?.hour || '08');
-  const [selectedMinute, setSelectedMinute] = useState(reminder?.minute || '00');
+  const [selectedHour, setSelectedHour] = useState(timeH);
+  const [selectedMinute, setSelectedMinute] = useState(timeM);
   const [showTimeModal, setShowTimeModal] = useState(false);
-  const [notes, setNotes] = useState(reminder?.notes || '');
+  const [notes, setNotes] = useState(reminder?.note || '');
+  const [submitting, setSubmitting] = useState(false);
 
   const frequencyOptions = [
     { label: 'Hàng ngày', value: 'daily' },
@@ -68,33 +73,48 @@ export default function EditNotification({ navigation, route }) {
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
-  const handleEditReminder = () => {
-    if (reminderName.trim()) {
-      const time = `${selectedHour}:${selectedMinute}`;
-      console.log('Sửa lời nhắc:', { id: reminder.id, reminderName, frequency, startDate: formatDate(selectedDate), time, notes });
+  const toISODate = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const handleEditReminder = async () => {
+    if (!reminderName.trim()) return;
+    try {
+      setSubmitting(true);
+      await updateReminder(reminder.id, {
+        name: reminderName.trim(),
+        frequency,
+        start_date: toISODate(selectedDate),
+        reminder_time: `${selectedHour}:${selectedMinute}`,
+        note: notes.trim() || null,
+      });
       navigation.goBack();
+    } catch (err) {
+      Alert.alert('Lỗi', err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleDeleteReminder = () => {
-    Alert.alert(
-      'Xóa lời nhắc',
-      `Bạn có chắc chắn muốn xóa lời nhắc "${reminderName}"?`,
-      [
-        {
-          text: 'Hủy',
-          style: 'cancel',
-        },
-        {
-          text: 'Xóa',
-          onPress: () => {
-            console.log('Xóa lời nhắc:', reminder.id);
+    Alert.alert('Xóa lời nhắc', `Bạn có chắc chắn muốn xóa "${reminderName}"?`, [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Xóa',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteReminder(reminder.id);
             navigation.goBack();
-          },
-          style: 'destructive',
+          } catch (err) {
+            Alert.alert('Lỗi', err.message);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
@@ -352,18 +372,17 @@ export default function EditNotification({ navigation, route }) {
           </View>
 
           <View style={styles.buttonGroup}>
-            <TouchableOpacity 
-              style={[styles.submitButton, !reminderName.trim() && styles.submitButtonDisabled]}
+            <TouchableOpacity
+              style={[styles.submitButton, (!reminderName.trim() || submitting) && styles.submitButtonDisabled]}
               onPress={handleEditReminder}
-              disabled={!reminderName.trim()}
+              disabled={!reminderName.trim() || submitting}
             >
-              <Text style={styles.submitButtonText}>Sửa lời nhắc</Text>
+              {submitting
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.submitButtonText}>Sửa lời nhắc</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.deleteButton}
-              onPress={handleDeleteReminder}
-            >
+            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteReminder}>
               <Text style={styles.deleteButtonText}>Xóa lời nhắc</Text>
             </TouchableOpacity>
           </View>

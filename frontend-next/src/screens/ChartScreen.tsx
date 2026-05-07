@@ -92,132 +92,145 @@ export default function ChartScreen() {
     <div className="bg-[#f8f9fa] flex flex-col relative">
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      {/* Header[cite: 5] */}
-      <div className="bg-[#075c09] p-6 pt-10 flex justify-between items-center text-white">
-        <button onClick={() => setSidebarOpen(true)} className="p-2 space-y-1">
-          <div className="w-6 h-0.5 bg-white"></div>
-          <div className="w-6 h-0.5 bg-white"></div>
-          <div className="w-4 h-0.5 bg-white"></div>
+      {/* Header */}
+      <header className="bg-[#075c09] px-5 py-4 flex justify-between items-center text-white shadow-sm sticky top-0 z-30">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden p-2 space-y-1.5 hover:bg-white/10 rounded-xl transition-colors"
+        >
+          <div className="w-6 h-0.5 bg-white rounded" />
+          <div className="w-6 h-0.5 bg-white rounded" />
+          <div className="w-4 h-0.5 bg-white rounded" />
         </button>
-        <h1 className="text-xl font-bold">Biểu đồ</h1>
-          <HeaderIconButton icon="📋" onPress={() => {}} />
-      </div>
+        <h1 className="text-lg font-bold">Biểu đồ phân tích</h1>
+        <div className="w-10" />
+      </header>
 
-      {/* Tabs[cite: 5] */}
-      <div className="flex bg-white border-b sticky top-0 z-10 shadow-sm">
+      {/* Tabs */}
+      <div className="flex bg-white border-b shadow-sm">
         {['all', 'expense', 'income'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`flex-1 py-4 text-sm font-bold transition-all border-b-4 ${
-              activeTab === tab ? 'border-[#075c09] text-[#075c09]' : 'border-transparent text-gray-400'
+            className={`flex-1 py-3.5 text-sm font-bold transition-all border-b-2 ${
+              activeTab === tab
+                ? 'border-[#075c09] text-[#075c09]'
+                : 'border-transparent text-slate-400 hover:text-slate-600'
             }`}
           >
-            {tab === 'all' ? 'CHUNG' : tab === 'expense' ? 'CHI PHÍ' : 'THU NHẬP'}
+            {tab === 'all' ? 'Tổng quan' : tab === 'expense' ? 'Chi phí' : 'Thu nhập'}
           </button>
         ))}
       </div>
 
-      <div className="p-4">
-        <DateTimeSelector
-          timePeriod={timePeriod}
-          selectedDate={selectedDate}
-          setTimePeriod={setTimePeriod}
-          setSelectedDate={setSelectedDate}
-          setConfirmedStartDate={setConfirmedStartDate}
-          setConfirmedEndDate={setConfirmedEndDate}
-          showCalendar={showCalendar}
-          setShowCalendar={setShowCalendar}
-          currentCalendarMonth={currentCalendarMonth}
-          setCurrentCalendarMonth={setCurrentCalendarMonth}
-          selectingStartDate={selectingStartDate}
-          setSelectingStartDate={setSelectingStartDate}
-          customStartDate={customStartDate}
-          setCustomStartDate={setCustomStartDate}
-          customEndDate={customEndDate}
-          setCustomEndDate={setCustomEndDate}
-        />
-      </div>
+      <div className="p-4 max-w-4xl mx-auto">
+        {/* Date selector */}
+        <div className="mb-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <DateTimeSelector
+            timePeriod={timePeriod}
+            selectedDate={selectedDate}
+            setTimePeriod={setTimePeriod}
+            setSelectedDate={setSelectedDate}
+            setConfirmedStartDate={setConfirmedStartDate}
+            setConfirmedEndDate={setConfirmedEndDate}
+            showCalendar={showCalendar}
+            setShowCalendar={setShowCalendar}
+            currentCalendarMonth={currentCalendarMonth}
+            setCurrentCalendarMonth={setCurrentCalendarMonth}
+            selectingStartDate={selectingStartDate}
+            setSelectingStartDate={setSelectingStartDate}
+            customStartDate={customStartDate}
+            setCustomStartDate={setCustomStartDate}
+            customEndDate={customEndDate}
+            setCustomEndDate={setCustomEndDate}
+          />
+        </div>
 
-      {/* Legend & Chart Area[cite: 5] */}
-      <div className="m-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {/* Chú thích */}
-        <div className="flex justify-center gap-6 mb-6">
-          {activeTab === 'all' ? (
-            <>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-[#d9534f] rounded-sm"></div><span className="text-xs font-bold text-gray-600">Chi phí</span></div>
-              <div className="flex items-center gap-2"><div className="w-3 h-3 bg-[#5cb85c] rounded-sm"></div><span className="text-xs font-bold text-gray-600">Thu nhập</span></div>
-            </>
+        {/* Chart card */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-slate-800 text-sm">
+              {activeTab === 'all' ? 'Thu - Chi theo thời gian' : activeTab === 'expense' ? 'Chi phí theo danh mục' : 'Thu nhập theo danh mục'}
+            </h3>
+            {/* Legend */}
+            <div className="flex items-center gap-4">
+              {activeTab === 'all' ? (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 bg-[#ef4444] rounded-sm" />
+                    <span className="text-xs text-slate-500 font-medium">Chi phí</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 bg-[#22c55e] rounded-sm" />
+                    <span className="text-xs text-slate-500 font-medium">Thu nhập</span>
+                  </div>
+                </>
+              ) : (
+                getAllCategories().slice(0, 4).map((cat) => (
+                  <div key={cat} className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: apiCategoryColors[cat] }} />
+                    <span className="text-xs text-slate-500 font-medium">{cat}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {apiChartData.length === 0 ? (
+            <div className="flex items-center justify-center py-16 text-slate-400">
+              <p className="text-sm italic">Không có dữ liệu trong khoảng thời gian này</p>
+            </div>
           ) : (
-            getAllCategories().map(cat => (
-              <div key={cat} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: apiCategoryColors[cat] }}></div>
-                <span className="text-xs font-bold text-gray-600">{cat}</span>
+            <div className="flex overflow-x-auto pb-2">
+              <div className="flex flex-col justify-between pr-3 text-[10px] text-slate-400 font-medium h-[220px] mt-10">
+                {[1, 0.75, 0.5, 0.25, 0].map((ratio) => (
+                  <span key={ratio}>{(maxValue * ratio / 1000).toFixed(0)}K</span>
+                ))}
               </div>
-            ))
+              <svg width={chartWidth} height={chartHeight} className="flex-shrink-0">
+                {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                  const y = chartHeight - padding - (chartHeight - padding * 2) * ratio;
+                  return (
+                    <line key={ratio} x1={padding} y1={y} x2={chartWidth} y2={y} stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 2" />
+                  );
+                })}
+                <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#e2e8f0" strokeWidth="1.5" />
+                <line x1={padding} y1={chartHeight - padding} x2={chartWidth} y2={chartHeight - padding} stroke="#e2e8f0" strokeWidth="1.5" />
+                {apiChartData.map((data, idx) => {
+                  const xBase = padding + idx * barSpacing + barSpacing / 2 - BAR_WIDTH / 2;
+                  const graphHeight = chartHeight - padding * 2;
+                  if (activeTab === 'all') {
+                    const incH = (data.income / maxValue) * graphHeight;
+                    const expH = (data.expense / maxValue) * graphHeight;
+                    return (
+                      <g key={idx}>
+                        <rect x={xBase} y={chartHeight - padding - expH} width={BAR_WIDTH} height={expH} fill="#ef4444" rx="3" />
+                        <rect x={xBase + BAR_WIDTH + 3} y={chartHeight - padding - incH} width={BAR_WIDTH} height={incH} fill="#22c55e" rx="3" />
+                        <text x={xBase + BAR_WIDTH} y={chartHeight - 12} fontSize="9" fill="#94a3b8" textAnchor="middle">{data.label}</text>
+                      </g>
+                    );
+                  } else {
+                    let currentY = chartHeight - padding;
+                    return (
+                      <g key={idx}>
+                        {getAllCategories().map((cat) => {
+                          const amt = data.categories?.[cat] || 0;
+                          const h = (amt / maxValue) * graphHeight;
+                          currentY -= h;
+                          return (
+                            <rect key={cat} x={xBase + BAR_WIDTH / 2} y={currentY} width={BAR_WIDTH} height={h} fill={apiCategoryColors[cat]} rx="2" />
+                          );
+                        })}
+                        <text x={xBase + BAR_WIDTH} y={chartHeight - 12} fontSize="9" fill="#94a3b8" textAnchor="middle">{data.label}</text>
+                      </g>
+                    );
+                  }
+                })}
+              </svg>
+            </div>
           )}
         </div>
-
-        {/* Bar Chart SVG[cite: 5] */}
-        <div className="flex overflow-x-auto pb-4 custom-scrollbar">
-          {/* Y-Axis Labels */}
-          <div className="flex flex-col justify-between pr-2 text-[10px] text-gray-400 font-bold h-[220px] mt-[40px]">
-            {[1, 0.75, 0.5, 0.25, 0].map(ratio => (
-              <span key={ratio}>{(maxValue * ratio / 1000).toFixed(0)}K</span>
-            ))}
-          </div>
-
-          <svg width={chartWidth} height={chartHeight} className="flex-shrink-0">
-            {/* Grid Lines[cite: 5] */}
-            {[0, 0.25, 0.5, 0.75, 1].map(ratio => {
-              const y = chartHeight - padding - (chartHeight - padding * 2) * ratio;
-              return <line key={ratio} x1={padding} y1={y} x2={chartWidth} y2={y} stroke="#f0f0f0" strokeDasharray="4" />;
-            })}
-
-            {/* Trục X & Y */}
-            <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#075c09" strokeWidth="2" />
-            <line x1={padding} y1={chartHeight - padding} x2={chartWidth} y2={chartHeight - padding} stroke="#075c09" strokeWidth="2" />
-
-            {/* Render Bars[cite: 5] */}
-            {apiChartData.map((data, idx) => {
-              const xBase = padding + idx * barSpacing + barSpacing / 2 - BAR_WIDTH / 2;
-              const graphHeight = chartHeight - padding * 2;
-
-              if (activeTab === 'all') {
-                const incH = (data.income / maxValue) * graphHeight;
-                const expH = (data.expense / maxValue) * graphHeight;
-                return (
-                  <g key={idx}>
-                    <rect x={xBase} y={chartHeight - padding - expH} width={BAR_WIDTH} height={expH} fill="#d9534f" rx="2" />
-                    <rect x={xBase + BAR_WIDTH + 2} y={chartHeight - padding - incH} width={BAR_WIDTH} height={incH} fill="#5cb85c" rx="2" />
-                    <text x={xBase + BAR_WIDTH} y={chartHeight - 15} fontSize="10" fill="#999" textAnchor="middle">{data.label}</text>
-                  </g>
-                );
-              } else {
-                let currentY = chartHeight - padding;
-                return (
-                  <g key={idx}>
-                    {getAllCategories().map(cat => {
-                      const amt = data.categories?.[cat] || 0;
-                      const h = (amt / maxValue) * graphHeight;
-                      currentY -= h;
-                      return <rect key={cat} x={xBase + BAR_WIDTH / 2} y={currentY} width={BAR_WIDTH} height={h} fill={apiCategoryColors[cat]} rx="2" />;
-                    })}
-                    <text x={xBase + BAR_WIDTH} y={chartHeight - 15} fontSize="10" fill="#999" textAnchor="middle">{data.label}</text>
-                  </g>
-                );
-              }
-            })}
-          </svg>
-        </div>
       </div>
-
-      {apiChartData.length === 0 && (
-        <div className="flex-1 flex items-center justify-center p-10 opacity-40">
-          <p className="text-center italic font-medium">Không có dữ liệu trong khoảng thời gian này</p>
-        </div>
-      )}
-
-          </div>
+    </div>
   );
 }

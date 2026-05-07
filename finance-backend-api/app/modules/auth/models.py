@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, func
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, func, Text
 
 from app.db.base import Base
 
@@ -12,7 +12,7 @@ class User(Base):
     full_name = Column(String(150), nullable=False)
     phone_number = Column(String(20), nullable=True, default=None)
     is_active = Column(Boolean, nullable=False, default=True)
-    avatar_url = Column(String(10000), nullable=True, default=None)
+    avatar_url = Column(Text(length=4294967295), nullable=True, default=None)
     is_admin = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)

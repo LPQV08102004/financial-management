@@ -17,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { updateMyProfile } from '../api/authApi';
 
 export default function EditProfileScreen({ navigation }) {
-  const { state, refreshProfile } = useAuth();
+  const { state, updateUser } = useAuth();
   const user = state.user;
   const [fullName, setFullName] = useState(user?.full_name || '');
   const [phoneNumber, setPhoneNumber] = useState(user?.phone_number || '');
@@ -137,10 +137,8 @@ export default function EditProfileScreen({ navigation }) {
         payload.avatar_url = null;
       }
 
-      await updateMyProfile(payload);
-
-      // Refresh profile in AuthContext
-      await refreshProfile();
+      const updatedUser = await updateMyProfile(payload);
+      updateUser(updatedUser);
 
       Alert.alert('Thành công', 'Cập nhật hồ sơ thành công', [
         {
@@ -231,17 +229,16 @@ export default function EditProfileScreen({ navigation }) {
 
             {/* Phone Number */}
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Số điện thoại (tùy chọn)</Text>
+              <Text style={styles.formLabel}>Số điện thoại</Text>
               <TextInput
                 style={styles.formInput}
-                placeholder="0xxxxxxxxx hoặc +84xxxxxxxxx"
+                placeholder=""
                 placeholderTextColor="#999"
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
                 keyboardType="phone-pad"
                 editable={!saving}
               />
-              <Text style={styles.formHelper}>Định dạng: 0xxxxxxxxx hoặc +84xxxxxxxxx</Text>
             </View>
 
             {/* Save Button */}

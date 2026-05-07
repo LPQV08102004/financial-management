@@ -1,14 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Animated, Image, Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { listAccounts } from '../api/accountsApi';
 
 export default function SidebarDrawer({ isOpen, onClose, navigation }) {
-  const { state } = useAuth();
+  const { state, signOut } = useAuth();
   const user = state.user;
   const displayName = user?.full_name || user?.fullname || user?.name || 'Người dùng';
+  const avatarUri = (user?.avatar_url || user?.avatar || '').trim();
   const sidebarAnimation = useRef(new Animated.Value(-240)).current;
   const [totalBalance, setTotalBalance] = useState(null);
+
+  const handleLogout = () => {
+    Alert.alert('Đăng xuất', 'Bạn có chắc chắn muốn đăng xuất?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Đăng xuất',
+        style: 'destructive',
+        onPress: async () => {
+          await signOut();
+          onClose();
+        },
+      },
+    ]);
+  };
 
   useEffect(() => {
     Animated.timing(sidebarAnimation, {
@@ -54,7 +69,15 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
             activeOpacity={0.7}
           >
             <View style={styles.userAvatarCircle} pointerEvents="none">
-              <Text style={styles.userAvatarText}>👤</Text>
+              {avatarUri ? (
+                <Image
+                  source={{ uri: avatarUri }}
+                  style={styles.userAvatarImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={styles.userAvatarText}>👤</Text>
+              )}
             </View>
             <View style={styles.userInfoContainer} pointerEvents="none">
               <Text style={styles.userName}>{displayName}</Text>
@@ -128,6 +151,9 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
           >
             <Text style={styles.sidebarItemText}>🔔 Nhắc nhở</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.sidebarItem} onPress={handleLogout}>
+            <Text style={styles.sidebarItemText}>🚪 Đăng xuất</Text>
+          </TouchableOpacity>
         </Animated.View>
       )}
     </>
@@ -174,9 +200,14 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
+  },
+  userAvatarImage: {
+    width: '100%',
+    height: '100%',
   },
   userAvatarText: {
     fontSize: 32,

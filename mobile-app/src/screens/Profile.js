@@ -1,37 +1,23 @@
 /* eslint-disable react/prop-types */
-import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal, InteractionManager } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal, InteractionManager, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import Footer from '../components/Footer';
 
 export default function Profile({ navigation }) {
-  const { refreshProfile, signOut } = useAuth();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { state, refreshProfile, signOut } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const loadProfile = async () => {
-    try {
-      setLoading(true);
-      const result = await refreshProfile();
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-      setUser(result.user);
-    } catch (error) {
-      Alert.alert('Lỗi', error.message || 'Không tải được hồ sơ');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const user = state.user;
 
-  useFocusEffect(
-    useCallback(() => {
-      loadProfile();
-    }, [])
-  );
+  React.useEffect(() => {
+    if (!user) {
+      refreshProfile().catch((error) => {
+        Alert.alert('Lỗi', error.message || 'Không tải được hồ sơ');
+      });
+    }
+  }, [refreshProfile, user]);
 
   const performLogout = async () => {
     if (loggingOut) {
@@ -53,14 +39,6 @@ export default function Profile({ navigation }) {
     setShowLogoutModal(true);
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.screenContainer, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#075c09" />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.screenContainer}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
@@ -79,9 +57,15 @@ export default function Profile({ navigation }) {
         <View style={styles.contentWrapper}>
           {/* Avatar */}
           <View style={styles.avatarContainer}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>👤</Text>
-            </View>
+            {user?.avatar_url ? (
+              <View style={styles.avatarCircle}>
+                <Image source={{ uri: user.avatar_url }} style={styles.profileAvatarImage} />
+              </View>
+            ) : (
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarText}>👤</Text>
+              </View>
+            )}
             <TouchableOpacity 
               style={styles.editAvatarButton}
               onPress={() => navigation.navigate('EditProfile')}
@@ -265,6 +249,11 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 60,
+  },
+  profileAvatarImage: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
   },
   infoSection: {
     marginTop: 20,

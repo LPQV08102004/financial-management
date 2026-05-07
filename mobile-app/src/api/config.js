@@ -28,7 +28,19 @@ export function getApiBaseUrl() {
 export function getApiBaseUrlCandidates() {
   const candidates = [];
 
-  const envBaseUrl = sanitizeBaseUrl(process.env.EXPO_PUBLIC_API_BASE_URL);
+  // Prefer values injected into the Expo runtime (app manifest / extra),
+  // then fall back to process.env which is available in some dev setups.
+  const manifestExtra =
+    Constants.manifest?.extra ||
+    Constants.expoConfig?.extra ||
+    (Constants.manifest2 && Constants.manifest2.extra) ||
+    null;
+
+  const extraBaseUrl = manifestExtra && manifestExtra.EXPO_PUBLIC_API_BASE_URL
+    ? sanitizeBaseUrl(manifestExtra.EXPO_PUBLIC_API_BASE_URL)
+    : null;
+
+  const envBaseUrl = extraBaseUrl || sanitizeBaseUrl(process.env.EXPO_PUBLIC_API_BASE_URL);
   if (envBaseUrl) {
     candidates.push(envBaseUrl);
   }

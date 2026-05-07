@@ -14,6 +14,8 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 class UpdateProfileRequest(BaseModel):
     full_name: str | None = Field(default=None, min_length=1, max_length=150)
+    phone_number: str | None = Field(default=None, min_length=1, max_length=20)
+    avatar_url: str | None = Field(default=None)
 
 
 @router.get("/me", response_model=UserOut)
@@ -27,7 +29,13 @@ def update_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return auth_service.update_profile(db=db, user=current_user, full_name=body.full_name)
+    return auth_service.update_profile(
+        db=db,
+        user=current_user,
+        full_name=body.full_name,
+        phone_number=body.phone_number,
+        avatar_url=body.avatar_url,
+    )
 
 
 @router.post("/me/change-password", response_model=MessageResponse)

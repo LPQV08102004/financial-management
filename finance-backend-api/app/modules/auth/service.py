@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from jose import JWTError
 
-from app.core.exceptions import ConflictError, UnauthorizedError, BadRequestError
+from app.core.exceptions import ConflictError, UnauthorizedError, BadRequestError, NotFoundError
+from app.db.session import SessionLocal
 from app.core.security import (
     hash_password,
     verify_password,
@@ -25,36 +26,58 @@ def get_user_by_id(db: Session, user_id: int) -> User | None:
     return db.query(User).filter(User.id == user_id).first()
 
 
-def register_user(db: Session, email: str, password: str, full_name: str) -> User:
+def register_user(db: Session, email: str, password: str, full_name: str, phone_number: str | None = None) -> User:
     existing = get_user_by_email(db, email)
     if existing:
         raise ConflictError("Email already registered")
 
-    user = User(
-        email=email,
-        hashed_password=hash_password(password),
-        full_name=full_name,
-        is_active=True,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    try:
+        user = User(
+            email=email,
+            hashed_password=hash_password(password),
+            full_name=full_name,
+            phone_number=phone_number,
+            is_active=True,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        print(f"[REGISTER_SUCCESS] User created: {user.id}, {user.email}")
 
-    seed_default_categories(db, user.id)
-    create_account(db, user.id, {"name": "Tiền mặt", "type": "cash", "currency": "VND"})
-
-    return user
+        return user
+    except Exception as e:
+        db.rollback()
+        import traceback
+        print(f"[REGISTER_FAILED] {str(e)}")
+        traceback.print_exc()
+        raise
 
 
 def authenticate_user(db: Session, email: str, password: str) -> User:
     user = get_user_by_email(db, email)
     if not user:
-        raise UnauthorizedError("Invalid email or password")
+        raise NotFoundError("Tài khoản chưa được đăng ký")
     if not user.is_active:
         raise UnauthorizedError("User is inactive")
     if not verify_password(password, user.hashed_password):
         raise UnauthorizedError("Invalid email or password")
     return user
+
+
+def bootstrap_new_user_data(user_id: int) -> None:
+    db = SessionLocal()
+    try:
+        try:
+            create_account(db, user_id, {"name": "Tiền mặt", "type": "cash", "currency": "VND"})
+        except Exception as account_err:
+            print(f"[ACCOUNT_ERROR] {str(account_err)}")
+
+        try:
+            seed_default_categories(db, user_id)
+        except Exception as cat_err:
+            print(f"[CATEGORY_ERROR] {str(cat_err)}")
+    finally:
+        db.close()
 
 
 def create_tokens_for_user(db: Session, user: User) -> tuple[str, str]:
@@ -141,9 +164,15 @@ def update_profile(
     db: Session,
     user: User,
     full_name: str | None,
+    phone_number: str | None = None,
+    avatar_url: str | None = None,
 ) -> User:
     if full_name is not None:
         user.full_name = full_name
+    if phone_number is not None:
+        user.phone_number = phone_number
+    if avatar_url is not None:
+        user.avatar_url = avatar_url
 
     db.commit()
     db.refresh(user)

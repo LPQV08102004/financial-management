@@ -14,10 +14,30 @@ export default function SignupScreen({ navigation }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signUp } = useAuth();
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    const phoneRegex = /^(0\d{9,10}|\+84\d{9,10})$/;
+    return phoneRegex.test(phone);
+  };
+
   const handleSignup = async () => {
     // Validation
     if (!fullname || !email || !sdt || !password || !confirmPassword) {
       Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      Alert.alert('Lỗi', 'Email không hợp lệ. Vui lòng nhập đúng định dạng email (vd: abc@example.com)');
+      return;
+    }
+
+    if (!validatePhone(sdt)) {
+      Alert.alert('Lỗi', 'Số điện thoại không hợp lệ. Vui lòng nhập: 0xxxxxxxxx hoặc +84xxxxxxxxx');
       return;
     }
 
@@ -26,8 +46,8 @@ export default function SignupScreen({ navigation }) {
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
+    if (password.length < 8) {
+      Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 8 ký tự');
       return;
     }
 

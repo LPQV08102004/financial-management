@@ -6,6 +6,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
     full_name: str = Field(min_length=1, max_length=150)
+    phone_number: str | None = Field(default=None, min_length=1, max_length=20)
 
 
 class LoginRequest(BaseModel):
@@ -21,7 +22,9 @@ class UserOut(BaseModel):
     id: int
     email: EmailStr
     full_name: str
+    phone_number: str | None = None
     is_active: bool
+    avatar_url: str | None = None
     created_at: datetime
     updated_at: datetime
 

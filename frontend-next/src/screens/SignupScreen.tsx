@@ -62,8 +62,9 @@ export default function SignupScreen() {
       setError('Mật khẩu không trùng khớp');
       return;
     }
-    if (password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự');
+    const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+    if (!STRONG_PASSWORD_REGEX.test(password)) {
+      setError('Mật khẩu phải từ 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
       return;
     }
     setLoading(true);
@@ -120,7 +121,7 @@ export default function SignupScreen() {
               type={showPw ? 'text' : 'password'}
               value={password}
               onChange={setPassword}
-              placeholder="Tối thiểu 6 ký tự"
+              placeholder="Chữ hoa, chữ thường, số, ký tự đặc biệt"
               rightEl={<PwToggle show={showPw} toggle={() => setShowPw(!showPw)} />}
             />
             <InputField

@@ -101,6 +101,8 @@ Nếu câu hỏi KHÔNG liên quan đến tài chính (ví dụ: tin tức, th�
 
 Chỉ trả lời dựa trên thông tin thực tế được cung cấp bên dưới. Nếu không đủ dữ liệu, nói rõ điều đó.
 
+Khi liệt kê danh sách giao dịch, hãy trình bày MỖI giao dịch trên MỘT DÒNG RIÊNG (dùng ký tự xuống dòng \\n giữa các mục), không gộp thành một đoạn liền.
+
 {financial_context}"""
 
     messages = [{"role": "system", "content": system_prompt}]

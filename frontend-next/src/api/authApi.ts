@@ -27,6 +27,41 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   };
 }
 
+/**
+ * Shared authenticated fetch — automatically attaches auth headers.
+ * Redirects to /auth/login when there is no token or the server returns 401.
+ */
+export async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = getSavedToken();
+
+  if (!token) {
+    if (typeof window !== 'undefined') {
+      window.location.replace('/auth/login');
+    }
+    throw new Error('Bạn chưa đăng nhập');
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...(options.headers as Record<string, string> | undefined),
+    },
+  });
+
+  if (res.status === 401) {
+    Cookies.remove(ACCESS_TOKEN_KEY);
+    Cookies.remove(REFRESH_TOKEN_KEY);
+    if (typeof window !== 'undefined') {
+      window.location.replace('/auth/login');
+    }
+    throw new Error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+  }
+
+  return res;
+}
+
 /** Đăng nhập */
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {

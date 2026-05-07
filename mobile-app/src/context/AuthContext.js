@@ -67,15 +67,15 @@ export function AuthProvider({ children }) {
           payload: { token, user: cachedUser },
         });
 
+        // Validate token is still accepted by backend
         getMyProfile()
           .then((user) => {
-            dispatch({
-              type: 'UPDATE_USER',
-              payload: user,
-            });
+            dispatch({ type: 'UPDATE_USER', payload: user });
           })
-          .catch((profileError) => {
-            console.warn('Profile refresh skipped:', profileError.message);
+          .catch(async () => {
+            // Token expired or invalid — force logout
+            await logout().catch(() => {});
+            dispatch({ type: 'SIGN_OUT' });
           });
       } catch (e) {
         console.error('Failed to restore token:', e);

@@ -18,8 +18,8 @@ export default function ChatScreen() {
   const { messages, setMessages } = useChatContext();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [nlpMode, setNlpMode] = useState(false);       // Chế độ nhập giao dịch
-  const [savingsMode, setSavingsMode] = useState(false); // Chế độ nhập tiết kiệm
+  const [nlpMode, setNlpMode] = useState(false);
+  const [savingsMode, setSavingsMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Cuộn xuống cuối khi có tin nhắn mới
@@ -160,7 +160,12 @@ export default function ChatScreen() {
                   : 'mr-auto bg-white text-gray-800 rounded-bl-none border border-gray-100'
               }`}
             >
-              {item.content}
+              {item.content.split('\n').map((line: string, i: number) => (
+                <React.Fragment key={i}>
+                  {line}
+                  {i < item.content.split('\n').length - 1 && <br />}
+                </React.Fragment>
+              ))}
             </div>
           );
         })}

@@ -1,24 +1,12 @@
 // src/api/categoriesApi.ts
-import Cookies from 'js-cookie';
 import { API_BASE_URL } from './config';
 import { Category, CategoryPayload, CategoryType } from '../types/category';
-const ACCESS_TOKEN_KEY = 'access_token';
-
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const token = Cookies.get(ACCESS_TOKEN_KEY);
-  if (!token) throw new Error('Bạn chưa đăng nhập');
-  return { 
-    'Content-Type': 'application/json', 
-    'Authorization': `Bearer ${token}` 
-  };
-}
+import { apiFetch } from './authApi';
 
 /** GET /categories — Lấy danh sách danh mục */
 export async function listCategories(type?: CategoryType): Promise<Category[]> {
   const query = type ? `?type=${type}` : '';
-  const res = await fetch(`${API_BASE_URL}/categories${query}`, {
-    headers: await getAuthHeaders(),
-  });
+  const res = await apiFetch(`${API_BASE_URL}/categories${query}`);
   
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.detail || 'Không lấy được danh mục');
@@ -27,9 +15,8 @@ export async function listCategories(type?: CategoryType): Promise<Category[]> {
 
 /** POST /categories — Tạo danh mục mới */
 export async function createCategory(payload: CategoryPayload): Promise<Category> {
-  const res = await fetch(`${API_BASE_URL}/categories`, {
+  const res = await apiFetch(`${API_BASE_URL}/categories`, {
     method: 'POST',
-    headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   
@@ -40,9 +27,8 @@ export async function createCategory(payload: CategoryPayload): Promise<Category
 
 /** PATCH /categories/{id} — Cập nhật danh mục */
 export async function updateCategory(id: string | number, payload: Partial<CategoryPayload>): Promise<Category> {
-  const res = await fetch(`${API_BASE_URL}/categories/${id}`, {
+  const res = await apiFetch(`${API_BASE_URL}/categories/${id}`, {
     method: 'PATCH',
-    headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   
@@ -53,9 +39,8 @@ export async function updateCategory(id: string | number, payload: Partial<Categ
 
 /** DELETE /categories/{id} — Xóa danh mục */
 export async function deleteCategory(id: string | number): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/categories/${id}`, {
+  const res = await apiFetch(`${API_BASE_URL}/categories/${id}`, {
     method: 'DELETE',
-    headers: await getAuthHeaders(),
   });
   
   if (!res.ok) {

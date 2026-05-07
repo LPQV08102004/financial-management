@@ -1,5 +1,4 @@
 // src/api/transactionApi.ts
-import Cookies from 'js-cookie';
 import { API_BASE_URL } from './config';
 import { 
   Transaction, 
@@ -7,17 +6,7 @@ import {
   TransactionListResponse, 
   CreateTransactionPayload 
 } from '../types/transaction';
-
-const ACCESS_TOKEN_KEY = 'access_token';
-
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const token = Cookies.get(ACCESS_TOKEN_KEY);
-  if (!token) throw new Error('Bạn chưa đăng nhập');
-  return { 
-    'Content-Type': 'application/json', 
-    'Authorization': `Bearer ${token}` 
-  };
-}
+import { apiFetch } from './authApi';
 
 const _buildQuery = (params: TransactionListParams): string =>
   new URLSearchParams(
@@ -29,9 +18,8 @@ const _buildQuery = (params: TransactionListParams): string =>
 /** GET /transactions — Lấy danh sách giao dịch có bộ lọc */
 export async function listTransactions(params: TransactionListParams = {}): Promise<TransactionListResponse> {
   const query = _buildQuery(params);
-  const res = await fetch(
-    `${API_BASE_URL}/transactions${query ? `?${query}` : ''}`,
-    { headers: await getAuthHeaders() }
+  const res = await apiFetch(
+    `${API_BASE_URL}/transactions${query ? `?${query}` : ''}`
   );
   
   const data = await res.json().catch(() => ({}));
@@ -41,9 +29,8 @@ export async function listTransactions(params: TransactionListParams = {}): Prom
 
 /** POST /transactions/income — Tạo giao dịch thu nhập */
 export async function createIncome(payload: CreateTransactionPayload): Promise<Transaction> {
-  const res = await fetch(`${API_BASE_URL}/transactions/income`, {
+  const res = await apiFetch(`${API_BASE_URL}/transactions/income`, {
     method: 'POST',
-    headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   
@@ -54,9 +41,8 @@ export async function createIncome(payload: CreateTransactionPayload): Promise<T
 
 /** POST /transactions/expense — Tạo giao dịch chi tiêu */
 export async function createExpense(payload: CreateTransactionPayload): Promise<Transaction> {
-  const res = await fetch(`${API_BASE_URL}/transactions/expense`, {
+  const res = await apiFetch(`${API_BASE_URL}/transactions/expense`, {
     method: 'POST',
-    headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   
@@ -70,9 +56,8 @@ export async function updateTransaction(
   txnId: string | number, 
   payload: Partial<CreateTransactionPayload>
 ): Promise<Transaction> {
-  const res = await fetch(`${API_BASE_URL}/transactions/${txnId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/transactions/${txnId}`, {
     method: 'PATCH',
-    headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   
@@ -83,9 +68,8 @@ export async function updateTransaction(
 
 /** DELETE /transactions/:id — Xóa giao dịch */
 export async function deleteTransaction(txnId: string | number): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/transactions/${txnId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/transactions/${txnId}`, {
     method: 'DELETE',
-    headers: await getAuthHeaders(),
   });
   
   if (!res.ok) {

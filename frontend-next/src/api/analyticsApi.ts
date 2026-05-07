@@ -1,5 +1,4 @@
 // src/api/analyticsApi.ts
-import Cookies from 'js-cookie';
 import { API_BASE_URL } from './config';
 import { 
   AnalyticsParams, 
@@ -7,15 +6,7 @@ import {
   CategoryStat, 
   OverTimeStat 
 } from '../types/analytics';
-const ACCESS_TOKEN_KEY = 'access_token';
-
-async function _headers(): Promise<HeadersInit> {
-  const token = Cookies.get(ACCESS_TOKEN_KEY);
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
+import { apiFetch } from './authApi';
 
 const _buildQuery = (params: AnalyticsParams): string =>
   new URLSearchParams(
@@ -29,9 +20,8 @@ const _buildQuery = (params: AnalyticsParams): string =>
  */
 export async function getBalance(params: AnalyticsParams = {}): Promise<BalanceResponse> {
   const query = _buildQuery(params);
-  const res = await fetch(
-    `${API_BASE_URL}/analytics/dashboard/balance${query ? `?${query}` : ''}`,
-    { headers: await _headers() }
+  const res = await apiFetch(
+    `${API_BASE_URL}/analytics/dashboard/balance${query ? `?${query}` : ''}`
   );
   if (!res.ok) throw new Error(`getBalance failed: ${res.status}`);
   return res.json();
@@ -42,9 +32,8 @@ export async function getBalance(params: AnalyticsParams = {}): Promise<BalanceR
  */
 export async function getStatsByCategory(params: AnalyticsParams = {}): Promise<CategoryStat[]> {
   const query = _buildQuery(params);
-  const res = await fetch(
-    `${API_BASE_URL}/analytics/reports/by-category${query ? `?${query}` : ''}`,
-    { headers: await _headers() }
+  const res = await apiFetch(
+    `${API_BASE_URL}/analytics/reports/by-category${query ? `?${query}` : ''}`
   );
   if (!res.ok) throw new Error(`getStatsByCategory failed: ${res.status}`);
   return res.json();
@@ -55,9 +44,8 @@ export async function getStatsByCategory(params: AnalyticsParams = {}): Promise<
  */
 export async function getOverTime(params: AnalyticsParams = {}): Promise<OverTimeStat[]> {
   const query = _buildQuery(params);
-  const res = await fetch(
-    `${API_BASE_URL}/analytics/reports/over-time${query ? `?${query}` : ''}`,
-    { headers: await _headers() }
+  const res = await apiFetch(
+    `${API_BASE_URL}/analytics/reports/over-time${query ? `?${query}` : ''}`
   );
   if (!res.ok) throw new Error(`getOverTime failed: ${res.status}`);
   return res.json();

@@ -1,5 +1,4 @@
 // src/api/recurringApi.ts
-import Cookies from 'js-cookie';
 import { API_BASE_URL } from './config';
 import { 
   RecurringTemplate, 
@@ -7,23 +6,11 @@ import {
   UpcomingOccurrence, 
   GenerateResult 
 } from '../types/recurring';
-
-const ACCESS_TOKEN_KEY = 'access_token';
-
-async function getAuthHeaders(): Promise<HeadersInit> {
-  const token = Cookies.get(ACCESS_TOKEN_KEY);
-  if (!token) throw new Error('Bạn chưa đăng nhập');
-  return { 
-    'Content-Type': 'application/json', 
-    'Authorization': `Bearer ${token}` 
-  };
-}
+import { apiFetch } from './authApi';
 
 /** GET /recurring — Danh sách tất cả mẫu giao dịch định kỳ */
 export async function listTemplates(): Promise<RecurringTemplate[]> {
-  const res = await fetch(`${API_BASE_URL}/recurring`, {
-    headers: await getAuthHeaders(),
-  });
+  const res = await apiFetch(`${API_BASE_URL}/recurring`);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.detail || 'Không lấy được danh sách giao dịch định kỳ');
   return data;
@@ -31,9 +18,8 @@ export async function listTemplates(): Promise<RecurringTemplate[]> {
 
 /** POST /recurring — Tạo mới một mẫu giao dịch định kỳ */
 export async function createTemplate(payload: CreateRecurringPayload): Promise<RecurringTemplate> {
-  const res = await fetch(`${API_BASE_URL}/recurring`, {
+  const res = await apiFetch(`${API_BASE_URL}/recurring`, {
     method: 'POST',
-    headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
@@ -43,9 +29,7 @@ export async function createTemplate(payload: CreateRecurringPayload): Promise<R
 
 /** GET /recurring/upcoming — Dự báo các giao dịch sắp tới */
 export async function getUpcoming(days: number = 30): Promise<UpcomingOccurrence[]> {
-  const res = await fetch(`${API_BASE_URL}/recurring/upcoming?days=${days}`, {
-    headers: await getAuthHeaders(),
-  });
+  const res = await apiFetch(`${API_BASE_URL}/recurring/upcoming?days=${days}`);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.detail || 'Không lấy được lịch sắp tới');
   return data;
@@ -53,9 +37,8 @@ export async function getUpcoming(days: number = 30): Promise<UpcomingOccurrence
 
 /** POST /recurring/process — Tự động tạo các giao dịch đã đến hạn */
 export async function processAllDue(): Promise<GenerateResult> {
-  const res = await fetch(`${API_BASE_URL}/recurring/process`, {
+  const res = await apiFetch(`${API_BASE_URL}/recurring/process`, {
     method: 'POST',
-    headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.detail || 'Lỗi khi xử lý giao dịch định kỳ');
@@ -64,9 +47,7 @@ export async function processAllDue(): Promise<GenerateResult> {
 
 /** GET /recurring/:id — Lấy chi tiết một mẫu */
 export async function getTemplate(templateId: string | number): Promise<RecurringTemplate> {
-  const res = await fetch(`${API_BASE_URL}/recurring/${templateId}`, {
-    headers: await getAuthHeaders(),
-  });
+  const res = await apiFetch(`${API_BASE_URL}/recurring/${templateId}`);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.detail || 'Không tìm thấy giao dịch định kỳ');
   return data;
@@ -77,9 +58,8 @@ export async function updateTemplate(
   templateId: string | number, 
   payload: Partial<CreateRecurringPayload>
 ): Promise<RecurringTemplate> {
-  const res = await fetch(`${API_BASE_URL}/recurring/${templateId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/recurring/${templateId}`, {
     method: 'PATCH',
-    headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
@@ -89,9 +69,8 @@ export async function updateTemplate(
 
 /** DELETE /recurring/:id — Xóa mẫu */
 export async function deleteTemplate(templateId: string | number): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/recurring/${templateId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/recurring/${templateId}`, {
     method: 'DELETE',
-    headers: await getAuthHeaders(),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));

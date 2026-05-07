@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
-import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Modal, Pressable } from 'react-native';
+import Svg, { Line, Rect, Text as SvgText, G } from 'react-native-svg';
 import { useFocusEffect } from '@react-navigation/native';
 import SidebarDrawer from '../components/SidebarDrawer';
 import Header from '../components/Header';
@@ -26,6 +26,34 @@ export default function Chart({ navigation }) {
   const [apiChartData, setApiChartData] = useState([]);
   // Colors keyed by category name, populated when activeTab is expense/income
   const [apiCategoryColors, setApiCategoryColors] = useState({});
+  // Tap tooltip
+  const [tooltip, setTooltip] = useState(null); // { lines: string[] }
+
+  /** Round up to a clean 'nice' ceiling so Y-axis ticks are whole round numbers */
+  const niceMax = (value) => {
+    if (value <= 0) return 100_000;
+    const exp = Math.floor(Math.log10(value));
+    const mag = Math.pow(10, exp);
+    const norm = value / mag;
+    if (norm <= 1)   return 1   * mag;
+    if (norm <= 2)   return 2   * mag;
+    if (norm <= 2.5) return 2.5 * mag;
+    if (norm <= 5)   return 5   * mag;
+    return 10 * mag;
+  };
+
+  /** Format large VND amounts to short readable form */
+  const formatAmount = (value) => {
+    if (value === 0) return '0';
+    if (value >= 1_000_000_000) return `${+(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}tỷ`;
+    if (value >= 1_000_000)    return `${+(value / 1_000_000).toFixed(0)}tr`;
+    if (value >= 1_000)        return `${+(value / 1_000).toFixed(0)}K`;
+    return String(value);
+  };
+
+  /** Format exact amount with thousand separators */
+  const formatExact = (value) =>
+    new Intl.NumberFormat('vi-VN').format(value) + ' đ';
 
   const _toDateStr = (d) => {
     if (!d) return undefined;
@@ -67,15 +95,16 @@ export default function Chart({ navigation }) {
   const chartData = apiChartData;
 
   // Calculate maxValue based on active tab
-  let maxValue = 100000;
+  let rawMax = 100000;
   if (activeTab === 'all') {
-    maxValue = Math.max(...chartData.map(d => Math.max(d.income || 0, d.expense || 0)), 100000);
+    rawMax = Math.max(...chartData.map(d => Math.max(d.income || 0, d.expense || 0)), 100000);
   } else {
-    maxValue = Math.max(...chartData.map(d => {
+    rawMax = Math.max(...chartData.map(d => {
       const vals = Object.values(d.categories || {});
       return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) : 0;
     }), 100000);
   }
+  const maxValue = niceMax(rawMax);
 
   const chartHeight = 300;
   const maxPossibleBars = Math.max(chartData.length, 1);
@@ -109,30 +138,20 @@ export default function Chart({ navigation }) {
   const renderBarChart = () => {
     const padding = 40;
     const graphHeight = chartHeight - padding * 2;
-    const graphWidth = chartWidth - padding * 2;
 
     return (
       <View style={{ flexDirection: 'row' }}>
-        {/* Y-axis labels - positioned to match grid lines */}
+        {/* Y-axis labels */}
         <View style={{ width: 50, height: chartHeight, position: 'relative', paddingHorizontal: 5 }}>
           {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-            const value = Math.floor((maxValue * ratio) / 1000);
             const yPos = chartHeight - padding - graphHeight * ratio;
-            // Tính margin để canh label với grid line (trừ đi nửa height của text)
-            const marginTop = yPos - 6;
             return (
-              <View 
-                key={`y-label-${idx}`} 
-                style={{ 
-                  position: 'absolute',
-                  top: marginTop,
-                  right: 5,
-                  height: 12,
-                  justifyContent: 'center'
-                }}
+              <View
+                key={`y-label-${idx}`}
+                style={{ position: 'absolute', top: yPos - 6, right: 5, height: 12, justifyContent: 'center' }}
               >
-                <Text style={{ fontSize: 11, color: '#666', fontWeight: '500', textAlign: 'right' }}>
-                  {`${value}K`}
+                <Text style={{ fontSize: 10, color: '#666', fontWeight: '500', textAlign: 'right' }}>
+                  {formatAmount(maxValue * ratio)}
                 </Text>
               </View>
             );
@@ -141,49 +160,32 @@ export default function Chart({ navigation }) {
 
         <ScrollView horizontal scrollEnabled={true} showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingRight: 20 }}>
           <Svg height={chartHeight + 30} width={chartWidth} style={{ marginVertical: 10 }}>
-            {/* Y-axis */}
             <Line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#075c09" strokeWidth="2" />
-            {/* X-axis */}
             <Line x1={padding} y1={chartHeight - padding} x2={chartWidth - 20} y2={chartHeight - padding} stroke="#075c09" strokeWidth="2" />
-
-            {/* Grid lines */}
             {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
               const y = chartHeight - padding - graphHeight * ratio;
-              return (
-                <Line key={`grid-${idx}`} x1={padding - 5} y1={y} x2={chartWidth - 20} y2={y} stroke="#e0e0e0" strokeWidth="1" strokeDasharray="4" />
-              );
+              return <Line key={`grid-${idx}`} x1={padding - 5} y1={y} x2={chartWidth - 20} y2={y} stroke="#e0e0e0" strokeWidth="1" strokeDasharray="4" />;
             })}
-
-            {/* Bars */}
             {chartData.map((data, idx) => {
               const xPos = padding + idx * barSpacing + barSpacing / 2 - barWidth / 2;
-              
-              // Income bar (xanh)
               const incomeHeight = (data.income / maxValue) * graphHeight || 0;
               const incomeY = chartHeight - padding - incomeHeight;
-
-              // Expense bar (đỏ)
               const expenseHeight = (data.expense / maxValue) * graphHeight || 0;
               const expenseY = chartHeight - padding - expenseHeight;
-
               return (
-                <React.Fragment key={`bar-${idx}`}>
-                  {/* Expense bar */}
-                  <Rect x={xPos} y={expenseY} width={barWidth} height={expenseHeight} fill="#d9534f" />
-                  {/* Income bar */}
-                  <Rect x={xPos + barWidth} y={incomeY} width={barWidth} height={incomeHeight} fill="#5cb85c" />
-                  
-                  {/* X-axis label */}
-                  <SvgText 
-                    x={xPos + barWidth} 
-                    y={chartHeight - padding + 20} 
-                    fontSize="12" 
-                    fill="#666" 
-                    textAnchor="middle"
-                  >
+                <G key={`bar-${idx}`}>
+                  <Rect
+                    x={xPos} y={expenseY} width={barWidth} height={expenseHeight} fill="#d9534f"
+                    onPress={() => setTooltip({ lines: [`\uD83D\uDCC5 ${data.label}`, `Chi ph\u00ED: ${formatExact(data.expense)}`] })}
+                  />
+                  <Rect
+                    x={xPos + barWidth} y={incomeY} width={barWidth} height={incomeHeight} fill="#5cb85c"
+                    onPress={() => setTooltip({ lines: [`\uD83D\uDCC5 ${data.label}`, `Thu nh\u1EADp: ${formatExact(data.income)}`] })}
+                  />
+                  <SvgText x={xPos + barWidth} y={chartHeight - padding + 20} fontSize="12" fill="#666" textAnchor="middle">
                     {data.label}
                   </SvgText>
-                </React.Fragment>
+                </G>
               );
             })}
           </Svg>
@@ -195,30 +197,21 @@ export default function Chart({ navigation }) {
   const renderStackedBarChart = () => {
     const padding = 40;
     const graphHeight = chartHeight - padding * 2;
-    const graphWidth = chartWidth - padding * 2;
     const categories = getAllCategories();
 
     return (
       <View style={{ flexDirection: 'row' }}>
-        {/* Y-axis labels - positioned to match grid lines */}
+        {/* Y-axis labels */}
         <View style={{ width: 50, height: chartHeight, position: 'relative', paddingHorizontal: 5 }}>
           {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-            const value = Math.floor((maxValue * ratio) / 1000);
             const yPos = chartHeight - padding - graphHeight * ratio;
-            const marginTop = yPos - 6;
             return (
-              <View 
-                key={`y-label-${idx}`} 
-                style={{ 
-                  position: 'absolute',
-                  top: marginTop,
-                  right: 5,
-                  height: 12,
-                  justifyContent: 'center'
-                }}
+              <View
+                key={`y-label-${idx}`}
+                style={{ position: 'absolute', top: yPos - 6, right: 5, height: 12, justifyContent: 'center' }}
               >
-                <Text style={{ fontSize: 11, color: '#666', fontWeight: '500', textAlign: 'right' }}>
-                  {`${value}K`}
+                <Text style={{ fontSize: 10, color: '#666', fontWeight: '500', textAlign: 'right' }}>
+                  {formatAmount(maxValue * ratio)}
                 </Text>
               </View>
             );
@@ -227,12 +220,8 @@ export default function Chart({ navigation }) {
 
         <ScrollView horizontal scrollEnabled={true} showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingRight: 20 }}>
           <Svg height={chartHeight + 30} width={chartWidth} style={{ marginVertical: 10 }}>
-            {/* Y-axis */}
             <Line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#075c09" strokeWidth="2" />
-            {/* X-axis */}
             <Line x1={padding} y1={chartHeight - padding} x2={chartWidth - 20} y2={chartHeight - padding} stroke="#075c09" strokeWidth="2" />
-
-            {/* Grid lines */}
             {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
               const y = chartHeight - padding - graphHeight * ratio;
               return (
@@ -246,39 +235,25 @@ export default function Chart({ navigation }) {
               let currentY = chartHeight - padding;
 
               return (
-                <React.Fragment key={`stacked-bar-${idx}`}>
-                  {categories.map((category, catIdx) => {
+                <G key={`stacked-bar-${idx}`}>
+                  {categories.map((category) => {
                     const categoryAmount = data.categories?.[category] || 0;
                     const barHeight = (categoryAmount / maxValue) * graphHeight || 0;
                     const barY = currentY - barHeight;
                     const color = apiCategoryColors[category] || '#999';
-
-                    const element = (
+                    currentY = barY;
+                    return (
                       <Rect
                         key={`${idx}-${category}`}
-                        x={xPos}
-                        y={barY}
-                        width={barWidth}
-                        height={barHeight}
-                        fill={color}
+                        x={xPos} y={barY} width={barWidth} height={barHeight} fill={color}
+                        onPress={() => setTooltip({ lines: [category, formatExact(categoryAmount)] })}
                       />
                     );
-
-                    currentY = barY;
-                    return element;
                   })}
-
-                  {/* X-axis label */}
-                  <SvgText
-                    x={xPos + barWidth / 2}
-                    y={chartHeight - padding + 20}
-                    fontSize="12"
-                    fill="#666"
-                    textAnchor="middle"
-                  >
+                  <SvgText x={xPos + barWidth / 2} y={chartHeight - padding + 20} fontSize="12" fill="#666" textAnchor="middle">
                     {data.label}
                   </SvgText>
-                </React.Fragment>
+                </G>
               );
             })}
           </Svg>
@@ -289,6 +264,20 @@ export default function Chart({ navigation }) {
 
   return (
     <View style={styles.screenContainer}>
+      {/* Tap tooltip modal */}
+      <Modal transparent visible={!!tooltip} animationType="fade" onRequestClose={() => setTooltip(null)}>
+        <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setTooltip(null)}>
+          <View style={{ backgroundColor: '#1f2937', borderRadius: 12, paddingHorizontal: 20, paddingVertical: 14, minWidth: 180, alignItems: 'center' }}>
+            {tooltip?.lines.map((line, i) => (
+              <Text key={i} style={{ color: '#fff', fontSize: i === 0 ? 13 : 15, fontWeight: i === 0 ? '400' : '700', marginTop: i > 0 ? 4 : 0 }}>
+                {line}
+              </Text>
+            ))}
+            <Text style={{ color: '#9ca3af', fontSize: 11, marginTop: 8 }}>Chạm để đóng</Text>
+          </View>
+        </Pressable>
+      </Modal>
+
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
         {/* Header */}
         <View style={styles.header}>

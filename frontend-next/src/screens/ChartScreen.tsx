@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SidebarDrawer from '../components/SidebarDrawer';
 import HeaderIconButton from '../components/HeaderIconButton';
 import Footer from '../components/Footer';
@@ -26,6 +26,33 @@ export default function ChartScreen() {
   // API chart data
   const [apiChartData, setApiChartData] = useState<any[]>([]);
   const [apiCategoryColors, setApiCategoryColors] = useState<Record<string, string>>({});
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string[] } | null>(null);
+
+  /** Round up to a clean 'nice' ceiling so Y-axis ticks are whole round numbers */
+  const niceMax = (value: number): number => {
+    if (value <= 0) return 100_000;
+    const exp = Math.floor(Math.log10(value));
+    const mag = Math.pow(10, exp);
+    const norm = value / mag;
+    if (norm <= 1)   return 1   * mag;
+    if (norm <= 2)   return 2   * mag;
+    if (norm <= 2.5) return 2.5 * mag;
+    if (norm <= 5)   return 5   * mag;
+    return 10 * mag;
+  };
+
+  /** Format large VND amounts to readable short form */
+  const formatAmount = (value: number): string => {
+    if (value === 0) return '0';
+    if (value >= 1_000_000_000) return `${+(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}tỷ`;
+    if (value >= 1_000_000)    return `${+(value / 1_000_000).toFixed(0)}tr`;
+    if (value >= 1_000)        return `${+(value / 1_000).toFixed(0)}K`;
+    return value.toFixed(0);
+  };
+
+  /** Format exact amount with thousand separators */
+  const formatExact = (value: number): string =>
+    new Intl.NumberFormat('vi-VN').format(value) + ' đ';
 
   const _toDateStr = (d: Date | null) => {
     if (!d) return undefined;
@@ -70,15 +97,16 @@ export default function ChartScreen() {
   const chartWidth = Math.max(300, apiChartData.length * GROUP_SPACING + 60);
   const barSpacing = (chartWidth - 60) / Math.max(apiChartData.length, 1);
 
-  // Tính giá trị lớn nhất để scale cột[cite: 5]
-  const maxValue = Math.max(
+  // Tính giá trị lớn nhất để scale cột
+  const rawMax = Math.max(
     ...apiChartData.map(d => {
       if (activeTab === 'all') return Math.max(d.income || 0, d.expense || 0);
       const vals: number[] = Object.values(d.categories || {});
       return vals.reduce((a, b) => a + b, 0);
     }),
-    100000 // Giá trị tối thiểu để biểu đồ không bị rỗng
+    100000
   );
+  const maxValue = niceMax(rawMax);
 
   const getAllCategories = () => {
     const categories = new Set<string>();
@@ -181,52 +209,95 @@ export default function ChartScreen() {
               <p className="text-sm italic">Không có dữ liệu trong khoảng thời gian này</p>
             </div>
           ) : (
-            <div className="flex overflow-x-auto pb-2">
+            <div className="relative">
+              <div className="flex overflow-x-auto pb-2">
               <div className="flex flex-col justify-between pr-3 text-[10px] text-slate-400 font-medium h-[220px] mt-10">
                 {[1, 0.75, 0.5, 0.25, 0].map((ratio) => (
-                  <span key={ratio}>{(maxValue * ratio / 1000).toFixed(0)}K</span>
+                  <span key={ratio}>{formatAmount(maxValue * ratio)}</span>
                 ))}
               </div>
-              <svg width={chartWidth} height={chartHeight} className="flex-shrink-0">
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-                  const y = chartHeight - padding - (chartHeight - padding * 2) * ratio;
-                  return (
-                    <line key={ratio} x1={padding} y1={y} x2={chartWidth} y2={y} stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 2" />
-                  );
-                })}
-                <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#e2e8f0" strokeWidth="1.5" />
-                <line x1={padding} y1={chartHeight - padding} x2={chartWidth} y2={chartHeight - padding} stroke="#e2e8f0" strokeWidth="1.5" />
-                {apiChartData.map((data, idx) => {
-                  const xBase = padding + idx * barSpacing + barSpacing / 2 - BAR_WIDTH / 2;
-                  const graphHeight = chartHeight - padding * 2;
-                  if (activeTab === 'all') {
-                    const incH = (data.income / maxValue) * graphHeight;
-                    const expH = (data.expense / maxValue) * graphHeight;
+              <div className="relative flex-shrink-0 overflow-visible">
+                {/* Tooltip */}
+                {tooltip && (
+                  <div
+                    className="absolute z-20 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-xl pointer-events-none whitespace-nowrap"
+                    style={{ left: tooltip.x, top: tooltip.y, transform: 'translate(-50%, calc(-100% - 8px))' }}
+                  >
+                    {tooltip.content.map((line, i) => <div key={i}>{line}</div>)}
+                  </div>
+                )}
+                <svg width={chartWidth} height={chartHeight} className="flex-shrink-0">
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                    const y = chartHeight - padding - (chartHeight - padding * 2) * ratio;
                     return (
-                      <g key={idx}>
-                        <rect x={xBase} y={chartHeight - padding - expH} width={BAR_WIDTH} height={expH} fill="#ef4444" rx="3" />
-                        <rect x={xBase + BAR_WIDTH + 3} y={chartHeight - padding - incH} width={BAR_WIDTH} height={incH} fill="#22c55e" rx="3" />
-                        <text x={xBase + BAR_WIDTH} y={chartHeight - 12} fontSize="9" fill="#94a3b8" textAnchor="middle">{data.label}</text>
-                      </g>
+                      <line key={ratio} x1={padding} y1={y} x2={chartWidth} y2={y} stroke="#f1f5f9" strokeWidth="1" strokeDasharray="4 2" />
                     );
-                  } else {
-                    let currentY = chartHeight - padding;
-                    return (
-                      <g key={idx}>
-                        {getAllCategories().map((cat) => {
-                          const amt = data.categories?.[cat] || 0;
-                          const h = (amt / maxValue) * graphHeight;
-                          currentY -= h;
-                          return (
-                            <rect key={cat} x={xBase + BAR_WIDTH / 2} y={currentY} width={BAR_WIDTH} height={h} fill={apiCategoryColors[cat]} rx="2" />
-                          );
-                        })}
-                        <text x={xBase + BAR_WIDTH} y={chartHeight - 12} fontSize="9" fill="#94a3b8" textAnchor="middle">{data.label}</text>
-                      </g>
-                    );
-                  }
-                })}
-              </svg>
+                  })}
+                  <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#e2e8f0" strokeWidth="1.5" />
+                  <line x1={padding} y1={chartHeight - padding} x2={chartWidth} y2={chartHeight - padding} stroke="#e2e8f0" strokeWidth="1.5" />
+                  {apiChartData.map((data, idx) => {
+                    const xBase = padding + idx * barSpacing + barSpacing / 2 - BAR_WIDTH / 2;
+                    const graphHeight = chartHeight - padding * 2;
+                    if (activeTab === 'all') {
+                      const incH = (data.income / maxValue) * graphHeight;
+                      const expH = (data.expense / maxValue) * graphHeight;
+                      return (
+                        <g key={idx}>
+                          <rect
+                            x={xBase} y={chartHeight - padding - expH} width={BAR_WIDTH} height={expH}
+                            fill="#ef4444" rx="3" className="cursor-pointer hover:opacity-80 transition-opacity"
+                            onMouseEnter={(e) => {
+                              const svg = (e.target as SVGElement).closest('svg')!.getBoundingClientRect();
+                              const r = (e.target as SVGElement).getBoundingClientRect();
+                              setTooltip({ x: r.left - svg.left + BAR_WIDTH / 2, y: r.top - svg.top, content: [`📅 ${data.label}`, `Chi phí: ${formatExact(data.expense)}`] });
+                            }}
+                            onMouseLeave={() => setTooltip(null)}
+                          />
+                          <rect
+                            x={xBase + BAR_WIDTH + 3} y={chartHeight - padding - incH} width={BAR_WIDTH} height={incH}
+                            fill="#22c55e" rx="3" className="cursor-pointer hover:opacity-80 transition-opacity"
+                            onMouseEnter={(e) => {
+                              const svg = (e.target as SVGElement).closest('svg')!.getBoundingClientRect();
+                              const r = (e.target as SVGElement).getBoundingClientRect();
+                              setTooltip({ x: r.left - svg.left + BAR_WIDTH / 2, y: r.top - svg.top, content: [`📅 ${data.label}`, `Thu nhập: ${formatExact(data.income)}`] });
+                            }}
+                            onMouseLeave={() => setTooltip(null)}
+                          />
+                          <text x={xBase + BAR_WIDTH} y={chartHeight - 12} fontSize="9" fill="#94a3b8" textAnchor="middle">{data.label}</text>
+                        </g>
+                      );
+                    } else {
+                      let currentY = chartHeight - padding;
+                      const totalAmt: number = Object.values(data.categories || {}).reduce((a: number, b) => a + (b as number), 0);
+                      return (
+                        <g key={idx}>
+                          {getAllCategories().map((cat) => {
+                            const amt = data.categories?.[cat] || 0;
+                            const h = (amt / maxValue) * graphHeight;
+                            currentY -= h;
+                            const barY = currentY;
+                            return (
+                              <rect
+                                key={cat} x={xBase + BAR_WIDTH / 2} y={barY} width={BAR_WIDTH} height={h}
+                                fill={apiCategoryColors[cat]} rx="2"
+                                className="cursor-pointer hover:opacity-80 transition-opacity"
+                                onMouseEnter={(e) => {
+                                  const svg = (e.target as SVGElement).closest('svg')!.getBoundingClientRect();
+                                  const r = (e.target as SVGElement).getBoundingClientRect();
+                                  setTooltip({ x: r.left - svg.left + BAR_WIDTH / 2, y: r.top - svg.top, content: [`${cat}`, `${formatExact(amt)}`] });
+                                }}
+                                onMouseLeave={() => setTooltip(null)}
+                              />
+                            );
+                          })}
+                          <text x={xBase + BAR_WIDTH} y={chartHeight - 12} fontSize="9" fill="#94a3b8" textAnchor="middle">{data.label}</text>
+                        </g>
+                      );
+                    }
+                  })}
+                </svg>
+              </div>
+              </div>
             </div>
           )}
         </div>

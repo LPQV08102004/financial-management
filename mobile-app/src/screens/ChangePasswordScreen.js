@@ -26,8 +26,9 @@ export default function ChangePasswordScreen({ navigation }) {
       Alert.alert('Lỗi', 'Vui lòng điền đầy đủ tất cả các trường');
       return;
     }
-    if (newPassword.length < 8) {
-      Alert.alert('Lỗi', 'Mật khẩu mới phải có ít nhất 8 ký tự');
+    const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+    if (!STRONG_PASSWORD_REGEX.test(newPassword)) {
+      Alert.alert('Lỗi', 'Mật khẩu mới phải từ 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
       return;
     }
     if (newPassword !== confirmPassword) {

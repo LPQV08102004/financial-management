@@ -18,6 +18,11 @@ from app.modules.categories.service import seed_default_categories
 from app.modules.accounts.service import create_account
 
 
+def get_user_by_email_or_phone(db: Session, login_str: str) -> User | None:
+    return db.query(User).filter(
+        (User.email == login_str) | (User.phone_number == login_str)
+    ).first()
+
 def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email).first()
 
@@ -54,7 +59,7 @@ def register_user(db: Session, email: str, password: str, full_name: str, phone_
 
 
 def authenticate_user(db: Session, email: str, password: str) -> User:
-    user = get_user_by_email(db, email)
+    user = get_user_by_email_or_phone(db, email)
     if not user:
         raise NotFoundError("Tài khoản chưa được đăng ký")
     if not user.is_active:

@@ -110,6 +110,11 @@ def create_expense(db: Session, user_id: int, data: dict) -> tuple[Transaction, 
     category_id: int = data["category_id"]
     month = _period_month(data["transaction_date"])
 
+    balance = _to_decimal(acc.current_balance)
+    if amount > balance:
+        raise BadRequestError(
+            f"Số dư tài khoản không đủ. Số dư hiện tại: {balance:,.0f} đ"
+        )
     txn = Transaction(
         user_id=user_id,
         account_id=data["account_id"],

@@ -19,6 +19,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 // Tin nhắn chào mừng mặc định
 const INITIAL_MESSAGES: ChatMessage[] = [
   {
+    id: '0',
     role: 'assistant',
     content: 'Xin chào! Tôi là trợ lý tài chính của bạn.\nHỏi tôi bất cứ điều gì về tình hình tài chính nhé 😊',
   },

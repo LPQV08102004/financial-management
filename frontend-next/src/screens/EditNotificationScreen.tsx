@@ -1,33 +1,51 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Footer from '../components/Footer';
-
-// Định nghĩa kiểu dữ liệu cho Reminder
-interface Reminder {
-  id: string;
-  title: string;
-  frequency: 'daily' | 'weekly' | 'monthly' | 'once';
-  startDate: string;
-  hour: string;
-  minute: string;
-  notes?: string;
-}
+import { listReminders, updateReminder, deleteReminder as apiDeleteReminder } from '../api/notificationsApi';
 
 interface EditNotificationProps {
-  reminder: Reminder;
+  reminderId: string;
 }
 
-export default function EditNotificationScreen({ reminder }: EditNotificationProps) {
-  const [reminderName, setReminderName] = useState(reminder?.title || '');
-  const [frequency, setFrequency] = useState(reminder?.frequency || 'weekly');
+export default function EditNotificationScreen({ reminderId }: EditNotificationProps) {
+  const router = useRouter();
+  const [reminderName, setReminderName] = useState('');
+  const [frequency, setFrequency] = useState('weekly');
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(reminder?.startDate ? new Date(reminder.startDate) : new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDateModal, setShowDateModal] = useState(false);
-  const [selectedHour, setSelectedHour] = useState(reminder?.hour || '08');
-  const [selectedMinute, setSelectedMinute] = useState(reminder?.minute || '00');
+  const [selectedHour, setSelectedHour] = useState('08');
+  const [selectedMinute, setSelectedMinute] = useState('00');
   const [showTimeModal, setShowTimeModal] = useState(false);
-  const [notes, setNotes] = useState(reminder?.notes || '');
+  const [notes, setNotes] = useState('');
+  const [loadingData, setLoadingData] = useState(true);
+
+  useEffect(() => {
+    if (!reminderId) return;
+    (async () => {
+      try {
+        const list = await listReminders();
+        const r = list.find((x: any) => String(x.id) === String(reminderId));
+        if (r) {
+          setReminderName(r.title || '');
+          setFrequency(r.frequency || 'weekly');
+          if (r.start_date) setSelectedDate(new Date(r.start_date));
+          if (r.reminder_time) {
+            const [h, m] = r.reminder_time.split(':');
+            setSelectedHour(h || '08');
+            setSelectedMinute(m || '00');
+          }
+          setNotes(r.notes || '');
+        }
+      } catch (e: any) {
+        alert(e.message);
+      } finally {
+        setLoadingData(false);
+      }
+    })();
+  }, [reminderId]);
 
   const frequencyOptions = [
     { label: 'Hàng ngày', value: 'daily' },
@@ -71,18 +89,31 @@ export default function EditNotificationScreen({ reminder }: EditNotificationPro
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
-  const handleEditReminder = () => {
-    if (reminderName.trim()) {
-      const time = `${selectedHour}:${selectedMinute}`;
-      console.log('Sửa lời nhắc:', { id: reminder.id, reminderName, frequency, startDate: formatDate(selectedDate), time, notes });
-      window.history.back();
+  const handleEditReminder = async () => {
+    if (!reminderName.trim()) return;
+    const time = `${selectedHour}:${selectedMinute}`;
+    const iso = selectedDate.toISOString().split('T')[0];
+    try {
+      await updateReminder(reminderId, {
+        title: reminderName.trim(),
+        frequency,
+        start_date: iso,
+        reminder_time: time,
+        notes: notes.trim() || undefined,
+      });
+      router.back();
+    } catch (e: any) {
+      alert(e.message);
     }
   };
 
-  const handleDeleteReminder = () => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa lời nhắc "${reminderName}"?`)) {
-      console.log('Xóa lời nhắc:', reminder.id);
-      window.history.back();
+  const handleDeleteReminder = async () => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa lời nhắc "${reminderName}"?`)) return;
+    try {
+      await apiDeleteReminder(reminderId);
+      router.back();
+    } catch (e: any) {
+      alert(e.message);
     }
   };
 
@@ -90,7 +121,7 @@ export default function EditNotificationScreen({ reminder }: EditNotificationPro
     <div className="flex flex-col bg-[#FFF8F0] relative font-sans">
       {/* Header */}
       <header className="bg-[#075c09] p-5 pt-8 flex items-center justify-between sticky top-0 z-50">
-        <button onClick={() => window.history.back()} className="text-white text-2xl font-bold p-2 hover:opacity-80">←</button>
+        <button onClick={() => router.back()} className="text-white text-2xl font-bold p-2 hover:opacity-80">←</button>
         <h1 className="text-white text-xl font-medium">Sửa lời nhắc</h1>
         <div className="w-12"></div>
       </header>

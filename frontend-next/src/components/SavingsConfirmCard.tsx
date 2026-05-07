@@ -44,6 +44,21 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
 
   const handleConfirm = async () => {
     if (missingFields.length > 0) return;
+
+    if (action === 'deposit' && selectedGoal) {
+      const remaining = Number(selectedGoal.target_amount) - Number(selectedGoal.saved_amount ?? 0);
+      if (Number(amount) > remaining) {
+        setError(`Số tiền nạp vượt quá số còn thiếu (${remaining.toLocaleString('vi-VN')} đ)`);
+        return;
+      }
+    }
+    if (action === 'withdraw' && selectedGoal) {
+      if (Number(amount) > Number(selectedGoal.saved_amount ?? 0)) {
+        setError(`Số tiền rút vượt quá số đã tích lũy (${Number(selectedGoal.saved_amount).toLocaleString('vi-VN')} đ)`);
+        return;
+      }
+    }
+
     setSaving(true);
     setError('');
     try {

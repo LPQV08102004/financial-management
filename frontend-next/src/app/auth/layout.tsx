@@ -14,7 +14,7 @@ export default function AuthLayout({
 
   useEffect(() => {
     if (state.userToken) {
-      router.push('/dashboard');
+      router.push('/home');
     }
   }, [state.userToken, router]);
 

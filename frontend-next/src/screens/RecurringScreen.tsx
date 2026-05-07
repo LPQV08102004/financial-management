@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   listTemplates, 
   deleteTemplate, 
@@ -112,6 +113,7 @@ function UpcomingCard({ item }: { item: UpcomingItem }) {
 }
 
 export default function RecurringScreen() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('templates');
   const [templates, setTemplates] = useState<RecurringTemplate[]>([]);
   const [upcoming, setUpcoming] = useState<{ items: UpcomingItem[], total_expense: number, total_income: number } | null>(null);
@@ -171,7 +173,9 @@ export default function RecurringScreen() {
         <button onClick={() => window.history.back()} className="text-2xl">←</button>
         <h1 className="text-lg font-bold flex-1">Giao dịch định kỳ</h1>
         {activeTab === 'templates' && (
-          <button className="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full text-2xl font-light">+</button>
+          <button
+            onClick={() => router.push('/add-recurring')}
+            className="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full text-2xl font-light">+</button>
         )}
       </div>
 

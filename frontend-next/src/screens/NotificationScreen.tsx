@@ -1,43 +1,49 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import SidebarDrawer from '../components/SidebarDrawer';
 import HeaderIconButton from '../components/HeaderIconButton';
 import Footer from '../components/Footer';
+import { listReminders, deleteReminder as apiDeleteReminder } from '../api/notificationsApi';
 
-// Định nghĩa kiểu dữ liệu cho lời nhắc
 interface Reminder {
   id: string;
   title: string;
-  enabled: boolean;
+  frequency: string;
+  start_date: string;
+  reminder_time?: string;
+  notes?: string;
+  is_active: boolean;
 }
 
 export default function NotificationScreen() {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  
-  // Quản lý trạng thái lời nhắc
-  const [reminders, setReminders] = useState<Reminder[]>([
-    {
-      id: '1',
-      title: 'Đóng tiền quỹ',
-      enabled: true,
-    },
-    {
-      id: '2',
-      title: 'Lời nhắc đóng tiền điện',
-      enabled: true,
-    },
-  ]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleReminder = (id: string) => {
-    setReminders(reminders.map(reminder =>
-      reminder.id === id ? { ...reminder, enabled: !reminder.enabled } : reminder
-    ));
-  };
+  const fetchReminders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await listReminders();
+      setReminders(data);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const deleteReminder = (id: string) => {
-    if (confirm("Bạn có chắc chắn muốn xóa lời nhắc này?")) {
-      setReminders(reminders.filter(reminder => reminder.id !== id));
+  useEffect(() => { fetchReminders(); }, [fetchReminders]);
+
+  const deleteReminder = async (id: string) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa lời nhắc này?')) return;
+    try {
+      await apiDeleteReminder(id);
+      setReminders(reminders.filter(r => r.id !== id));
+    } catch (e: any) {
+      alert(e.message);
     }
   };
 
@@ -66,21 +72,25 @@ export default function NotificationScreen() {
 
         <HeaderIconButton 
           icon="+" 
-          onPress={() => console.log('Navigate to AddNotification')}
+          onPress={() => router.push('/add-notification')}
         />
       </header>
 
       {/* Content[cite: 10] */}
       <main className="flex-1 p-4 pb-24 overflow-y-auto">
         <div className="space-y-3">
-          {reminders.length > 0 ? (
+          {loading ? (
+            <div className="flex justify-center mt-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#075c09]"></div>
+            </div>
+          ) : reminders.length > 0 ? (
             reminders.map((item) => (
               <div 
                 key={item.id}
                 className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm border border-gray-50 transition-all active:scale-[0.98]"
               >
                 {/* Reminder Title[cite: 10] */}
-                <div className="flex-1 cursor-pointer" onClick={() => console.log('Edit', item.id)}>
+                <div className="flex-1 cursor-pointer" onClick={() => router.push(`/edit-notification?id=${item.id}`)}>  
                   <span className={`text-base font-semibold transition-colors ${
                     item.enabled ? 'text-[#075c09]' : 'text-gray-400 line-through'
                   }`}>

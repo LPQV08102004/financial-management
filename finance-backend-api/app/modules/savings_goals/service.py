@@ -155,7 +155,19 @@ def deposit(
     if _compute_status(goal) == GoalStatus.completed:
         raise BadRequestError("Mục tiêu đã hoàn thành, không thể nạp thêm tiền")
 
+    remaining = Decimal(str(goal.target_amount)) - Decimal(str(goal.saved_amount))
+    if amount > remaining:
+        raise BadRequestError(
+            f"Số tiền nạp ({amount:,.0f}) vượt quá số tiền còn thiếu ({remaining:,.0f})"
+        )
+
     acc = _get_account(db, account_id, user_id)
+
+    acc_balance = Decimal(str(acc.current_balance))
+    if amount > acc_balance:
+        raise BadRequestError(
+            f"Số dư tài khoản không đủ. Số dư hiện tại: {acc_balance:,.0f} đ"
+        )
 
     # Create real expense transaction (debits account)
     txn = Transaction(

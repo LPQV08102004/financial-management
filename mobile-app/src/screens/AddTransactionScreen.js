@@ -23,13 +23,17 @@ export default function AddTransactionScreen({ navigation }) {
   const [calculatorInput, setCalculatorInput] = useState('');
   const [categories, setCategories] = useState([]);
   const [accounts, setAccounts] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrResult, setOcrResult] = useState(null);
   const [ocrImageUri, setOcrImageUri] = useState(null);
 
   useEffect(() => {
-    listAccounts().then(setAccounts).catch(() => {});
+    listAccounts().then((list) => {
+      setAccounts(list);
+      if (list.length > 0) setSelectedAccount(list[0]);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -39,9 +43,13 @@ export default function AddTransactionScreen({ navigation }) {
 
   const handleAmountChange = (text) => {
     let numericValue = text.replace(/[^0-9]/g, '');
-    // Loại bỏ số 0 ở đầu nếu không phải là số duy nhất
     if (numericValue.startsWith('0') && numericValue.length > 1) {
       numericValue = numericValue.slice(1);
+    }
+    // Cap at account balance for expense
+    if (activeTab === 'expense' && selectedAccount) {
+      const cap = Math.floor(Number(selectedAccount.current_balance));
+      if (Number(numericValue) > cap) numericValue = String(cap);
     }
     setAmount(numericValue);
   };
@@ -200,7 +208,7 @@ export default function AddTransactionScreen({ navigation }) {
       return;
     }
 
-    const account_id = accounts[0].id;
+    const account_id = (selectedAccount ?? accounts[0]).id;
     const transaction_date = selectedDate.toISOString();
     const amountNum = parseFloat(amount);
 
@@ -265,6 +273,11 @@ export default function AddTransactionScreen({ navigation }) {
       <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Số tiền</Text>
+          {activeTab === 'expense' && selectedAccount && (
+            <Text style={styles.balanceHint}>
+              Số dư: {Number(selectedAccount.current_balance).toLocaleString('vi-VN')} đ
+            </Text>
+          )}
           <View style={styles.amountInputContainer}>
             <TextInput
               style={styles.input}
@@ -832,6 +845,12 @@ const styles = StyleSheet.create({
   },
   calculatorIcon: {
     fontSize: 24,
+  },
+  balanceHint: {
+    fontSize: 12,
+    color: '#075c09',
+    fontWeight: '600',
+    marginBottom: 4,
   },
   calculatorModal: {
     backgroundColor: '#fff',

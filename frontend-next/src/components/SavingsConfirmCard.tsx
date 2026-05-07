@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react'; // Sử dụng icon loading hiện đại
-import { depositToGoal, withdrawFromGoal } from '../api/savingsApi';
+import { depositToGoal, withdrawFromGoal, getGoal } from '../api/savingsApi';
 import { listAccounts } from '../api/accountsApi';
 
 // Helper định dạng tiền tệ
@@ -19,13 +19,22 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
   const [amount, setAmount] = useState(parsed.amount ? String(parsed.amount) : '');
   const [date, setDate] = useState(parsed.date || new Date().toISOString().split('T')[0]);
   const [note, setNote] = useState(parsed.note || '');
-  const [selectedGoal, setSelectedGoal] = useState(parsed.goal_suggestions?.[0] || null);
+  const [selectedGoal, setSelectedGoal] = useState<any>(parsed.goal_suggestions?.[0] || null);
   const [accounts, setAccounts] = useState<any[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [cappedInfo, setCappedInfo] = useState('');
 
-  // Thay thế useFocusEffect bằng useEffect của React[cite: 6]
+  // Fetch full goal data if AI suggestion only has id/name (no target_amount)
+  useEffect(() => {
+    if (selectedGoal?.id && selectedGoal.target_amount == null) {
+      getGoal(selectedGoal.id)
+        .then((full) => setSelectedGoal(full))
+        .catch(() => {});
+    }
+  }, [selectedGoal?.id]);
+
   useEffect(() => {
     listAccounts()
       .then((list) => {
@@ -34,6 +43,42 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
       })
       .catch(() => {});
   }, []);
+
+  // Auto-cap amount when goal or account changes (AI may have suggested too high)
+  useEffect(() => {
+    if (!selectedGoal?.target_amount || !amount) return;
+    const num = Number(amount);
+    if (isNaN(num) || num <= 0) return;
+    const cap = computeCap();
+    if (cap !== null && num > cap) {
+      setCappedInfo(`AI gợi ý ${num.toLocaleString('vi-VN')} đ nhưng số tiền tối đa là ${cap.toLocaleString('vi-VN')} đ — đã tự điều chỉnh.`);
+      setAmount(String(cap));
+    } else {
+      setCappedInfo('');
+    }
+  }, [selectedGoal, selectedAccount, action]);
+
+  const computeCap = (): number | null => {
+    if (action === 'deposit' && selectedGoal?.target_amount != null) {
+      const remaining = Number(selectedGoal.target_amount) - Number(selectedGoal.saved_amount ?? 0);
+      const balance = selectedAccount ? Math.floor(Number(selectedAccount.current_balance)) : Infinity;
+      return Math.min(remaining, isFinite(balance) ? balance : remaining);
+    }
+    if (action === 'withdraw' && selectedGoal?.saved_amount != null) {
+      return Number(selectedGoal.saved_amount ?? 0);
+    }
+    return null;
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '');
+    if (!raw) { setAmount(''); setCappedInfo(''); return; }
+    let num = parseInt(raw, 10);
+    const cap = computeCap();
+    if (cap !== null && num > cap) num = cap;
+    setAmount(String(num));
+    setCappedInfo('');
+  };
 
   // Logic kiểm tra các trường còn thiếu[cite: 6]
   const missingFields = [];
@@ -44,21 +89,6 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
 
   const handleConfirm = async () => {
     if (missingFields.length > 0) return;
-
-    if (action === 'deposit' && selectedGoal) {
-      const remaining = Number(selectedGoal.target_amount) - Number(selectedGoal.saved_amount ?? 0);
-      if (Number(amount) > remaining) {
-        setError(`Số tiền nạp vượt quá số còn thiếu (${remaining.toLocaleString('vi-VN')} đ)`);
-        return;
-      }
-    }
-    if (action === 'withdraw' && selectedGoal) {
-      if (Number(amount) > Number(selectedGoal.saved_amount ?? 0)) {
-        setError(`Số tiền rút vượt quá số đã tích lũy (${Number(selectedGoal.saved_amount).toLocaleString('vi-VN')} đ)`);
-        return;
-      }
-    }
-
     setSaving(true);
     setError('');
     try {
@@ -113,11 +143,25 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
       <div className="space-y-3 mb-4">
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Số tiền (VND)</label>
+          {action === 'deposit' && selectedGoal && selectedGoal.target_amount != null && (
+            <p className="text-[11px] text-[#075c09] font-medium mb-1">
+              Còn thiếu: {(Number(selectedGoal.target_amount) - Number(selectedGoal.saved_amount ?? 0)).toLocaleString('vi-VN')} đ
+              {selectedAccount ? `  ·  Số dư TK: ${Number(selectedAccount.current_balance).toLocaleString('vi-VN')} đ` : ''}
+            </p>
+          )}
+          {action === 'withdraw' && selectedGoal && selectedGoal.saved_amount != null && (
+            <p className="text-[11px] text-[#075c09] font-medium mb-1">
+              Đã tích lũy: {Number(selectedGoal.saved_amount ?? 0).toLocaleString('vi-VN')} đ
+            </p>
+          )}
+          {cappedInfo && (
+            <p className="text-[11px] text-orange-500 font-medium mb-1">ℹ️ {cappedInfo}</p>
+          )}
           <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="VD: 100000"
+            type="text"
+            value={amount ? Number(amount).toLocaleString('vi-VN') : ''}
+            onChange={handleAmountChange}
+            placeholder={(() => { const c = computeCap(); return c !== null ? `Tối đa ${c.toLocaleString('vi-VN')} đ` : 'VD: 100000'; })()}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#075c09] outline-none bg-gray-50"
           />
         </div>
@@ -150,7 +194,10 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
             {parsed.goal_suggestions.map((goal: any) => (
               <button
                 key={goal.id}
-                onClick={() => setSelectedGoal(goal)}
+                onClick={() => {
+                  // Always re-fetch full goal when clicking a chip (suggestion has no target_amount)
+                  setSelectedGoal({ id: goal.id, name: goal.name, confidence: goal.confidence });
+                }}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-full border-2 text-xs font-semibold transition-all ${
                   selectedGoal?.id === goal.id
                     ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]'

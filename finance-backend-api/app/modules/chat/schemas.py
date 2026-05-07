@@ -38,6 +38,7 @@ class ParseTransactionResponse(BaseModel):
     note: Optional[str] = None
     category_suggestions: List[CategorySuggestion] = []
     missing_fields: List[str] = []      # fields that could not be extracted
+    warning: Optional[str] = None       # AI warning message (e.g. insufficient balance)
 
 
 # ── NLP Savings Action Parsing ─────────────────────────────────────────────────
@@ -59,6 +60,7 @@ class ParseSavingsResponse(BaseModel):
     note: Optional[str] = None
     goal_suggestions: List[GoalSuggestion] = []
     missing_fields: List[str] = []
+    warning: Optional[str] = None       # AI warning message (e.g. over cap, insufficient balance)
 
 
 # ── OCR Receipt Parsing ────────────────────────────────────────────────────────

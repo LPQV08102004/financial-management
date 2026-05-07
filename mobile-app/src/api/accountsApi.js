@@ -11,13 +11,20 @@ async function getAuthHeaders() {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 }
 
+const parseError = (detail, fallback) => {
+  if (!detail) return fallback;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) return detail.map((e) => e.msg || String(e)).join('; ');
+  return fallback;
+};
+
 /** GET /accounts — returns user's active accounts */
 export async function listAccounts() {
   const res = await fetch(`${BASE_URL}/accounts`, {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không lấy được tài khoản');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không lấy được tài khoản'));
   return data;
 }
 
@@ -33,6 +40,6 @@ export async function createAccount(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tạo được tài khoản');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không tạo được tài khoản'));
   return data;
 }

@@ -146,6 +146,14 @@ async def parse_transaction(db: Session, user: User, message: str) -> ParseTrans
     ).all()
     cat_list = [{"id": c.id, "name": c.name, "type": c.type.value} for c in categories]
 
+    # Fetch account balances for spending limit awareness
+    accounts = db.query(Account).filter(
+        Account.user_id == user.id,
+        Account.is_active == True,
+    ).all()
+    total_balance = float(sum(Decimal(str(a.current_balance)) for a in accounts)) if accounts else 0.0
+    acc_lines_txn = [f"  - {a.name}: {float(a.current_balance):,.0f} VND" for a in accounts]
+
     system_prompt = f"""Bạn là engine trích xuất dữ liệu tài chính. Hôm nay là {today.strftime('%Y-%m-%d')}.
 
 Từ câu đầu vào, hãy trích xuất JSON với các trường sau (không giải thích thêm, chỉ trả về JSON thuần):
@@ -168,6 +176,10 @@ Quy tắc số tiền tiếng Việt:
 Quy tắc ngày:
 - "hôm nay" = {today.strftime('%Y-%m-%d')}
 - "hôm qua" / "tối qua" / "sáng qua" = {(today.replace(day=today.day-1)).strftime('%Y-%m-%d') if today.day > 1 else today.strftime('%Y-%m-%d')}
+
+Tổng số dư tài khoản của người dùng: {total_balance:,.0f} VND
+Các tài khoản:
+{chr(10).join(acc_lines_txn) if acc_lines_txn else '  (không có tài khoản)'}
 
 Danh sách danh mục của người dùng (chỉ gợi ý từ danh sách này):
 {json.dumps(cat_list, ensure_ascii=False)}
@@ -232,13 +244,23 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
         if s.get("id") and s.get("name")
     ]
 
+    # ── Post-parse: generate warning for expense overdraw ──────────────────────
+    txn_warning: str | None = None
+    parsed_amount = parsed.get("amount")
+    if parsed_amount and parsed.get("type") == "expense" and parsed_amount > total_balance:
+        txn_warning = (
+            f"⚠️ Số tiền chi tiêu ({parsed_amount:,.0f} đ) vượt quá tổng số dư tài khoản "
+            f"({total_balance:,.0f} đ). Hãy kiểm tra lại số dư trước khi xác nhận."
+        )
+
     return ParseTransactionResponse(
         type=parsed.get("type"),
-        amount=parsed.get("amount"),
+        amount=parsed_amount,
         date=parsed.get("date"),
         note=parsed.get("note"),
         category_suggestions=suggestions,
         missing_fields=missing,
+        warning=txn_warning,
     )
 
 
@@ -256,8 +278,23 @@ async def parse_savings_action(db: Session, user: User, message: str) -> ParseSa
         SavingsGoal.user_id == user.id,
         SavingsGoal.is_active == True,
     ).all()
+
+    # Fetch user's accounts for balance awareness
+    accounts = db.query(Account).filter(
+        Account.user_id == user.id,
+        Account.is_active == True,
+    ).all()
+    total_balance = float(sum(Decimal(str(a.current_balance)) for a in accounts)) if accounts else 0.0
+    acc_lines = [f"  - {a.name}: {float(a.current_balance):,.0f} VND" for a in accounts]
+
     goal_list = [
-        {"id": g.id, "name": g.name, "saved": float(g.saved_amount), "target": float(g.target_amount)}
+        {
+            "id": g.id,
+            "name": g.name,
+            "saved": float(g.saved_amount),
+            "target": float(g.target_amount),
+            "remaining": float(Decimal(str(g.target_amount)) - Decimal(str(g.saved_amount))),
+        }
         for g in goals
     ]
 
@@ -288,7 +325,11 @@ Quy tắc ngày:
 - "hôm nay" = {today.strftime('%Y-%m-%d')}
 - "hôm qua" = {(today.replace(day=today.day-1)).strftime('%Y-%m-%d') if today.day > 1 else today.strftime('%Y-%m-%d')}
 
-Danh sách mục tiêu tiết kiệm của người dùng (chỉ gợi ý từ danh sách này):
+Tổng số dư tài khoản của người dùng: {total_balance:,.0f} VND
+Các tài khoản:
+{chr(10).join(acc_lines) if acc_lines else '  (không có tài khoản)'}
+
+Danh sách mục tiêu tiết kiệm của người dùng (chỉ gợi ý từ danh sách này, mỗi mục có "remaining" = số tiền còn cần nạp):
 {json.dumps(goal_list, ensure_ascii=False)}
 
 Trả về tối đa 3 goal_suggestions, sắp xếp theo confidence giảm dần.
@@ -345,13 +386,52 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
         if s.get("id") and s.get("name")
     ]
 
+    # ── Post-parse: cap amount and generate warning ────────────────────────────
+    warning: str | None = None
+    parsed_amount = parsed.get("amount")
+    parsed_action = parsed.get("action")
+
+    if parsed_amount and parsed_action == "deposit" and suggestions:
+        # Find the matched goal to get remaining
+        matched_goal = next((g for g in goals if g.id == suggestions[0].id), None)
+        if matched_goal:
+            remaining = float(Decimal(str(matched_goal.target_amount)) - Decimal(str(matched_goal.saved_amount)))
+            cap = min(remaining, total_balance)
+            if parsed_amount > cap:
+                warning = (
+                    f"⚠️ Số tiền bạn muốn nạp ({parsed_amount:,.0f} đ) vượt quá giới hạn. "
+                    f"Còn thiếu {remaining:,.0f} đ cho mục tiêu '{matched_goal.name}', "
+                    f"số dư tài khoản là {total_balance:,.0f} đ. "
+                    f"Đã điều chỉnh xuống {cap:,.0f} đ."
+                )
+                parsed_amount = cap
+
+    if parsed_amount and parsed_action == "withdraw" and suggestions:
+        matched_goal = next((g for g in goals if g.id == suggestions[0].id), None)
+        if matched_goal:
+            saved = float(matched_goal.saved_amount)
+            if parsed_amount > saved:
+                warning = (
+                    f"⚠️ Số tiền muốn rút ({parsed_amount:,.0f} đ) vượt quá số đã tích lũy "
+                    f"({saved:,.0f} đ) trong mục tiêu '{matched_goal.name}'. "
+                    f"Đã điều chỉnh xuống {saved:,.0f} đ."
+                )
+                parsed_amount = saved
+
+    if not warning and parsed_action == "deposit" and parsed_amount and parsed_amount > total_balance:
+        warning = (
+            f"⚠️ Số dư tài khoản ({total_balance:,.0f} đ) không đủ để nạp {parsed_amount:,.0f} đ."
+        )
+        parsed_amount = total_balance
+
     return ParseSavingsResponse(
-        action=parsed.get("action"),
-        amount=parsed.get("amount"),
+        action=parsed_action,
+        amount=parsed_amount,
         date=parsed.get("date"),
         note=parsed.get("note"),
         goal_suggestions=suggestions,
         missing_fields=missing,
+        warning=warning,
     )
 
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -41,6 +41,26 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
       }).catch(() => {});
     }, [])
   );
+
+  // Auto-cap when account changes or type switches to expense
+  useEffect(() => {
+    if (type !== 'expense' || !selectedAccount || !amount) return;
+    const num = Number(amount);
+    if (isNaN(num) || num <= 0) return;
+    const cap = Math.floor(Number(selectedAccount.current_balance));
+    if (num > cap) setAmount(String(cap));
+  }, [selectedAccount, type]);
+
+  const handleAmountChange = (text) => {
+    const raw = text.replace(/\D/g, '');
+    if (!raw) { setAmount(''); return; }
+    let num = parseInt(raw, 10);
+    if (type === 'expense' && selectedAccount) {
+      const cap = Math.floor(Number(selectedAccount.current_balance));
+      if (num > cap) num = cap;
+    }
+    setAmount(String(num));
+  };
 
   const missingFields = [];
   if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) missingFields.push('Số tiền');
@@ -99,12 +119,19 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
       {/* Amount */}
       <View style={styles.row}>
         <Text style={styles.label}>Số tiền (VND)</Text>
+        {type === 'expense' && selectedAccount && (
+          <Text style={styles.balanceHint}>
+            Số dư: {Math.floor(Number(selectedAccount.current_balance)).toLocaleString('vi-VN')} đ
+          </Text>
+        )}
         <TextInput
           style={styles.input}
-          value={amount}
-          onChangeText={setAmount}
+          value={amount ? Number(amount).toLocaleString('vi-VN') : ''}
+          onChangeText={handleAmountChange}
           keyboardType="numeric"
-          placeholder="VD: 220000"
+          placeholder={type === 'expense' && selectedAccount
+            ? `Tối đa ${Math.floor(Number(selectedAccount.current_balance)).toLocaleString('vi-VN')} đ`
+            : 'VD: 220000'}
         />
       </View>
 
@@ -285,4 +312,5 @@ const styles = StyleSheet.create({
   },
   confirmBtnDisabled: { backgroundColor: '#ccc' },
   confirmText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  balanceHint: { fontSize: 11, color: '#075c09', fontWeight: '600', marginBottom: 4 },
 });

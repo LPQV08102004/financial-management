@@ -38,6 +38,26 @@ export default function TransactionConfirmCard({
       .catch(() => {});
   }, []);
 
+  // Auto-cap amount when account changes or type switches to expense
+  useEffect(() => {
+    if (type !== 'expense' || !selectedAccount || !amount) return;
+    const num = Number(amount);
+    if (isNaN(num) || num <= 0) return;
+    const cap = Math.floor(Number(selectedAccount.current_balance));
+    if (num > cap) setAmount(String(cap));
+  }, [selectedAccount, type]);
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '');
+    if (!raw) { setAmount(''); return; }
+    let num = parseInt(raw, 10);
+    if (type === 'expense' && selectedAccount) {
+      const cap = Math.floor(Number(selectedAccount.current_balance));
+      if (num > cap) num = cap;
+    }
+    setAmount(String(num));
+  };
+
   // Kiểm tra các trường thông tin bắt buộc[cite: 6]
   const missingFields: string[] = [];
   if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) missingFields.push('Số tiền');
@@ -107,12 +127,19 @@ export default function TransactionConfirmCard({
       <div className="space-y-3 mb-4">
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Số tiền (VND)</label>
+          {type === 'expense' && selectedAccount && (
+            <p className="text-[11px] text-[#075c09] font-medium mb-1">
+              Số dư: {Math.floor(Number(selectedAccount.current_balance)).toLocaleString('vi-VN')} đ
+            </p>
+          )}
           <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            type="text"
+            value={amount ? Number(amount).toLocaleString('vi-VN') : ''}
+            onChange={handleAmountChange}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#075c09] outline-none bg-gray-50"
-            placeholder="VD: 220000"
+            placeholder={type === 'expense' && selectedAccount
+              ? `Tối đa ${Math.floor(Number(selectedAccount.current_balance)).toLocaleString('vi-VN')} đ`
+              : 'VD: 220000'}
           />
         </div>
         <div>

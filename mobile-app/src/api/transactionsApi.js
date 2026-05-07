@@ -11,6 +11,13 @@ async function getAuthHeaders() {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 }
 
+const parseError = (detail, fallback) => {
+  if (!detail) return fallback;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) return detail.map((e) => e.msg || String(e)).join('; ');
+  return fallback;
+};
+
 const _buildQuery = (params) =>
   new URLSearchParams(
     Object.fromEntries(Object.entries(params).filter(([, v]) => v != null))
@@ -27,7 +34,7 @@ export async function listTransactions(params = {}) {
     { headers: await getAuthHeaders() }
   );
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không lấy được giao dịch');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không lấy được giao dịch'));
   return data;
 }
 
@@ -42,7 +49,7 @@ export async function createIncome(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tạo được giao dịch');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không tạo được giao dịch'));
   return data;
 }
 
@@ -57,7 +64,7 @@ export async function createExpense(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tạo được giao dịch');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không tạo được giao dịch'));
   return data;
 }
 
@@ -71,7 +78,7 @@ export async function deleteTransaction(txnId) {
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data?.detail || 'Không xóa được giao dịch');
+    throw new Error(parseError(data?.detail, 'Không xóa được giao dịch'));
   }
 }
 
@@ -86,6 +93,6 @@ export async function updateTransaction(txnId, payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không cập nhật được giao dịch');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không cập nhật được giao dịch'));
   return data;
 }

@@ -48,29 +48,45 @@ export default function ChatScreen() {
       if (nlpMode) {
         setNlpMode(false);
         const result = await parseTransaction(userText);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
+        setMessages((prev) => {
+          const newMsgs: any[] = [];
+          if (result.warning) {
+            newMsgs.push({
+              id: (Date.now() + 1).toString(),
+              role: 'assistant',
+              content: result.warning,
+            });
+          }
+          newMsgs.push({
+            id: (Date.now() + 2).toString(),
             role: 'assistant',
             type: 'card',
             content: '__card__',
             parsed: result,
-          },
-        ]);
+          });
+          return [...prev, ...newMsgs];
+        });
       } else if (savingsMode) {
         setSavingsMode(false);
         const result = await parseSavingsAction(userText);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
+        setMessages((prev) => {
+          const newMsgs: any[] = [];
+          if (result.warning) {
+            newMsgs.push({
+              id: (Date.now() + 1).toString(),
+              role: 'assistant',
+              content: result.warning,
+            });
+          }
+          newMsgs.push({
+            id: (Date.now() + 2).toString(),
             role: 'assistant',
             type: 'savings-card',
             content: '__savings-card__',
             parsed: result,
-          },
-        ]);
+          });
+          return [...prev, ...newMsgs];
+        });
       } else {
         const reply = await sendChatMessage(userText, getHistory(nextMessages));
         setMessages((prev) => [
@@ -139,7 +155,9 @@ export default function ChatScreen() {
               className={`max-w-[85%] p-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
                 isUser 
                 ? 'ml-auto bg-[#075c09] text-white rounded-br-none' 
-                : 'mr-auto bg-white text-gray-800 rounded-bl-none border border-gray-100'
+                : item.content.startsWith('⚠️')
+                  ? 'mr-auto bg-orange-50 text-orange-800 rounded-bl-none border border-orange-200'
+                  : 'mr-auto bg-white text-gray-800 rounded-bl-none border border-gray-100'
               }`}
             >
               {item.content}

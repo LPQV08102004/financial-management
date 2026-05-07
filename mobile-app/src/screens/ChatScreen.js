@@ -57,30 +57,46 @@ export default function ChatScreen({ navigation }) {
         setNlpMode(false);
         const result = await parseTransaction(userText);
         setParsedTxn(result);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
+        setMessages((prev) => {
+          const newMsgs = [];
+          if (result.warning) {
+            newMsgs.push({
+              id: (Date.now() + 1).toString(),
+              role: 'assistant',
+              content: result.warning,
+            });
+          }
+          newMsgs.push({
+            id: (Date.now() + 2).toString(),
             role: 'assistant',
             type: 'card',
             content: '__card__',
             parsed: result,
-          },
-        ]);
+          });
+          return [...prev, ...newMsgs];
+        });
       } else if (savingsMode) {
         setSavingsMode(false);
         const result = await parseSavingsAction(userText);
         setParsedSavings(result);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
+        setMessages((prev) => {
+          const newMsgs = [];
+          if (result.warning) {
+            newMsgs.push({
+              id: (Date.now() + 1).toString(),
+              role: 'assistant',
+              content: result.warning,
+            });
+          }
+          newMsgs.push({
+            id: (Date.now() + 2).toString(),
             role: 'assistant',
             type: 'savings-card',
             content: '__savings-card__',
             parsed: result,
-          },
-        ]);
+          });
+          return [...prev, ...newMsgs];
+        });
       } else {
         const reply = await sendChatMessage(userText, getHistory(nextMessages));
         setMessages((prev) => [
@@ -262,9 +278,11 @@ export default function ChatScreen({ navigation }) {
       );
     }
 
+    const isWarning = !isUser && item.content && item.content.startsWith('⚠️');
+
     return (
-      <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleAI]}>
-        <Text style={[styles.bubbleText, isUser ? styles.bubbleTextUser : styles.bubbleTextAI]}>
+      <View style={[styles.bubble, isUser ? styles.bubbleUser : isWarning ? styles.bubbleWarning : styles.bubbleAI]}>
+        <Text style={[styles.bubbleText, isUser ? styles.bubbleTextUser : isWarning ? styles.bubbleTextWarning : styles.bubbleTextAI]}>
           {item.content}
         </Text>
       </View>
@@ -439,9 +457,21 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  bubbleWarning: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#fff8e1',
+    borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ffe082',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
   bubbleText: { fontSize: 15, lineHeight: 22 },
   bubbleTextUser: { color: '#fff' },
   bubbleTextAI: { color: '#222' },
+  bubbleTextWarning: { color: '#7b4800' },
 
   loadingRow: {
     flexDirection: 'row',

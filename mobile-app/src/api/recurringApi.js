@@ -11,13 +11,20 @@ async function getAuthHeaders() {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 }
 
+const parseError = (detail, fallback) => {
+  if (!detail) return fallback;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) return detail.map((e) => e.msg || String(e)).join('; ');
+  return fallback;
+};
+
 /** GET /recurring — list all active templates */
 export async function listTemplates() {
   const res = await fetch(`${BASE_URL}/recurring`, {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không lấy được danh sách giao dịch định kỳ');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không lấy được danh sách giao dịch định kỳ'));
   return data; // RecurringTemplateOut[]
 }
 
@@ -29,7 +36,7 @@ export async function createTemplate(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tạo được giao dịch định kỳ');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không tạo được giao dịch định kỳ'));
   return data;
 }
 
@@ -39,7 +46,7 @@ export async function getUpcoming(days = 30) {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không lấy được lịch sắp tới');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không lấy được lịch sắp tới'));
   return data; // UpcomingListResponse
 }
 
@@ -50,7 +57,7 @@ export async function processAllDue() {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Lỗi khi xử lý giao dịch định kỳ');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Lỗi khi xử lý giao dịch định kỳ'));
   return data; // GenerateResult
 }
 
@@ -60,7 +67,7 @@ export async function getTemplate(templateId) {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tìm thấy giao dịch định kỳ');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không tìm thấy giao dịch định kỳ'));
   return data;
 }
 
@@ -72,7 +79,7 @@ export async function updateTemplate(templateId, payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không cập nhật được giao dịch định kỳ');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không cập nhật được giao dịch định kỳ'));
   return data;
 }
 
@@ -84,7 +91,7 @@ export async function deleteTemplate(templateId) {
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data?.detail || 'Không xóa được giao dịch định kỳ');
+    throw new Error(parseError(data?.detail, 'Không xóa được giao dịch định kỳ'));
   }
 }
 
@@ -95,6 +102,6 @@ export async function generateDue(templateId) {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tạo được giao dịch');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không tạo được giao dịch'));
   return data;
 }

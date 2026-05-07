@@ -20,6 +20,7 @@ export interface SavingsParseResponse {
   note: string;
   goal_suggestions?: string[];
   missing_fields?: string[];
+  warning?: string | null;
 }
 
 export interface TransactionParseResponse {
@@ -29,4 +30,5 @@ export interface TransactionParseResponse {
   note: string;
   category_suggestions?: string[];
   missing_fields?: string[];
+  warning?: string | null;
 }

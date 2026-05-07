@@ -9,13 +9,20 @@ async function getAuthHeaders() {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 }
 
+const parseError = (detail, fallback) => {
+  if (!detail) return fallback;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) return detail.map((e) => e.msg || String(e)).join('; ');
+  return fallback;
+};
+
 export async function listCategories(type) {
   const query = type ? `?type=${type}` : '';
   const res = await fetch(`${API_BASE_URL}/categories${query}`, {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không lấy được danh mục');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không lấy được danh mục'));
   return data;
 }
 
@@ -26,7 +33,7 @@ export async function createCategory(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tạo được danh mục');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không tạo được danh mục'));
   return data;
 }
 
@@ -37,7 +44,7 @@ export async function updateCategory(id, payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không cập nhật được danh mục');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không cập nhật được danh mục'));
   return data;
 }
 
@@ -48,6 +55,6 @@ export async function deleteCategory(id) {
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data?.detail || 'Không xóa được danh mục');
+    throw new Error(parseError(data?.detail, 'Không xóa được danh mục'));
   }
 }

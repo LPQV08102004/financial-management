@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import { depositToGoal, withdrawFromGoal } from '../api/savingsGoalsApi';
+import { depositToGoal, withdrawFromGoal, getGoal } from '../api/savingsGoalsApi';
 import { listAccounts } from '../api/accountsApi';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -24,6 +24,16 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [cappedInfo, setCappedInfo] = useState('');
+
+  // Fetch full goal when AI suggestion only has id/name (no target_amount)
+  useEffect(() => {
+    if (selectedGoal?.id && selectedGoal.target_amount == null) {
+      getGoal(selectedGoal.id)
+        .then((full) => setSelectedGoal(full))
+        .catch(() => {});
+    }
+  }, [selectedGoal?.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -33,6 +43,42 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
       }).catch(() => {});
     }, [])
   );
+
+  const computeCap = () => {
+    if (action === 'deposit' && selectedGoal?.target_amount != null) {
+      const remaining = Number(selectedGoal.target_amount) - Number(selectedGoal.saved_amount ?? 0);
+      const balance = selectedAccount ? Math.floor(Number(selectedAccount.current_balance)) : Infinity;
+      return Math.min(remaining, isFinite(balance) ? balance : remaining);
+    }
+    if (action === 'withdraw' && selectedGoal?.saved_amount != null) {
+      return Number(selectedGoal.saved_amount ?? 0);
+    }
+    return null;
+  };
+
+  // Auto-cap when goal/account/action changes
+  useEffect(() => {
+    if (!selectedGoal?.target_amount || !amount) return;
+    const num = Number(amount);
+    if (isNaN(num) || num <= 0) return;
+    const cap = computeCap();
+    if (cap !== null && num > cap) {
+      setCappedInfo(`Tối đa ${cap.toLocaleString('vi-VN')} đ — đã điều chỉnh.`);
+      setAmount(String(cap));
+    } else {
+      setCappedInfo('');
+    }
+  }, [selectedGoal, selectedAccount, action]);
+
+  const handleAmountChange = (text) => {
+    const raw = text.replace(/\D/g, '');
+    if (!raw) { setAmount(''); setCappedInfo(''); return; }
+    let num = parseInt(raw, 10);
+    const cap = computeCap();
+    if (cap !== null && num > cap) num = cap;
+    setAmount(String(num));
+    setCappedInfo('');
+  };
 
   const missingFields = [];
   if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) missingFields.push('Số tiền');
@@ -90,12 +136,24 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
       {/* Amount */}
       <View style={styles.row}>
         <Text style={styles.label}>Số tiền (VND)</Text>
+        {action === 'deposit' && selectedGoal?.target_amount != null && (
+          <Text style={styles.balanceHint}>
+            Còn thiếu: {(Number(selectedGoal.target_amount) - Number(selectedGoal.saved_amount ?? 0)).toLocaleString('vi-VN')} đ
+            {selectedAccount ? `  ·  Số dư TK: ${Math.floor(Number(selectedAccount.current_balance)).toLocaleString('vi-VN')} đ` : ''}
+          </Text>
+        )}
+        {action === 'withdraw' && selectedGoal?.saved_amount != null && (
+          <Text style={styles.balanceHint}>
+            Đã tích lũy: {Number(selectedGoal.saved_amount ?? 0).toLocaleString('vi-VN')} đ
+          </Text>
+        )}
+        {cappedInfo ? <Text style={styles.cappedHint}>ℹ️ {cappedInfo}</Text> : null}
         <TextInput
           style={styles.input}
-          value={amount}
-          onChangeText={setAmount}
+          value={amount ? Number(amount).toLocaleString('vi-VN') : ''}
+          onChangeText={handleAmountChange}
           keyboardType="numeric"
-          placeholder="VD: 100000"
+          placeholder={(() => { const c = computeCap(); return c !== null ? `Tối đa ${c.toLocaleString('vi-VN')} đ` : 'VD: 100000'; })()}
         />
       </View>
 
@@ -130,7 +188,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
               <TouchableOpacity
                 key={goal.id}
                 style={[styles.chip, selectedGoal?.id === goal.id && styles.chipSelected]}
-                onPress={() => setSelectedGoal(goal)}
+                onPress={() => setSelectedGoal({ id: goal.id, name: goal.name, confidence: goal.confidence })}
               >
                 <Text style={[
                   styles.chipText,
@@ -261,6 +319,8 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 13, color: '#555', fontWeight: '600' },
   chipTextSelected: { color: '#075c09' },
   chipBalance: { fontSize: 11, color: '#888', fontWeight: '400' },
+  balanceHint: { fontSize: 11, color: '#075c09', fontWeight: '600', marginBottom: 4 },
+  cappedHint: { fontSize: 11, color: '#e65100', marginBottom: 4 },
   hint: { fontSize: 12, color: '#999', fontStyle: 'italic', marginTop: 4 },
   warning: { fontSize: 12, color: '#e65100', marginBottom: 8 },
   errorText: { fontSize: 13, color: '#CC3300', marginBottom: 8 },

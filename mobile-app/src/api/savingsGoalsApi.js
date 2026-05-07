@@ -11,6 +11,13 @@ async function getAuthHeaders() {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 }
 
+function parseError(detail, fallback) {
+  if (!detail) return fallback;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) return detail.map((e) => e.msg || String(e)).join('; ');
+  return fallback;
+}
+
 /**
  * GET /savings-goals
  * Returns: { items: SavingsGoalOut[], total_locked: Decimal }
@@ -20,7 +27,7 @@ export async function listGoals() {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không lấy được mục tiêu tiết kiệm');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không lấy được mục tiêu tiết kiệm'));
   return data;
 }
 
@@ -35,7 +42,7 @@ export async function createGoal(payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tạo được mục tiêu');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không tạo được mục tiêu'));
   return data;
 }
 
@@ -47,7 +54,7 @@ export async function getGoal(goalId) {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tìm thấy mục tiêu');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không tìm thấy mục tiêu'));
   return data;
 }
 
@@ -62,7 +69,7 @@ export async function updateGoal(goalId, payload) {
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không cập nhật được mục tiêu');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không cập nhật được mục tiêu'));
   return data;
 }
 
@@ -76,7 +83,7 @@ export async function deleteGoal(goalId) {
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data?.detail || 'Không xóa được mục tiêu');
+    throw new Error(parseError(data?.detail, 'Không xóa được mục tiêu'));
   }
 }
 
@@ -92,7 +99,7 @@ export async function depositToGoal(goalId, amount, accountId, transactionDate) 
     body: JSON.stringify({ amount, account_id: accountId, transaction_date: transactionDate }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không nạp được tiền');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không nạp được tiền'));
   return data;
 }
 
@@ -108,6 +115,6 @@ export async function withdrawFromGoal(goalId, amount, accountId, transactionDat
     body: JSON.stringify({ amount, account_id: accountId, transaction_date: transactionDate }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không rút được tiền');
+  if (!res.ok) throw new Error(parseError(data?.detail, 'Không rút được tiền'));
   return data;
 }

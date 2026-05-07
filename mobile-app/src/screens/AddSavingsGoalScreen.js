@@ -168,6 +168,20 @@ function ActionModal({ visible, onClose, goal, onDone }) {
 
   if (!goal) return null;
 
+  const remaining = Number(goal.target_amount) - Number(goal.saved_amount);
+  const accountBalance = selectedAccount ? Math.floor(Number(selectedAccount.current_balance)) : Infinity;
+  const maxDeposit = isFinite(accountBalance) ? Math.min(remaining, accountBalance) : remaining;
+  const maxWithdraw = Number(goal.saved_amount);
+  const cap = mode === 'deposit' ? maxDeposit : maxWithdraw;
+
+  const handleAmountChange = (text) => {
+    const raw = text.replace(/[^0-9]/g, '');
+    if (!raw) { setAmount(''); return; }
+    let num = parseInt(raw, 10);
+    if (num > cap) num = cap;
+    setAmount(String(num).replace(/\B(?=(\d{3})+(?!\d))/g, '.'));
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose} />
@@ -182,26 +196,33 @@ function ActionModal({ visible, onClose, goal, onDone }) {
         <View style={styles.modeRow}>
           <TouchableOpacity
             style={[styles.modeBtn, mode === 'deposit' && styles.modeBtnActive]}
-            onPress={() => setMode('deposit')}
+            onPress={() => { setMode('deposit'); setAmount(''); }}
           >
             <Text style={[styles.modeBtnText, mode === 'deposit' && styles.modeBtnTextActive]}>Nạp tiền</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modeBtn, mode === 'withdraw' && styles.modeBtnActiveRed]}
-            onPress={() => setMode('withdraw')}
+            onPress={() => { setMode('withdraw'); setAmount(''); }}
           >
             <Text style={[styles.modeBtnText, mode === 'withdraw' && styles.modeBtnTextRed]}>Rút tiền</Text>
           </TouchableOpacity>
         </View>
 
+        <Text style={styles.modalHint}>
+          {mode === 'deposit'
+            ? `Còn thiếu: ${_fmtVND(remaining)} đ  ·  Số dư TK: ${_fmtVND(accountBalance === Infinity ? 0 : accountBalance)} đ`
+            : `Đã tích lũy: ${_fmtVND(maxWithdraw)} đ`
+          }
+        </Text>
+
         {/* Amount */}
         <Text style={styles.modalFieldLabel}>Số tiền (đ)</Text>
         <TextInput
           style={styles.modalInput}
-          placeholder="Nhập số tiền"
+          placeholder={`Tối đa ${_fmtVND(cap)} đ`}
           keyboardType="numeric"
           value={amount}
-          onChangeText={setAmount}
+          onChangeText={handleAmountChange}
         />
 
         {/* Date */}
@@ -598,6 +619,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 17, fontWeight: '700', color: '#333', marginBottom: 4 },
   modalGoalName: { fontSize: 15, color: '#075c09', fontWeight: '600', marginBottom: 2 },
   modalProgress: { fontSize: 13, color: '#888', marginBottom: 16 },
+  modalHint: { fontSize: 12, color: '#075c09', fontWeight: '600', marginBottom: 8 },
   modeRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
   modeBtn: {
     flex: 1, paddingVertical: 10, borderRadius: 8, borderWidth: 1.5,

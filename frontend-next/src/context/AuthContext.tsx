@@ -159,7 +159,7 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
     dispatch({ type: 'SIGN_OUT' });
     try {
       await apiLogout(); // Thực hiện logout và xóa cookie
-      router.push('/login');
+      router.push('/auth/login');
       return { success: true };
     } catch (error: any) {
       return { success: false, message: error.message };

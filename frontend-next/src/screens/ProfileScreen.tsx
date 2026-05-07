@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Footer from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,6 +9,7 @@ interface UserProfile {
   full_name: string;
   email: string;
   phone_number?: string;
+  avatar_url?: string;
 }
 
 export default function ProfileScreen() {
@@ -16,6 +17,8 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [updatingAvatar, setUpdatingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const user = state.user;
 
@@ -48,10 +51,42 @@ export default function ProfileScreen() {
         alert(result.message || 'Đăng xuất thất bại');
       } else {
         // Next.js xử lý điều hướng sau đăng xuất thường qua Router hoặc window.location
-        window.location.href = '/login'; 
+        window.location.href = '/auth/login'; 
       }
     } finally {
       setLoggingOut(false);
+    }
+  };
+
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước ảnh quá lớn. Vui lòng chọn ảnh dưới 5MB.');
+      return;
+    }
+
+    try {
+      setUpdatingAvatar(true);
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        try {
+          const { updateMyProfile } = await import('../api/authApi');
+          await updateMyProfile({ avatar_url: base64String });
+          await refreshProfile();
+          // Cập nhật thành công, không hiện alert gây phiền nhiễu
+        } catch (error: any) {
+          alert(error.message || 'Cập nhật ảnh đại diện thất bại');
+        } finally {
+          setUpdatingAvatar(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      setUpdatingAvatar(false);
+      alert('Đã xảy ra lỗi khi đọc file');
     }
   };
 
@@ -81,16 +116,35 @@ export default function ProfileScreen() {
       <main className="flex-1 p-5 pb-24 overflow-y-auto">
         <div className="flex flex-col items-center my-8 relative">
           {/* Avatar Circle */}
-          <div className="w-32 h-32 rounded-full bg-[#075c09]/10 flex items-center justify-center border-4 border-[#075c09] text-6xl">
-            👤
+          <div className="w-32 h-32 rounded-full bg-[#075c09]/10 flex items-center justify-center border-4 border-[#075c09] text-6xl overflow-hidden relative">
+            {user?.avatar_url ? (
+              <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span>👤</span>
+            )}
+            {updatingAvatar && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-white"></div>
+              </div>
+            )}
           </div>
           {/* Edit Icon Overlay */}
           <button 
-            onClick={() => console.log('Change avatar')}
-            className="absolute bottom-0 right-[30%] w-10 h-10 bg-[#075c09] rounded-full flex items-center justify-center border-2 border-[#FFF8F0] text-lg shadow-lg hover:scale-110 transition-transform"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={updatingAvatar}
+            className="absolute bottom-0 right-[30%] w-10 h-10 bg-[#075c09] rounded-full flex items-center justify-center border-2 border-[#FFF8F0] text-lg shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
+            title="Thay đổi ảnh đại diện"
           >
             ✏️
           </button>
+          
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/png, image/jpeg, image/jpg" 
+            onChange={handleAvatarChange} 
+          />
         </div>
 
         {/* User Info Section */}

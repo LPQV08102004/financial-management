@@ -27,8 +27,9 @@ export default function SignupScreen() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự');
+    const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+    if (!STRONG_PASSWORD_REGEX.test(password)) {
+      setError('Mật khẩu phải từ 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
       return;
     }
 

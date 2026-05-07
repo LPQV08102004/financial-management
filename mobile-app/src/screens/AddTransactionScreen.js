@@ -335,7 +335,7 @@ export default function AddTransactionScreen({ navigation }) {
         {/* Image Upload Section */}
         <View style={styles.imageSection}>
           <View style={styles.imageSectionHeader}>
-            <Text style={styles.label}>Ảnh (Tùy chọn)</Text>
+            {/* <Text style={styles.label}>Ảnh (Tùy chọn)</Text> */}
             <TouchableOpacity
               style={styles.scanReceiptBtn}
               onPress={handleScanReceipt}
@@ -347,7 +347,7 @@ export default function AddTransactionScreen({ navigation }) {
               }
             </TouchableOpacity>
           </View>
-          <View style={styles.imageGrid}>
+          {/* <View style={styles.imageGrid}>
             {[0, 1, 2].map((index) => (
               <View key={index} style={styles.imageBox}>
                 {images[index] ? (
@@ -373,7 +373,7 @@ export default function AddTransactionScreen({ navigation }) {
                 )}
               </View>
             ))}
-          </View>
+          </View> */}
         </View>
 
         <TouchableOpacity

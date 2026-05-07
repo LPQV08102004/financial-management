@@ -168,30 +168,48 @@ export default function RecurringScreen() {
 
   return (
     <div className="flex flex-col bg-gray-50 relative">
-      {/* Header[cite: 8] */}
-      <div className="bg-[#075c09] text-white pt-12 pb-4 px-4 flex items-center gap-4">
-        <button onClick={() => window.history.back()} className="text-2xl">←</button>
+      {/* Header */}
+      <header className="bg-[#075c09] text-white px-5 py-4 flex items-center gap-3 shadow-sm sticky top-0 z-30">
+        <button
+          onClick={() => window.history.back()}
+          className="w-9 h-9 flex items-center justify-center hover:bg-white/10 rounded-xl transition-colors text-xl"
+        >
+          ←
+        </button>
         <h1 className="text-lg font-bold flex-1">Giao dịch định kỳ</h1>
         {activeTab === 'templates' && (
           <button
             onClick={() => router.push('/add-recurring')}
-            className="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full text-2xl font-light">+</button>
+            className="w-9 h-9 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-xl transition-colors text-xl"
+          >
+            +
+          </button>
         )}
-      </div>
+      </header>
 
-      {/* Tabs[cite: 8] */}
-      <div className="flex bg-white border-b sticky top-0 z-10 shadow-sm">
+      {/* Tabs */}
+      <div className="flex bg-white border-b shadow-sm">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 py-4 text-[11px] font-black tracking-tight transition-all border-b-4 ${
-              activeTab === tab.key ? 'border-[#075c09] text-[#075c09]' : 'border-transparent text-gray-400'
+            className={`flex-1 py-3.5 text-sm font-bold transition-all border-b-2 ${
+              activeTab === tab.key
+                ? 'border-[#075c09] text-[#075c09]'
+                : 'border-transparent text-slate-400 hover:text-slate-600'
             }`}
           >
-            {tab.label.toUpperCase()}
-            {tab.key === 'templates' && templates.length > 0 ? ` (${templates.length})` : ''}
-            {tab.key === 'upcoming' && upcoming && upcoming.items && upcoming.items.length > 0 ? ` (${upcoming.items.length})` : ''}
+            {tab.label}
+            {tab.key === 'templates' && templates.length > 0 && (
+              <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
+                activeTab === tab.key ? 'bg-[#075c09] text-white' : 'bg-slate-100 text-slate-500'
+              }`}>{templates.length}</span>
+            )}
+            {tab.key === 'upcoming' && upcoming?.items?.length ? (
+              <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
+                activeTab === tab.key ? 'bg-[#075c09] text-white' : 'bg-slate-100 text-slate-500'
+              }`}>{upcoming.items.length}</span>
+            ) : null}
           </button>
         ))}
       </div>

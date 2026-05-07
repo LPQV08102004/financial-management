@@ -49,9 +49,10 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
   ];
 
   return (
-    <>
+    // Hidden on desktop — AppSidebar handles navigation on lg+ screens
+    <div className="lg:hidden">
       {/* 1. Sidebar Overlay[cite: 7] */}
-      <div 
+      <div
         className={`fixed inset-0 bg-black/40 z-[60] transition-opacity duration-300 ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
@@ -59,8 +60,8 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
       />
 
       {/* 2. Sidebar[cite: 7] */}
-      <aside 
-        className={`fixed left-0 top-0 bottom-0 w-[280px] bg-[#216b38] z-[70] transition-transform duration-300 ease-in-out shadow-2xl overflow-y-auto ${
+      <aside
+        className={`fixed left-0 top-0 bottom-0 w-[280px] bg-[#075c09] z-[70] transition-transform duration-300 ease-in-out shadow-2xl overflow-y-auto ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -106,11 +107,10 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
           })}
         </nav>
 
-        {/* Nút đăng xuất nếu cần (bổ sung thêm so với bản mobile) */}
-        <div className="mt-auto p-8 opacity-50 text-white text-xs">
+        <div className="mt-auto p-6 opacity-50 text-white text-xs">
           © 2026 Singitronic Agentic AI
         </div>
       </aside>
-    </>
+    </div>
   );
 }

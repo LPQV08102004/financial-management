@@ -138,32 +138,44 @@ export default function TransactionScreen() {
   return (
     <div className="flex flex-col bg-gray-50 relative font-sans">
       {/* Header */}
-      <header className="bg-[#075c09] p-5 pt-8 flex items-center justify-between text-white sticky top-0 z-40">
-        <button onClick={() => setSidebarOpen(true)} className="flex flex-col gap-1.5 p-2">
-          <div className="w-6 h-0.5 bg-white rounded"></div>
-          <div className="w-6 h-0.5 bg-white rounded"></div>
-          <div className="w-6 h-0.5 bg-white rounded"></div>
+      <header className="bg-[#075c09] px-5 py-4 flex items-center justify-between text-white sticky top-0 z-40 shadow-sm">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden flex flex-col gap-1.5 p-2 hover:bg-white/10 rounded-xl transition-colors"
+        >
+          <div className="w-6 h-0.5 bg-white rounded" />
+          <div className="w-6 h-0.5 bg-white rounded" />
+          <div className="w-6 h-0.5 bg-white rounded" />
         </button>
-        <h1 className="text-xl font-bold">Lịch sử giao dịch</h1>
+        <h1 className="text-lg font-bold lg:ml-0">Lịch sử giao dịch</h1>
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => setShowFilterModal(true)}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${filterCategoryId ? 'bg-white/20' : ''}`}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors hover:bg-white/10 ${filterCategoryId ? 'bg-white/20' : ''}`}
           >
             {filterCategoryId ? '🔽' : '⚙️'}
           </button>
-          <button className="text-xl" onClick={() => router.push('/add-transaction')}>➕</button>
+          <button
+            onClick={() => router.push('/add-transaction')}
+            className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-white/10 transition-colors text-xl"
+          >
+            ➕
+          </button>
         </div>
       </header>
 
-      <main className="p-4 pb-24 flex-1 overflow-y-auto">
+      <main className="p-4 pb-8 max-w-4xl mx-auto">
         {/* Type Tabs */}
-        <div className="flex bg-white rounded-lg border shadow-sm mb-4 overflow-hidden">
+        <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100 mb-4">
           {['expense', 'income'].map((type) => (
             <button
               key={type}
               onClick={() => setActiveTab(type as any)}
-              className={`flex-1 py-3 font-semibold transition-all border-b-4 ${activeTab === type ? 'border-[#075c09] bg-green-50 text-[#075c09]' : 'border-transparent text-gray-400'}`}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                activeTab === type
+                  ? 'bg-[#075c09] text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
             >
               {type === 'expense' ? 'Chi phí' : 'Thu nhập'}
             </button>
@@ -172,21 +184,26 @@ export default function TransactionScreen() {
 
         {/* Search Bar */}
         <div className="relative mb-4">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
           <input
             type="text"
-            className="w-full bg-white border border-gray-300 rounded-xl py-2.5 pl-10 pr-10 focus:ring-2 focus:ring-green-500 outline-none"
+            className="w-full bg-white border border-slate-200 rounded-xl py-3 pl-10 pr-10 focus:ring-2 focus:ring-[#075c09]/20 focus:border-[#075c09] outline-none text-sm shadow-sm"
             placeholder="Tìm theo ghi chú..."
             value={searchQuery}
             onChange={handleSearchChange}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">✕</button>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm"
+            >
+              ✕
+            </button>
           )}
         </div>
 
         {/* Date Time Selector */}
-        <div className="mb-4">
+        <div className="mb-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <DateTimeSelector
             timePeriod={timePeriod}
             selectedDate={selectedDate}
@@ -208,85 +225,114 @@ export default function TransactionScreen() {
         </div>
 
         {/* Summary Bar */}
-        <div className="flex justify-between items-center bg-white border rounded-lg p-3 mb-4 shadow-sm">
-          <span className="text-sm text-gray-500 font-medium">{totalCount} giao dịch</span>
-          <span className="text-base font-bold text-[#075c09]">
+        <div className="flex justify-between items-center bg-white rounded-2xl px-5 py-3.5 mb-4 shadow-sm border border-slate-100">
+          <span className="text-sm text-slate-500 font-medium">{totalCount} giao dịch</span>
+          <span className={`text-base font-bold ${activeTab === 'income' ? 'text-green-600' : 'text-red-500'}`}>
             {activeTab === 'income' ? '+' : '-'}{_formatVND(totalAmount)} đ
           </span>
         </div>
 
         {/* Transaction List */}
-        <div className="space-y-3">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           {loading ? (
-            <div className="flex justify-center p-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#075c09]"></div></div>
+            <div className="flex justify-center py-16">
+              <div className="w-8 h-8 border-2 border-[#075c09] border-t-transparent rounded-full animate-spin" />
+            </div>
           ) : transactions.length > 0 ? (
-            transactions.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => openEditModal(item)}
-                className={`flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border-l-4 cursor-pointer hover:bg-gray-50 transition-colors ${item.reconcile_status === 'reconciled' ? 'border-gray-400 opacity-80' : 'border-[#075c09]'}`}
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-gray-800">{item.category_name || 'Giao dịch'}</span>
-                    {item.reconcile_status === 'reconciled' && <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">Đối soát</span>}
+            <div className="divide-y divide-slate-50">
+              {transactions.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => openEditModal(item)}
+                  className={`flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-slate-50 transition-colors ${
+                    item.reconcile_status === 'reconciled' ? 'opacity-70' : ''
+                  }`}
+                >
+                  <div className={`w-1 h-10 rounded-full flex-shrink-0 ${
+                    item.reconcile_status === 'reconciled' ? 'bg-slate-300' : 'bg-[#075c09]'
+                  }`} />
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-lg flex-shrink-0">
+                    {item.type === 'income' ? '💰' : item.type === 'transfer' ? '🔄' : '💸'}
                   </div>
-                  <div className="text-xs text-gray-400">{_dateToInput(item.transaction_date)}</div>
-                  {item.note && <div className="text-xs text-gray-600 mt-1 italic">"{item.note}"</div>}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm text-slate-800 truncate">
+                        {item.category_name || 'Giao dịch'}
+                      </span>
+                      {item.reconcile_status === 'reconciled' && (
+                        <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">
+                          Đối soát
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-0.5">
+                      {_dateToInput(item.transaction_date)}
+                      {item.note && <span className="ml-2 italic text-slate-500">· {item.note}</span>}
+                    </div>
+                  </div>
+                  <span className={`font-bold text-sm flex-shrink-0 ${item.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
+                    {item.type === 'income' ? '+' : '-'}{_formatVND(item.amount)} đ
+                  </span>
                 </div>
-                <div className={`font-bold ${item.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
-                  {item.type === 'income' ? '+' : '-'}{_formatVND(item.amount)} đ
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
-            <div className="text-center py-20 text-gray-400 font-medium">Không có giao dịch</div>
+            <div className="text-center py-16">
+              <p className="text-slate-400 text-sm font-medium">Không có giao dịch</p>
+            </div>
           )}
         </div>
       </main>
 
-      {/* Edit Modal Overlay */}
+      {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-[60] bg-black/60 flex items-end sm:items-center justify-center backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl animate-in slide-in-from-bottom duration-300">
-            <div className="flex justify-between items-center border-b pb-4 mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Chỉnh sửa giao dịch</h2>
-              <button onClick={() => setShowEditModal(false)} className="text-xl text-gray-400">✕</button>
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-lg font-bold text-slate-800">Chỉnh sửa giao dịch</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="w-8 h-8 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors"
+              >
+                ✕
+              </button>
             </div>
-            
-            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+
+            <div className="space-y-4 max-h-[65vh] overflow-y-auto">
               <div>
-                <label className="text-xs font-bold text-[#075c09] block mb-1">SỐ TIỀN</label>
-                <input 
-                  className="w-full border rounded-lg p-3 outline-none focus:border-green-600" 
-                  value={editAmount} 
-                  onChange={(e) => setEditAmount(e.target.value)} 
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">Số tiền</label>
+                <input
+                  className="w-full border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-[#075c09] focus:ring-2 focus:ring-[#075c09]/20 transition-colors"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#075c09] block mb-1">NGÀY (DD/MM/YYYY)</label>
-                <input 
-                  className="w-full border rounded-lg p-3 outline-none focus:border-green-600" 
-                  value={editDate} 
-                  onChange={(e) => setEditDate(e.target.value)} 
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">Ngày (DD/MM/YYYY)</label>
+                <input
+                  className="w-full border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-[#075c09] focus:ring-2 focus:ring-[#075c09]/20 transition-colors"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#075c09] block mb-1">GHI CHÚ</label>
-                <textarea 
-                  className="w-full border rounded-lg p-3 outline-none focus:border-green-600 min-h-[100px]" 
-                  value={editNote} 
-                  onChange={(e) => setEditNote(e.target.value)} 
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block mb-1.5">Ghi chú</label>
+                <textarea
+                  className="w-full border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-[#075c09] focus:ring-2 focus:ring-[#075c09]/20 transition-colors min-h-[80px] resize-none"
+                  value={editNote}
+                  onChange={(e) => setEditNote(e.target.value)}
                 />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button 
+              <div className="flex gap-3 pt-2">
+                <button
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 py-3 bg-gray-100 font-bold rounded-xl text-gray-600"
-                >Hủy</button>
-                <button 
-                  className="flex-1 py-3 bg-[#075c09] font-bold rounded-xl text-white shadow-lg shadow-green-900/20"
-                >Lưu</button>
+                  className="flex-1 py-3 bg-slate-100 font-semibold rounded-xl text-slate-600 hover:bg-slate-200 transition-colors text-sm"
+                >
+                  Hủy
+                </button>
+                <button className="flex-1 py-3 bg-[#075c09] font-semibold rounded-xl text-white hover:bg-[#065308] transition-colors text-sm shadow-sm">
+                  Lưu
+                </button>
               </div>
             </div>
           </div>

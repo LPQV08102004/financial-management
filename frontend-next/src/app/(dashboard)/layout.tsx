@@ -1,8 +1,7 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import Footer from '@/src/components/Footer';
+import { useState } from 'react';
+import AppSidebar from '@/src/components/AppSidebar';
 import SidebarDrawer from '@/src/components/SidebarDrawer';
 
 export default function DashboardLayout({
@@ -10,24 +9,23 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex flex-col h-screen bg-[#f8f9fa]">
-      {/* Sidebar overlay */}
-      <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+    <div className="flex h-screen bg-slate-100 overflow-hidden">
+      {/* Desktop: permanent sidebar */}
+      <AppSidebar />
 
-      {/* Main content - scrollable, takes remaining height */}
-      <main className="flex-1 overflow-y-auto">
-        {/* Inject sidebar toggle into children context somehow */}
+      {/* Mobile: overlay sidebar — triggered by screens' own hamburger buttons */}
+      <SidebarDrawer
+        isOpen={mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
+      />
+
+      {/* Main content area */}
+      <main className="flex-1 overflow-y-auto min-w-0">
         {children}
       </main>
-
-      {/* Footer - sticky at bottom */}
-      <div className="sticky bottom-0 z-10 border-t">
-        <Footer />
-      </div>
     </div>
   );
 }

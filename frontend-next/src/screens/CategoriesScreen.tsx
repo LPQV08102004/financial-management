@@ -117,8 +117,10 @@ export default function CategoriesScreen() {
           <button
             key={key}
             onClick={() => setActiveTab(key as any)}
-            className={`flex-1 py-4 text-sm font-bold transition-all border-b-4 ${
-              activeTab === key ? 'border-[#075c09] text-[#075c09]' : 'border-transparent text-gray-400'
+            className={`flex-1 py-3.5 text-sm font-bold transition-all border-b-2 ${
+              activeTab === key
+                ? 'border-[#075c09] text-[#075c09]'
+                : 'border-transparent text-slate-400 hover:text-slate-600'
             }`}
           >
             {label}
@@ -126,8 +128,8 @@ export default function CategoriesScreen() {
         ))}
       </div>
 
-      {/* Category Grid[cite: 7] */}
-      <div className="p-6 grid grid-cols-3 gap-6 overflow-y-auto">
+      {/* Category Grid */}
+      <div className="p-5 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-5 overflow-y-auto">
         {filtered.map((item) => (
           <button
             key={item.id}

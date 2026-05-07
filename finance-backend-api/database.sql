@@ -31,6 +31,8 @@ CREATE TABLE users (
     email           VARCHAR(255)    NOT NULL,
     hashed_password VARCHAR(255)    NOT NULL,
     full_name       VARCHAR(150)    NOT NULL,
+    phone_number    VARCHAR(30)     NULL,
+    avatar_url      MEDIUMTEXT      NULL,
     is_active       TINYINT(1)      NOT NULL DEFAULT 1,
     is_admin        TINYINT(1)      NOT NULL DEFAULT 0,
     created_at      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,

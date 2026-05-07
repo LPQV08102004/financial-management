@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.db.session import engine
@@ -53,6 +54,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Body size limit: 20 MB (to support base64 avatar images) ──────────────────
+_MAX_BODY = 20 * 1024 * 1024  # 20 MB
+
+@app.middleware("http")
+async def limit_body_size(request: Request, call_next):
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > _MAX_BODY:
+        return JSONResponse(status_code=413, content={"detail": "Request body too large (max 20 MB)"})
+    return await call_next(request)
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 PREFIX = settings.API_V1_PREFIX

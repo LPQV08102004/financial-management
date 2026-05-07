@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import { getMyProfile, getSavedToken, getSavedUserProfile, login, logout, register } from '../api/authApi';
 
 const AuthContext = createContext(null);
@@ -52,6 +53,8 @@ export function AuthProvider({ children }) {
     }
   );
 
+  const appStateRef = useRef(AppState.currentState);
+
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
@@ -85,6 +88,37 @@ export function AuthProvider({ children }) {
     };
 
     bootstrapAsync();
+  }, []);
+
+  // Re-fetch profile whenever the app comes back to foreground (picks up PC edits)
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+        getSavedToken().then((token) => {
+          if (token) {
+            getMyProfile()
+              .then((user) => dispatch({ type: 'UPDATE_USER', payload: user }))
+              .catch(() => {});
+          }
+        });
+      }
+      appStateRef.current = nextState;
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Poll for profile updates every 30s while app is running (picks up changes from other devices)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getSavedToken().then((token) => {
+        if (token) {
+          getMyProfile()
+            .then((user) => dispatch({ type: 'UPDATE_USER', payload: user }))
+            .catch(() => {});
+        }
+      });
+    }, 30_000);
+    return () => clearInterval(interval);
   }, []);
 
   const authContext = {

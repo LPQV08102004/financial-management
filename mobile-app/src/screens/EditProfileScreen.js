@@ -12,7 +12,6 @@ import {
   Modal,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
 import { useAuth } from '../context/AuthContext';
 import { updateMyProfile } from '../api/authApi';
 
@@ -48,7 +47,9 @@ export default function EditProfileScreen({ navigation }) {
         result = await ImagePicker.launchCameraAsync({
           allowsEditing: true,
           aspect: [1, 1],
-          quality: 0.8,
+          quality: 0.5,
+          base64: true,
+          exif: false,
         });
       } else {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -60,13 +61,25 @@ export default function EditProfileScreen({ navigation }) {
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
           aspect: [1, 1],
-          quality: 0.8,
+          quality: 0.5,
+          base64: true,
+          exif: false,
         });
       }
 
       if (!result.canceled && result.assets && result.assets[0]) {
         const asset = result.assets[0];
-        setAvatarUri(asset.uri);
+        // Use asset.mimeType for correct type (same pattern as chatbot OCR)
+        const mimeType = asset.mimeType || 'image/jpeg';
+        const dataUri = `data:${mimeType};base64,${asset.base64}`;
+
+        // 16MB cap — base64 is ~4/3x original file size
+        const MAX_BASE64 = 16 * 1024 * 1024;
+        if (dataUri.length > MAX_BASE64) {
+          Alert.alert('Lỗi', 'Ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 12MB.');
+          return;
+        }
+        setAvatarUri(dataUri);
       }
     } catch (error) {
       console.error('Image picker error:', error);
@@ -74,37 +87,9 @@ export default function EditProfileScreen({ navigation }) {
     }
   };
 
-  const convertImageToBase64 = async (imageUri) => {
-    try {
-      // Handle case where it's already a data URI or URL
-      if (imageUri.startsWith('data:') || imageUri.startsWith('http')) {
-        return imageUri;
-      }
-      
-      // Read local file and convert to base64
-      const base64String = await FileSystem.readAsStringAsync(imageUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      
-      // Determine MIME type based on file extension
-      let mimeType = 'image/jpeg';
-      if (imageUri.toLowerCase().endsWith('.png')) {
-        mimeType = 'image/png';
-      } else if (imageUri.toLowerCase().endsWith('.gif')) {
-        mimeType = 'image/gif';
-      } else if (imageUri.toLowerCase().endsWith('.webp')) {
-        mimeType = 'image/webp';
-      }
-      
-      return `data:${mimeType};base64,${base64String}`;
-    } catch (error) {
-      console.error('Error converting image to base64:', error);
-      throw new Error(`Không thể xử lý ảnh: ${error.message}`);
-    }
-  };
-
   const handleSave = async () => {
-    if (!fullName.trim()) {
+    // fullName could be pre-filled from user — only block if truly empty after editing
+    if (fullName !== undefined && fullName.trim() === '') {
       Alert.alert('Lỗi', 'Vui lòng nhập tên');
       return;
     }
@@ -121,20 +106,9 @@ export default function EditProfileScreen({ navigation }) {
         phone_number: phoneNumber || null,
       };
 
-      // If avatar changed and is local file, convert to base64
-      if (avatarUri && avatarUri !== originalAvatarUri && !avatarUri.startsWith('data:')) {
-        try {
-          payload.avatar_url = await convertImageToBase64(avatarUri);
-        } catch (error) {
-          console.error('Failed to convert avatar:', error);
-          Alert.alert('Lỗi', 'Không thể xử lý ảnh đại diện');
-          setSaving(false);
-          return;
-        }
-      } else if (avatarUri && avatarUri.startsWith('data:')) {
-        payload.avatar_url = avatarUri;
-      } else if (!avatarUri) {
-        payload.avatar_url = null;
+      // Only include avatar_url when it changed
+      if (avatarUri !== originalAvatarUri) {
+        payload.avatar_url = avatarUri; // data URI (data:image/...;base64,...), http URL, or null
       }
 
       const updatedUser = await updateMyProfile(payload);

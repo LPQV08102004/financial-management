@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -19,14 +19,25 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
-def register(body: RegisterRequest, db: Session = Depends(get_db)):
-    user = service.register_user(db, body.email, body.password, body.full_name)
-    access_token, refresh_token = service.create_tokens_for_user(db, user)
-    return TokenResponse(
-        access_token=access_token,
-        refresh_token=refresh_token,
-        user=UserOut.model_validate(user),
-    )
+def register(body: RegisterRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    print(f"[ENDPOINT] register() called with email={body.email}")
+    try:
+        print(f"[ENDPOINT] calling service.register_user...")
+        user = service.register_user(db, body.email, body.password, body.full_name, body.phone_number)
+        print(f"[ENDPOINT] user created: {user.id}")
+        access_token, refresh_token = service.create_tokens_for_user(db, user)
+        print(f"[ENDPOINT] tokens created")
+        background_tasks.add_task(service.bootstrap_new_user_data, user.id)
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=UserOut.model_validate(user),
+        )
+    except Exception as e:
+        import traceback
+        print(f"[ENDPOINT_ERROR] {str(e)}")
+        traceback.print_exc()
+        raise
 
 
 @router.post("/login", response_model=TokenResponse)

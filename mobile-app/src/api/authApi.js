@@ -3,6 +3,7 @@ import { API_BASE_URL, API_BASE_URL_CANDIDATES } from './config';
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
+const USER_PROFILE_KEY = 'user_profile';
 
 export async function login(email, password) {
   const response = await fetchWithNetworkGuard(`${API_BASE_URL}/auth/login`, {
@@ -22,6 +23,9 @@ export async function login(email, password) {
   }
   if (data?.refresh_token) {
     await AsyncStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
+  }
+  if (data?.user) {
+    await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(data.user));
   }
 
   return data;
@@ -51,12 +55,28 @@ export async function register(fullName, email, password, phoneNumber) {
   if (data?.refresh_token) {
     await AsyncStorage.setItem(REFRESH_TOKEN_KEY, data.refresh_token);
   }
+  if (data?.user) {
+    await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(data.user));
+  }
 
   return data;
 }
 
 export async function getSavedToken() {
   return AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+}
+
+export async function getSavedUserProfile() {
+  const raw = await AsyncStorage.getItem(USER_PROFILE_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 export async function logout() {
@@ -69,6 +89,7 @@ export async function logout() {
   }
 
   await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+  await AsyncStorage.removeItem(USER_PROFILE_KEY);
 
   if (!refreshToken) {
     return;
@@ -130,6 +151,11 @@ export async function getMyProfile() {
     const msg = formatErrorDetail(data) || 'Không lấy được hồ sơ người dùng';
     throw new Error(msg);
   }
+
+  if (data) {
+    await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(data));
+  }
+
   return data;
 }
 
@@ -145,6 +171,11 @@ export async function updateMyProfile(payload) {
     const msg = formatErrorDetail(data) || 'Không cập nhật được hồ sơ người dùng';
     throw new Error(msg);
   }
+
+  if (data) {
+    await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(data));
+  }
+
   return data;
 }
 

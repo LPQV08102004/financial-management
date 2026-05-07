@@ -31,5 +31,9 @@
         "projectId": "9e90a066-6595-4c11-9040-83932c478e3b"
       }
     }
+    ,
+    "extra": {
+      "EXPO_PUBLIC_API_BASE_URL": "http://10.13.21.135:8001/api/v1"
+    }
   }
 }

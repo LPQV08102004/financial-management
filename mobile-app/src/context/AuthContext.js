@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect } from 'react';
-import { getMyProfile, getSavedToken, login, logout, register } from '../api/authApi';
+import { getMyProfile, getSavedToken, getSavedUserProfile, login, logout, register } from '../api/authApi';
 
 const AuthContext = createContext(null);
 
@@ -61,24 +61,22 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        try {
-          const user = await getMyProfile();
-          dispatch({
-            type: 'RESTORE_TOKEN',
-            payload: { token, user },
+        const cachedUser = await getSavedUserProfile();
+        dispatch({
+          type: 'RESTORE_TOKEN',
+          payload: { token, user: cachedUser },
+        });
+
+        getMyProfile()
+          .then((user) => {
+            dispatch({
+              type: 'UPDATE_USER',
+              payload: user,
+            });
+          })
+          .catch((profileError) => {
+            console.warn('Profile refresh skipped:', profileError.message);
           });
-        } catch (profileError) {
-          // Token không hợp lệ hoặc hết hạn - đây là trường hợp bình thường khi user chưa đăng nhập
-          if (profileError.message.includes('401') || 
-              profileError.message.includes('Could not validate') ||
-              profileError.message.includes('Unauthorized')) {
-            await logout();
-            dispatch({ type: 'RESTORE_TOKEN', payload: null });
-          } else {
-            // Các lỗi khác (network, server) thì throw để xử lý
-            throw profileError;
-          }
-        }
       } catch (e) {
         console.error('Failed to restore token:', e);
         await logout();
@@ -90,16 +88,26 @@ export function AuthProvider({ children }) {
   }, []);
 
   const authContext = {
+    updateUser: (user) => {
+      dispatch({ type: 'UPDATE_USER', payload: user });
+    },
+
     signIn: async (email, password) => {
       try {
         const data = await login(email, password);
         const token = data?.access_token || await getSavedToken();
-        const user = await getMyProfile();
+        const user = data?.user || null;
 
         dispatch({
           type: 'SIGN_IN',
           payload: { token, user },
         });
+
+        if (!user) {
+          getMyProfile()
+            .then((freshUser) => dispatch({ type: 'UPDATE_USER', payload: freshUser }))
+            .catch(() => {});
+        }
 
         return { success: true, user };
       } catch (error) {
@@ -121,12 +129,18 @@ export function AuthProvider({ children }) {
           throw new Error('Đăng ký thành công nhưng chưa đăng nhập được');
         }
 
-        const user = await getMyProfile();
+        const user = registerData?.user || null;
 
         dispatch({
           type: 'SIGN_UP',
           payload: { token, user },
         });
+
+        if (!user) {
+          getMyProfile()
+            .then((freshUser) => dispatch({ type: 'UPDATE_USER', payload: freshUser }))
+            .catch(() => {});
+        }
 
         return { success: true, user };
       } catch (error) {

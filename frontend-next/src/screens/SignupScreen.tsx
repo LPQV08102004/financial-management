@@ -4,6 +4,41 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
+import { Wallet, Eye, EyeOff, AlertCircle } from 'lucide-react';
+
+function InputField({
+  label,
+  type = 'text',
+  value,
+  onChange,
+  placeholder,
+  rightEl,
+}: {
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  rightEl?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-slate-700 mb-1.5">{label}</label>
+      <div className="relative">
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09]/30 focus:border-[#075c09] text-slate-800 bg-slate-50/50 placeholder:text-slate-400 transition-colors text-sm pr-11"
+        />
+        {rightEl && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">{rightEl}</div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -13,6 +48,8 @@ export default function SignupScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [showPwC, setShowPwC] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,27 +58,19 @@ export default function SignupScreen() {
       setError('Vui lòng điền đầy đủ thông tin');
       return;
     }
-
     if (password !== passwordConfirm) {
       setError('Mật khẩu không trùng khớp');
       return;
     }
-
     const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
     if (!STRONG_PASSWORD_REGEX.test(password)) {
       setError('Mật khẩu phải từ 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
       return;
     }
-
     setLoading(true);
     setError('');
     try {
-      const result = await signUp({
-        email,
-        full_name: fullName,
-        phone_number: phone,
-        password,
-      });
+      const result = await signUp({ email, full_name: fullName, phone_number: phone, password });
       if (!result.success) {
         setError(result.message || 'Đăng ký thất bại');
       } else {
@@ -54,99 +83,84 @@ export default function SignupScreen() {
     }
   };
 
+  const PwToggle = ({ show, toggle }: { show: boolean; toggle: () => void }) => (
+    <button type="button" onClick={toggle} className="text-slate-400 hover:text-slate-600 transition-colors">
+      {show ? <EyeOff size={18} /> : <Eye size={18} />}
+    </button>
+  );
+
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#075c09] to-[#0a3e05] items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-[#075c09] mb-2">💰</h1>
-          <h2 className="text-2xl font-bold text-gray-800">Đăng ký</h2>
-          <p className="text-gray-500 text-sm mt-1">Tạo tài khoản để bắt đầu</p>
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 rounded-2xl bg-[#075c09] flex items-center justify-center mx-auto mb-3 shadow-lg">
+            <Wallet size={28} className="text-white" />
+          </div>
+          <h1 className="text-2xl font-black text-[#075c09]">Singitronic</h1>
         </div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-4 mb-6">
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Họ tên</label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Nguyen Van A"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
-            />
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8">
+          <div className="mb-5">
+            <h2 className="text-xl font-bold text-slate-800">Tạo tài khoản</h2>
+            <p className="text-slate-500 text-sm mt-0.5">Bắt đầu quản lý tài chính của bạn</p>
           </div>
 
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="example@gmail.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
-            />
-          </div>
+          {error && (
+            <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
+              <AlertCircle size={16} className="flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Số điện thoại</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="0123456789"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Mật khẩu</label>
-            <input
-              type="password"
+          <div className="space-y-4 mb-5">
+            <InputField label="Họ tên" value={fullName} onChange={setFullName} placeholder="Nguyễn Văn A" />
+            <InputField label="Email" type="email" value={email} onChange={setEmail} placeholder="example@gmail.com" />
+            <InputField label="Số điện thoại" type="tel" value={phone} onChange={setPhone} placeholder="0123456789" />
+            <InputField
+              label="Mật khẩu"
+              type={showPw ? 'text' : 'password'}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
+              onChange={setPassword}
+              placeholder="Chữ hoa, chữ thường, số, ký tự đặc biệt"
+              rightEl={<PwToggle show={showPw} toggle={() => setShowPw(!showPw)} />}
             />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Xác nhận mật khẩu</label>
-            <input
-              type="password"
+            <InputField
+              label="Xác nhận mật khẩu"
+              type={showPwC ? 'text' : 'password'}
               value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#075c09] text-black"
-              onKeyPress={(e) => e.key === 'Enter' && handleSignup()}
+              onChange={setPasswordConfirm}
+              placeholder="Nhập lại mật khẩu"
+              rightEl={<PwToggle show={showPwC} toggle={() => setShowPwC(!showPwC)} />}
             />
           </div>
-        </div>
 
-        <button
-          onClick={handleSignup}
-          disabled={loading}
-          className={`w-full py-3 rounded-xl font-bold text-white transition-all ${
-            loading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-[#075c09] hover:bg-[#064a08] active:scale-95'
-          }`}
-        >
-          {loading ? 'Đang đăng ký...' : 'Đăng ký'}
-        </button>
+          <button
+            onClick={handleSignup}
+            disabled={loading}
+            className={`w-full py-3.5 rounded-xl font-bold text-white text-sm transition-all ${
+              loading
+                ? 'bg-slate-400 cursor-not-allowed'
+                : 'bg-[#075c09] hover:bg-[#065308] active:scale-[0.98] shadow-sm shadow-[#075c09]/20'
+            }`}
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                Đang đăng ký...
+              </span>
+            ) : (
+              'Đăng ký'
+            )}
+          </button>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          Đã có tài khoản?{' '}
-          <Link href="/auth/login" className="font-bold text-[#075c09] hover:underline">
-            Đăng nhập
-          </Link>
+          <p className="mt-5 text-center text-sm text-slate-500">
+            Đã có tài khoản?{' '}
+            <Link href="/auth/login" className="font-bold text-[#075c09] hover:underline">
+              Đăng nhập
+            </Link>
+          </p>
         </div>
       </div>
     </div>
   );
 }
-

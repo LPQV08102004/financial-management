@@ -55,23 +55,19 @@ export default function NotificationScreen() {
         onClose={() => setSidebarOpen(false)} 
       />
 
-      {/* Header[cite: 10] */}
-      <header className="bg-[#075c09] p-5 pt-8 flex items-center justify-between sticky top-0 z-20 shadow-md">
-        <button 
-          className="flex flex-col gap-1 px-2 py-2 group" 
+      {/* Header */}
+      <header className="bg-[#075c09] px-5 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
+        <button
+          className="lg:hidden flex flex-col gap-1.5 px-2 py-2 hover:bg-white/10 rounded-xl transition-colors"
           onClick={() => setSidebarOpen(true)}
         >
-          <div className="w-6 h-[3px] bg-white rounded-full group-hover:opacity-80"></div>
-          <div className="w-6 h-[3px] bg-white rounded-full group-hover:opacity-80"></div>
-          <div className="w-6 h-[3px] bg-white rounded-full group-hover:opacity-80"></div>
+          <div className="w-6 h-0.5 bg-white rounded" />
+          <div className="w-6 h-0.5 bg-white rounded" />
+          <div className="w-6 h-0.5 bg-white rounded" />
         </button>
-        
-        <div className="flex-1 flex justify-center translate-x-2">
-          <h1 className="text-white text-xl font-medium tracking-wide">Nhắc nhở</h1>
-        </div>
-
-        <HeaderIconButton 
-          icon="+" 
+        <h1 className="text-white text-lg font-semibold">Nhắc nhở</h1>
+        <HeaderIconButton
+          icon="+"
           onPress={() => router.push('/add-notification')}
         />
       </header>

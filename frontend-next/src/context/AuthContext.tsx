@@ -99,7 +99,6 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
           dispatch({ type: 'RESTORE_TOKEN', payload: { token, user } });
         } catch (profileError: any) {
           // Token hết hạn hoặc không hợp lệ, xóa token và logout
-          console.error('Token validation failed:', profileError);
           await apiLogout().catch(() => {}); // Gọi logout để xóa token từ server
           dispatch({ type: 'RESTORE_TOKEN', payload: null });
         }
@@ -119,7 +118,7 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
       const user = data.user || await getMyProfile();
 
       dispatch({ type: 'SIGN_IN', payload: { token, user } });
-      router.push('/dashboard');
+      router.push('/home');
       return { success: true };
     } catch (error: any) {
       return { success: false, message: error.message };
@@ -138,7 +137,7 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
 
       const user = registerData.user || await getMyProfile();
       dispatch({ type: 'SIGN_UP', payload: { token, user } });
-      router.push('/dashboard');
+      router.push('/home');
       return { success: true };
     } catch (error: any) {
       return { success: false, message: error.message };
@@ -159,7 +158,7 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
     dispatch({ type: 'SIGN_OUT' });
     try {
       await apiLogout(); // Thực hiện logout và xóa cookie
-      router.push('/login');
+      router.push('/auth/login');
       return { success: true };
     } catch (error: any) {
       return { success: false, message: error.message };

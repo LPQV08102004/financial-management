@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Footer from '../components/Footer';
 import { listGoals, deleteGoal } from '../api/savingsApi';
 
@@ -51,11 +52,11 @@ function ProgressBar({ pct, color }: { pct: number; color: string }) {
 }
 
 // Component thẻ mục tiêu[cite: 7]
-function GoalCard({ goal, onDelete }: { goal: Goal; onDelete: (g: Goal) => void }) {
+function GoalCard({ goal, onDelete, onPress }: { goal: Goal; onDelete: (g: Goal) => void; onPress: () => void }) {
   const color = STATUS_COLOR[goal.status] || '#075c09';
   
   return (
-    <div className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-50 active:scale-[0.98] transition-transform cursor-pointer">
+    <div onClick={onPress} className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-50 active:scale-[0.98] transition-transform cursor-pointer">
       <div className="flex justify-between items-center mb-2.5">
         <h3 className="font-bold text-gray-800 truncate pr-4">{goal.name}</h3>
         <button 
@@ -111,6 +112,7 @@ function GoalCard({ goal, onDelete }: { goal: Goal; onDelete: (g: Goal) => void 
 }
 
 export default function SavingsGoalsScreen() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('in_progress');
   const [allGoals, setAllGoals] = useState<Goal[]>([]);
   const [totalLocked, setTotalLocked] = useState(0);
@@ -153,7 +155,9 @@ export default function SavingsGoalsScreen() {
         <div className="flex items-center justify-between mb-6">
           <button className="text-2xl" onClick={() => window.history.back()}>←</button>
           <h1 className="text-lg font-bold">Mục tiêu tiết kiệm</h1>
-          <button className="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full text-2xl font-light">
+          <button
+            onClick={() => router.push('/add-savings-goal')}
+            className="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full text-2xl font-light">
             +
           </button>
         </div>
@@ -207,6 +211,7 @@ export default function SavingsGoalsScreen() {
               key={item.id}
               goal={item}
               onDelete={handleDelete}
+              onPress={() => router.push(`/add-savings-goal?goalId=${item.id}`)}
             />
           ))
         )}

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Footer from '../components/Footer';
+import { createReminder } from '../api/notificationsApi';
 
 type Frequency = 'daily' | 'weekly' | 'monthly' | 'once';
 
@@ -13,6 +15,7 @@ const frequencyOptions: { label: string; value: Frequency }[] = [
 ];
 
 export default function AddNotificationScreen() {
+  const router = useRouter();
   const [reminderName, setReminderName] = useState('');
   const [frequency, setFrequency] = useState<Frequency>('weekly');
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
@@ -53,11 +56,21 @@ export default function AddNotificationScreen() {
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
-  const handleCreateReminder = () => {
-    if (reminderName.trim()) {
-      const time = `${selectedHour}:${selectedMinute}`;
-      console.log('Tạo lời nhắc:', { reminderName, frequency, startDate: formatDate(selectedDate), time, notes });
-      window.history.back();
+  const handleCreateReminder = async () => {
+    if (!reminderName.trim()) return;
+    const time = `${selectedHour}:${selectedMinute}`;
+    const iso = selectedDate.toISOString().split('T')[0];
+    try {
+      await createReminder({
+        title: reminderName.trim(),
+        frequency,
+        start_date: iso,
+        reminder_time: time,
+        notes: notes.trim() || undefined,
+      });
+      router.back();
+    } catch (e: any) {
+      alert(e.message);
     }
   };
 

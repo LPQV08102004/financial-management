@@ -48,7 +48,7 @@ export default function ProfileScreen() {
         alert(result.message || 'Đăng xuất thất bại');
       } else {
         // Next.js xử lý điều hướng sau đăng xuất thường qua Router hoặc window.location
-        window.location.href = '/login'; 
+        window.location.href = '/auth/login'; 
       }
     } finally {
       setLoggingOut(false);

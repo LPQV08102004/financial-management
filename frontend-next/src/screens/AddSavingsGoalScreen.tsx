@@ -67,6 +67,18 @@ function ActionModal({ visible, onClose, goal, onDone }: any) {
   const handleSubmit = async () => {
     const num = parseFloat(amount.replace(/\./g, ''));
     if (!num || !selectedAccount) return alert("Vui lòng nhập đủ thông tin");
+
+    if (mode === 'deposit') {
+      const remaining = Number(goal.target_amount) - Number(goal.saved_amount);
+      if (num > remaining) {
+        return alert(`Số tiền nạp vượt quá số còn thiếu (${remaining.toLocaleString('vi-VN')} đ)`);
+      }
+    }
+    if (mode === 'withdraw') {
+      if (num > Number(goal.saved_amount)) {
+        return alert(`Số tiền rút vượt quá số đã tích lũy (${Number(goal.saved_amount).toLocaleString('vi-VN')} đ)`);
+      }
+    }
     
     setSubmitting(true);
     try {
@@ -85,31 +97,49 @@ function ActionModal({ visible, onClose, goal, onDone }: any) {
     }
   };
 
+  const remaining = Number(goal.target_amount) - Number(goal.saved_amount);
+  const accountBalance = Math.floor(selectedAccount?.current_balance ?? Infinity);
+  const maxDeposit = Math.min(remaining, isFinite(accountBalance) ? accountBalance : remaining);
+  const maxWithdraw = Number(goal.saved_amount);
+  const cap = mode === 'deposit' ? maxDeposit : maxWithdraw;
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (!val) { setAmount(''); return; }
+    let num = Number(val);
+    if (num > cap) num = cap;
+    setAmount(num.toLocaleString('vi-VN'));
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-md rounded-t-3xl p-6 animate-slide-up">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl mx-4">
         <h4 className="text-lg font-bold text-gray-800 mb-1">Cập nhật tích lũy</h4>
         <p className="text-sm text-gray-500 mb-4">{goal.name}</p>
 
-        <div className="flex gap-3 mb-6">
+        <div className="flex gap-3 mb-4">
           <button 
-            onClick={() => setMode('deposit')}
+            onClick={() => { setMode('deposit'); setAmount(''); }}
             className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${mode === 'deposit' ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]' : 'border-gray-100 text-gray-400'}`}
           >Nạp tiền</button>
           <button 
-            onClick={() => setMode('withdraw')}
+            onClick={() => { setMode('withdraw'); setAmount(''); }}
             className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${mode === 'withdraw' ? 'border-red-600 bg-red-50 text-red-600' : 'border-gray-100 text-gray-400'}`}
           >Rút tiền</button>
         </div>
 
+        <p className="text-xs text-gray-400 mb-3">
+          {mode === 'deposit'
+            ? <>Còn thiếu: <strong>{remaining.toLocaleString('vi-VN')} đ</strong> · Số dư TK: <strong>{(selectedAccount?.current_balance ?? 0).toLocaleString('vi-VN')} đ</strong></>
+            : <>Đã tích lũy: <strong>{maxWithdraw.toLocaleString('vi-VN')} đ</strong></>}
+        </p>
+
         <Field label="Số tiền (đ)">
           <input 
             type="text" 
-            value={amount} 
-            onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '');
-                setAmount(val ? Number(val).toLocaleString('vi-VN') : '');
-            }}
+            value={amount}
+            onChange={handleAmountChange}
+            placeholder={`Tối đa ${cap.toLocaleString('vi-VN')} đ`}
             className="w-full border-2 border-gray-100 rounded-xl p-3 focus:border-[#075c09] outline-none font-bold"
           />
         </Field>
@@ -141,7 +171,9 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
   const handleSave = async () => {
     const raw = parseFloat(targetAmount.replace(/\./g, ''));
     const isoDate = _parseDate(deadline);
-    if (!name || !raw || !isoDate) return alert("Vui lòng điền đủ các trường có dấu *");
+    if (!name || !raw) return alert("Vui lòng điền đủ các trường có dấu *");
+    if (!isoDate) return alert("Định dạng ngày không hợp lệ. Vui lòng nhập theo định dạng dd/mm/yyyy");
+    if (isoDate <= new Date().toISOString().split('T')[0]) return alert("Ngày mục tiêu phải ở tương lai");
 
     setLoading(true);
     try {

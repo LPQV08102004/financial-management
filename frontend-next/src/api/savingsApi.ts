@@ -37,7 +37,10 @@ export async function createGoal(payload: CreateGoalPayload): Promise<SavingsGoa
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tạo được mục tiêu');
+  if (!res.ok) {
+    const d = data?.detail;
+    throw new Error(typeof d === 'string' ? d : Array.isArray(d) ? d.map((e: any) => e.msg ?? JSON.stringify(e)).join('; ') : 'Không tạo được mục tiêu');
+  }
   return data;
 }
 
@@ -47,7 +50,10 @@ export async function getGoal(goalId: string | number): Promise<SavingsGoal> {
     headers: await getAuthHeaders(),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không tìm thấy mục tiêu');
+  if (!res.ok) {
+    const d = data?.detail;
+    throw new Error(typeof d === 'string' ? d : Array.isArray(d) ? d.map((e: any) => e.msg ?? JSON.stringify(e)).join('; ') : 'Không tìm thấy mục tiêu');
+  }
   return data;
 }
 
@@ -62,7 +68,10 @@ export async function updateGoal(
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không cập nhật được mục tiêu');
+  if (!res.ok) {
+    const d = data?.detail;
+    throw new Error(typeof d === 'string' ? d : Array.isArray(d) ? d.map((e: any) => e.msg ?? JSON.stringify(e)).join('; ') : 'Không cập nhật được mục tiêu');
+  }
   return data;
 }
 
@@ -80,26 +89,42 @@ export async function deleteGoal(goalId: string | number): Promise<void> {
 
 /** POST /savings-goals/:id/deposit — Nạp tiền vào mục tiêu */
 export async function depositToGoal(
-goalId: string | number, p0: number, payload: GoalTransactionPayload, isoDate: string): Promise<SavingsGoal> {
+  goalId: string | number,
+  amount: number,
+  accountId: string | number,
+  transactionDate: string
+): Promise<SavingsGoal> {
+  const payload: GoalTransactionPayload = { amount, account_id: accountId, transaction_date: transactionDate };
   const res = await fetch(`${API_BASE_URL}/savings-goals/${goalId}/deposit`, {
     method: 'POST',
     headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không nạp được tiền');
+  if (!res.ok) {
+    const detail = data?.detail;
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail) || 'Không nạp được tiền');
+  }
   return data;
 }
 
 /** POST /savings-goals/:id/withdraw — Rút tiền khỏi mục tiêu */
 export async function withdrawFromGoal(
-goalId: string | number, p0: number, payload: GoalTransactionPayload, isoDate: string): Promise<SavingsGoal> {
+  goalId: string | number,
+  amount: number,
+  accountId: string | number,
+  transactionDate: string
+): Promise<SavingsGoal> {
+  const payload: GoalTransactionPayload = { amount, account_id: accountId, transaction_date: transactionDate };
   const res = await fetch(`${API_BASE_URL}/savings-goals/${goalId}/withdraw`, {
     method: 'POST',
     headers: await getAuthHeaders(),
     body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.detail || 'Không rút được tiền');
+  if (!res.ok) {
+    const detail = data?.detail;
+    throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail) || 'Không rút được tiền');
+  }
   return data;
 }

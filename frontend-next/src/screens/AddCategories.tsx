@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Footer from '../components/Footer';
+import { createCategory } from '../api/categoriesApi';
 
 // Định nghĩa kiểu dữ liệu
 interface CategoryIcon {
@@ -32,6 +34,7 @@ const basicColors = [
 ];
 
 export default function AddCategories() {
+  const router = useRouter();
   const [categoryName, setCategoryName] = useState('');
   const [categoryType, setCategoryType] = useState<'expense' | 'income'>('expense');
   const [selectedIcon, setSelectedIcon] = useState<CategoryIcon>(categoryIcons[0]);
@@ -144,7 +147,17 @@ export default function AddCategories() {
         </section>
 
         {/* Action Button[cite: 10] */}
-        <button className="w-full bg-[#075c09] hover:bg-[#064a08] text-white py-3.5 rounded-lg font-bold text-lg shadow-lg active:scale-95 transition-all mt-4">
+        <button
+          onClick={async () => {
+            if (!categoryName.trim()) { alert('Vui lòng nhập tên danh mục'); return; }
+            try {
+              await createCategory({ name: categoryName.trim(), type: categoryType });
+              router.back();
+            } catch (e: any) {
+              alert(e.message || 'Tạo danh mục thất bại');
+            }
+          }}
+          className="w-full bg-[#075c09] hover:bg-[#064a08] text-white py-3.5 rounded-lg font-bold text-lg shadow-lg active:scale-95 transition-all mt-4">
           Thêm danh mục
         </button>
       </main>

@@ -18,6 +18,7 @@ interface Category {
 interface Account {
   id: string;
   name: string;
+  current_balance: number;
 }
 
 const _fmtVND = (v: string) => v.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -41,10 +42,14 @@ export default function AddTransactionScreen() {
   const [calculatorDisplay, setCalculatorDisplay] = useState('0');
   const [categories, setCategories] = useState<Category[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    listAccounts().then(setAccounts).catch(() => {});
+    listAccounts().then((list: any) => {
+      setAccounts(list);
+      setSelectedAccount(list[0] ?? null);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -53,8 +58,15 @@ export default function AddTransactionScreen() {
   }, [activeTab]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, '');
-    setAmount(val.startsWith('0') && val.length > 1 ? val.slice(1) : val);
+    let val = e.target.value.replace(/\D/g, '');
+    if (!val) { setAmount(''); return; }
+    let num = parseInt(val, 10);
+    // Cap at account balance for expense and savings
+    if (activeTab === 'expense' && selectedAccount) {
+      const cap = Math.floor(selectedAccount.current_balance);
+      if (num > cap) num = cap;
+    }
+    setAmount(String(num));
   };
 
   const handlePickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,13 +96,13 @@ export default function AddTransactionScreen() {
   };
 
   const handleAddTransaction = async () => {
-    if (!amount || accounts.length === 0) return alert("Vui lòng nhập số tiền và đảm bảo có tài khoản");
+    if (!amount || !selectedAccount) return alert("Vui lòng nhập số tiền và đảm bảo có tài khoản");
     if (activeTab === 'expense' && !selectedCategory) return alert("Vui lòng chọn danh mục");
 
     setSubmitting(true);
     try {
       const data = {
-        account_id: accounts[0].id,
+        account_id: selectedAccount.id,
         amount: parseFloat(amount),
         transaction_date: selectedDate.toISOString(),
         note: description || undefined,
@@ -129,6 +141,11 @@ export default function AddTransactionScreen() {
         {/* Số tiền */}
         <section>
           <label className="block text-sm font-bold text-gray-700 mb-2">Số tiền</label>
+          {activeTab === 'expense' && selectedAccount && (
+            <p className="text-xs text-gray-400 mb-1">
+              Số dư: <span className="font-semibold text-[#075c09]">{Math.floor(selectedAccount.current_balance).toLocaleString('vi-VN')} đ</span>
+            </p>
+          )}
           <div className="flex gap-2">
             <input
               type="text"

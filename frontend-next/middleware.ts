@@ -1,24 +1,29 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+const PUBLIC_PATHS = ['/auth/login', '/auth/signup', '/auth'];
+
 export function middleware(request: NextRequest) {
-  // Lấy token từ cookie[cite: 1]
   const token = request.cookies.get('access_token')?.value;
   const { pathname } = request.nextUrl;
 
-  // Nếu chưa có token mà vào trang yêu cầu login
-  if (!token && (pathname.startsWith('/dashboard') || pathname.startsWith('/chat'))) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'));
+
+  // Unauthenticated user trying to access protected route
+  if (!token && !isPublic) {
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // Nếu đã có token mà vẫn cố vào trang login/register
-  if (token && (pathname === '/login' || pathname === '/register')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Authenticated user trying to access auth pages
+  if (token && isPublic) {
+    return NextResponse.redirect(new URL('/home', request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/chat/:path*', '/login', '/register'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|assets|public).*)',
+  ],
 };

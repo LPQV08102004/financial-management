@@ -12,7 +12,12 @@ export default function EditNotification({ navigation, route }) {
   const [reminderName, setReminderName] = useState(reminder?.name || '');
   const [frequency, setFrequency] = useState(reminder?.frequency || 'weekly');
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(reminder?.start_date ? new Date(reminder.start_date) : new Date());
+  const _parseLocalDate = (iso) => {
+    if (!iso) return new Date();
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+  const [selectedDate, setSelectedDate] = useState(_parseLocalDate(reminder?.start_date));
   const [showDateModal, setShowDateModal] = useState(false);
   const [selectedHour, setSelectedHour] = useState(timeH);
   const [selectedMinute, setSelectedMinute] = useState(timeM);

@@ -24,12 +24,13 @@ _DISPLAY_TYPE_MAP = {
     NotificationType.recent_transaction: "reminder",
     NotificationType.savings_no_deposit: "savings",
     NotificationType.savings_deadline: "savings",
+    NotificationType.custom_reminder_due: "reminder",
 }
 
 _FILTER_TO_TYPES = {
     "recurring": [NotificationType.recurring_due],
     "savings": [NotificationType.savings_no_deposit, NotificationType.savings_deadline],
-    "reminder": [NotificationType.recent_transaction],
+    "reminder": [NotificationType.recent_transaction, NotificationType.custom_reminder_due],
 }
 
 
@@ -174,6 +175,33 @@ def generate_notifications(db: Session, user_id: int) -> int:
             g.id, dedup,
         ):
             created += 1
+
+    # 5. Lời nhắc tùy chỉnh đến hạn
+    due_reminders = db.query(CustomReminder).filter(
+        CustomReminder.user_id == user_id,
+        CustomReminder.is_enabled == True,  # noqa: E712
+        CustomReminder.next_trigger_date != None,  # noqa: E711
+        CustomReminder.next_trigger_date <= today,
+    ).all()
+
+    for r in due_reminders:
+        dedup = f"custom_reminder_{r.id}_{r.next_trigger_date.isoformat()}"
+        time_str = f" lúc {r.reminder_time}" if r.reminder_time else ""
+        note_str = f" {r.note}" if r.note else ""
+        if _try_insert(
+            db, user_id,
+            NotificationType.custom_reminder_due,
+            f"Lời nhắc: {r.name}",
+            f"Đến giờ nhắc nhở{time_str}: {r.name}.{note_str}",
+            r.id, dedup,
+        ):
+            created += 1
+
+        # Advance next_trigger_date to next occurrence
+        if r.frequency == ReminderFrequency.once:
+            r.next_trigger_date = None
+        else:
+            r.next_trigger_date = _next_trigger(r.start_date, r.frequency)
 
     db.commit()
     return created

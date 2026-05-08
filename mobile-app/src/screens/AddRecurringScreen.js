@@ -246,15 +246,18 @@ export default function AddRecurringScreen({ navigation, route }) {
     }
   };
 
+  const _localISO = (date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
   const handleStartDateChange = (date) => {
     setSelectedStartDate(date);
-    setStartDate(_isoToDisplay(date.toISOString().split('T')[0]));
+    setStartDate(_isoToDisplay(_localISO(date)));
     setShowStartDateModal(false);
   };
 
   const handleEndDateChange = (date) => {
     setSelectedEndDate(date);
-    setEndDate(_isoToDisplay(date.toISOString().split('T')[0]));
+    setEndDate(_isoToDisplay(_localISO(date)));
     setShowEndDateModal(false);
   };
 

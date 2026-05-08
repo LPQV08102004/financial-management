@@ -106,8 +106,12 @@ export default function AppSidebar() {
           href="/profile"
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors group"
         >
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-            <User className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {user?.avatar_url ? (
+              <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-4 h-4 text-white" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white font-semibold text-xs truncate">

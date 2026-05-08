@@ -357,7 +357,8 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
 
   const handleDateChange = (date) => {
     setSelectedDeadlineDate(date);
-    setDeadline(_fmtDate(date.toISOString().split('T')[0]));
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    setDeadline(_fmtDate(iso));
     setShowDateModal(false);
   };
 

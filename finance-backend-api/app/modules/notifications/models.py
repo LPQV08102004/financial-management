@@ -11,6 +11,7 @@ class NotificationType(str, enum.Enum):
     recent_transaction = "recent_transaction"
     savings_no_deposit = "savings_no_deposit"
     savings_deadline = "savings_deadline"
+    custom_reminder_due = "custom_reminder_due"
 
 
 class ReminderFrequency(str, enum.Enum):

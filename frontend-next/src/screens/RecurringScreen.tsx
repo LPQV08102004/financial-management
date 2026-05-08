@@ -8,32 +8,19 @@ import {
   processAllDue, 
   getUpcoming
 } from '../api/recurringApi';
-
-// Kiểu dữ liệu cho giao dịch định kỳ
-interface RecurringTemplate {
-  id: number;
-  name: string;
-  type: 'income' | 'expense';
-  amount: number;
-  frequency_label: string;
-  next_run_date: string;
-  account_name?: string;
-  category_name?: string;
-  end_date?: string;
-  note?: string;
-}
-
-interface UpcomingItem extends RecurringTemplate {
-  scheduled_date: string;
-}
+import { 
+  RecurringTemplate,
+  UpcomingOccurrence,
+  UpcomingListResponse,
+} from '../types/recurring';
 
 const TABS = [
   { key: 'templates', label: 'Giao dịch định kỳ' },
   { key: 'upcoming',  label: 'Sắp tới (30 ngày)' },
 ];
 
-const TYPE_COLOR = { income: '#075c09', expense: '#CC3300' };
-const TYPE_LABEL = { income: 'Thu nhập', expense: 'Chi tiêu' };
+const TYPE_COLOR: Record<string, string> = { income: '#075c09', expense: '#CC3300' };
+const TYPE_LABEL: Record<string, string> = { income: 'Thu nhập', expense: 'Chi tiêu' };
 
 const _fmtVND = (n: number) => Number(n).toLocaleString('vi-VN') + ' đ';
 
@@ -46,16 +33,18 @@ const _fmtDate = (dateStr: string) => {
 // Component thẻ giao dịch định kỳ (Template)
 function TemplateCard({ 
   item, 
+  onEdit,
   onDelete, 
   onGenerate 
 }: { 
   item: RecurringTemplate; 
+  onEdit: (i: RecurringTemplate) => void;
   onDelete: (i: RecurringTemplate) => void; 
   onGenerate: (i: RecurringTemplate) => void;
 }) {
   const color = TYPE_COLOR[item.type] || '#333';
   return (
-    <div className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-50 active:scale-[0.99] transition-transform">
+    <div className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-50">
       <div className="flex items-center gap-2 mb-2">
         <span 
           className="text-[10px] font-bold text-white px-2 py-0.5 rounded-md uppercase"
@@ -64,16 +53,18 @@ function TemplateCard({
           {TYPE_LABEL[item.type]}
         </span>
         <h3 className="font-bold text-gray-800 flex-1 truncate">{item.name}</h3>
-        <button onClick={() => onDelete(item)} className="text-gray-400 hover:text-red-500">🗑</button>
+        <button onClick={() => onEdit(item)} className="text-gray-400 hover:text-[#075c09] text-sm px-1">✏️</button>
+        <button onClick={() => onDelete(item)} className="text-gray-400 hover:text-red-500 text-sm px-1">🗑</button>
       </div>
 
       <div className="text-lg font-black mb-2" style={{ color }}>{_fmtVND(item.amount)}</div>
 
       <div className="space-y-1 mb-3">
-        <p className="text-xs text-gray-500 flex items-center gap-1">🔁 {item.frequency_label}</p>
-        <p className="text-xs text-gray-500 flex items-center gap-1 font-semibold">📅 Tiếp theo: {_fmtDate(item.next_run_date)}</p>
+        <p className="text-xs text-gray-500">🔁 {item.frequency_label}</p>
+        <p className="text-xs text-gray-500 font-semibold">📅 Tiếp theo: {_fmtDate(item.next_run_date)}</p>
         {item.account_name && <p className="text-xs text-gray-400">🏦 {item.account_name}</p>}
         {item.category_name && <p className="text-xs text-gray-400">📂 {item.category_name}</p>}
+        {item.end_date && <p className="text-xs text-gray-400">⏳ Hết hạn: {_fmtDate(item.end_date)}</p>}
         {item.note && <p className="text-xs text-gray-400 italic">💬 {item.note}</p>}
       </div>
 
@@ -87,8 +78,8 @@ function TemplateCard({
   );
 }
 
-// Component thẻ giao dịch sắp tới (Upcoming)[cite: 8]
-function UpcomingCard({ item }: { item: UpcomingItem }) {
+// Component thẻ giao dịch sắp tới (Upcoming)
+function UpcomingCard({ item }: { item: UpcomingOccurrence }) {
   const color = TYPE_COLOR[item.type] || '#333';
   return (
     <div className="bg-white rounded-xl p-4 mb-3 shadow-sm border-l-4" style={{ borderLeftColor: color }}>
@@ -116,7 +107,7 @@ export default function RecurringScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('templates');
   const [templates, setTemplates] = useState<RecurringTemplate[]>([]);
-  const [upcoming, setUpcoming] = useState<{ items: UpcomingItem[], total_expense: number, total_income: number } | null>(null);
+  const [upcoming, setUpcoming] = useState<{ items: UpcomingOccurrence[], total_expense: number, total_income: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async (silent = false) => {
@@ -128,11 +119,11 @@ export default function RecurringScreen() {
         listTemplates(),
         getUpcoming(30),
       ]);
-      setTemplates((tmpls as any) || []);
+      setTemplates(Array.isArray(tmpls) ? tmpls : []);
       setUpcoming({
-        items: (upcomingData as any) || [],
-        total_expense: 0,
-        total_income: 0,
+        items: Array.isArray(upcomingData?.items) ? upcomingData.items : [],
+        total_expense: upcomingData?.total_expense ?? 0,
+        total_income: upcomingData?.total_income ?? 0,
       });
     } catch (e: any) {
       alert('Lỗi: ' + e.message);
@@ -144,6 +135,11 @@ export default function RecurringScreen() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleEdit = (item: RecurringTemplate) => {
+    sessionStorage.setItem('edit_recurring', JSON.stringify(item));
+    router.push(`/add-recurring?id=${item.id}`);
+  };
 
   const handleDelete = async (item: RecurringTemplate) => {
     if (confirm(`Bạn có chắc muốn dừng "${item.name}"? Giao dịch đã tạo sẽ không bị xóa.`)) {
@@ -230,7 +226,8 @@ export default function RecurringScreen() {
             templates.map(item => (
               <TemplateCard 
                 key={item.id} 
-                item={item} 
+                item={item}
+                onEdit={handleEdit}
                 onDelete={handleDelete} 
                 onGenerate={handleGenerate} 
               />
@@ -259,7 +256,7 @@ export default function RecurringScreen() {
               </div>
             ) : (
               upcoming.items.map((item, idx) => (
-                <UpcomingCard key={`${item.id}-${idx}`} item={item} />
+                <UpcomingCard key={`${item.template_id}-${idx}`} item={item} />
               ))
             )}
           </>

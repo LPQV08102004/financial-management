@@ -167,6 +167,25 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
   const [note, setNote] = useState(existingGoal?.note ?? '');
   const [loading, setLoading] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
+  const [showDeadlineCalendar, setShowDeadlineCalendar] = useState(false);
+  const [calendarView, setCalendarView] = useState(() => {
+    if (existingGoal?.deadline) {
+      const d = new Date(existingGoal.deadline);
+      return isNaN(d.getTime()) ? new Date() : d;
+    }
+    return new Date();
+  });
+
+  const _getCalDays = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days: (Date | null)[] = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+    return days;
+  };
 
   const handleSave = async () => {
     const raw = parseFloat(targetAmount.replace(/\./g, ''));
@@ -245,7 +264,7 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
           </Field>
 
           <Field label="Ngày mục tiêu *">
-            <div className="relative group">
+            <div className="flex border border-gray-200 rounded-xl bg-gray-50/50 overflow-hidden focus-within:ring-2 focus-within:ring-[#075c09]/20">
               <input 
                 type="text" value={deadline} 
                 onChange={(e) => {
@@ -256,9 +275,13 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
                 }}
                 placeholder="DD/MM/YYYY"
                 maxLength={10}
-                className="w-full border border-gray-200 rounded-xl p-3.5 bg-gray-50/50 focus:bg-white outline-none"
+                className="flex-1 p-3.5 bg-transparent outline-none"
               />
-              <span className="absolute right-4 top-3.5 text-xl grayscale group-focus-within:grayscale-0">📅</span>
+              <button
+                type="button"
+                onClick={() => setShowDeadlineCalendar(true)}
+                className="px-4 bg-gray-100 border-l border-gray-200 text-xl hover:bg-[#e8f5e9] transition-colors"
+              >📅</button>
             </div>
           </Field>
         </Section>
@@ -289,6 +312,65 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
           setCurrentGoal(updated);
         }}
       />
+
+      {/* Deadline Calendar Modal */}
+      {showDeadlineCalendar && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center">
+          <div className="bg-white w-full max-w-md rounded-t-3xl p-5 pb-8">
+            <div className="flex justify-between items-center mb-4">
+              <button
+                onClick={() => setCalendarView(new Date(calendarView.getFullYear(), calendarView.getMonth() - 1))}
+                className="bg-[#075c09] text-white px-4 py-1.5 rounded-lg font-bold"
+              >←</button>
+              <span className="font-bold text-[#075c09]">
+                Tháng {calendarView.getMonth() + 1} {calendarView.getFullYear()}
+              </span>
+              <button
+                onClick={() => setCalendarView(new Date(calendarView.getFullYear(), calendarView.getMonth() + 1))}
+                className="bg-[#075c09] text-white px-4 py-1.5 rounded-lg font-bold"
+              >→</button>
+            </div>
+            <div className="grid grid-cols-7 text-center mb-2">
+              {['CN','T2','T3','T4','T5','T6','T7'].map(d => (
+                <div key={d} className="text-[11px] font-bold text-gray-400 py-1">{d}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {_getCalDays(calendarView).map((day, i) => {
+                const today = new Date(); today.setHours(0,0,0,0);
+                const isPast = day && day <= today;
+                const currentDeadline = _parseDate(deadline);
+                const isSelected = day && currentDeadline === day.toISOString().split('T')[0];
+                return (
+                  <button
+                    key={i}
+                    disabled={!day || !!isPast}
+                    onClick={() => {
+                      if (day) {
+                        const d = day.getDate().toString().padStart(2,'0');
+                        const m = (day.getMonth()+1).toString().padStart(2,'0');
+                        const y = day.getFullYear();
+                        setDeadline(`${d}/${m}/${y}`);
+                        setShowDeadlineCalendar(false);
+                      }
+                    }}
+                    className={`aspect-square flex items-center justify-center rounded-lg text-sm transition-colors ${
+                      !day ? '' :
+                      isSelected ? 'bg-[#075c09] text-white font-bold' :
+                      isPast ? 'text-gray-300 cursor-not-allowed' :
+                      'hover:bg-[#e8f5e9] text-gray-700 font-medium'
+                    }`}
+                  >{day?.getDate()}</button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setShowDeadlineCalendar(false)}
+              className="w-full mt-5 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold"
+            >Đóng</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

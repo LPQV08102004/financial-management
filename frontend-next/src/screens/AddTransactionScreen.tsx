@@ -29,6 +29,17 @@ const _formatDateLong = (date: Date) => {
   return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 };
 
+const _getCalDays = (date: Date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days: (Date | null)[] = [];
+  for (let i = 0; i < firstDay; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+  return days;
+};
+
 export default function AddTransactionScreen() {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -229,7 +240,105 @@ export default function AddTransactionScreen() {
         </button>
       </main>
 
-            {/* Calculator Modal */}
+            {/* Date Picker Modal */}
+      {showDatePicker && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center">
+          <div className="bg-white w-full max-w-md rounded-t-3xl p-5 pb-8">
+            <div className="flex justify-between items-center mb-4">
+              <button
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                className="bg-[#075c09] text-white px-4 py-1.5 rounded-lg font-bold"
+              >←</button>
+              <span className="font-bold text-[#075c09]">
+                Tháng {currentMonth.getMonth() + 1} {currentMonth.getFullYear()}
+              </span>
+              <button
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                className="bg-[#075c09] text-white px-4 py-1.5 rounded-lg font-bold"
+              >→</button>
+            </div>
+            <div className="grid grid-cols-7 text-center mb-2">
+              {['CN','T2','T3','T4','T5','T6','T7'].map(d => (
+                <div key={d} className="text-[11px] font-bold text-gray-400 py-1">{d}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {_getCalDays(currentMonth).map((day, i) => {
+                const isSelected = day && selectedDate.toDateString() === day.toDateString();
+                const isFuture = day && day > new Date();
+                return (
+                  <button
+                    key={i}
+                    disabled={!day || !!isFuture}
+                    onClick={() => { if (day) { setSelectedDate(day); setShowDatePicker(false); } }}
+                    className={`aspect-square flex items-center justify-center rounded-lg text-sm transition-colors ${
+                      !day ? '' :
+                      isSelected ? 'bg-[#075c09] text-white font-bold' :
+                      isFuture ? 'text-gray-300 cursor-not-allowed' :
+                      'hover:bg-[#e8f5e9] text-gray-700 font-medium'
+                    }`}
+                  >{day?.getDate()}</button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setShowDatePicker(false)}
+              className="w-full mt-5 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold"
+            >Đóng</button>
+          </div>
+        </div>
+      )}
+
+      {/* Date Picker Modal */}
+      {showDatePicker && (
+        <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center">
+          <div className="bg-white w-full max-w-md rounded-t-3xl p-5 pb-8">
+            <div className="flex justify-between items-center mb-4">
+              <button
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                className="bg-[#075c09] text-white px-4 py-1.5 rounded-lg font-bold"
+              >←</button>
+              <span className="font-bold text-[#075c09]">
+                Tháng {currentMonth.getMonth() + 1} {currentMonth.getFullYear()}
+              </span>
+              <button
+                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                className="bg-[#075c09] text-white px-4 py-1.5 rounded-lg font-bold"
+              >→</button>
+            </div>
+            <div className="grid grid-cols-7 text-center mb-2">
+              {['CN','T2','T3','T4','T5','T6','T7'].map(d => (
+                <div key={d} className="text-[11px] font-bold text-gray-400 py-1">{d}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {_getCalDays(currentMonth).map((day, i) => {
+                const isSelected = day && selectedDate.toDateString() === day.toDateString();
+                const isFuture = day && day > new Date();
+                return (
+                  <button
+                    key={i}
+                    disabled={!day || !!isFuture}
+                    onClick={() => { if (day) { setSelectedDate(day); setShowDatePicker(false); } }}
+                    className={`aspect-square flex items-center justify-center rounded-lg text-sm transition-colors ${
+                      !day ? '' :
+                      isSelected ? 'bg-[#075c09] text-white font-bold' :
+                      isFuture ? 'text-gray-300 cursor-not-allowed' :
+                      'hover:bg-[#e8f5e9] text-gray-700 font-medium'
+                    }`}
+                  >{day?.getDate()}</button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setShowDatePicker(false)}
+              className="w-full mt-5 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold"
+            >Đóng</button>
+          </div>
+        </div>
+      )}
+
+      {/* Calculator Modal */}
       {showCalculator && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-5">
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">

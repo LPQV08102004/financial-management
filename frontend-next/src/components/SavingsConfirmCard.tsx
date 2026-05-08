@@ -100,7 +100,10 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
       }
       onConfirmed();
     } catch (e: any) {
-      setError(e.message);
+      const msg = typeof e?.message === 'string' ? e.message
+        : typeof e?.detail === 'string' ? e.detail
+        : JSON.stringify(e?.detail ?? e);
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -170,7 +173,15 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
           <input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            min="1900-01-01"
+            max="2099-12-31"
+            onChange={(e) => {
+              const val = e.target.value;
+              if (!val) { setDate(''); return; }
+              const year = parseInt(val.split('-')[0], 10);
+              if (year < 1900 || year > 2099) return;
+              setDate(val);
+            }}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#075c09] outline-none bg-gray-50"
           />
         </div>

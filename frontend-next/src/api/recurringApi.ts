@@ -1,9 +1,8 @@
-// src/api/recurringApi.ts
 import { API_BASE_URL } from './config';
 import { 
   RecurringTemplate, 
   CreateRecurringPayload, 
-  UpcomingOccurrence, 
+  UpcomingListResponse, 
   GenerateResult 
 } from '../types/recurring';
 import { apiFetch } from './authApi';
@@ -28,7 +27,7 @@ export async function createTemplate(payload: CreateRecurringPayload): Promise<R
 }
 
 /** GET /recurring/upcoming — Dự báo các giao dịch sắp tới */
-export async function getUpcoming(days: number = 30): Promise<UpcomingOccurrence[]> {
+export async function getUpcoming(days: number = 30): Promise<UpcomingListResponse> {
   const res = await apiFetch(`${API_BASE_URL}/recurring/upcoming?days=${days}`);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.detail || 'Không lấy được lịch sắp tới');

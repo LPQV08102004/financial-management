@@ -1,83 +1,100 @@
 // src/api/notificationsApi.ts
 import { API_BASE_URL } from './config';
-import { getSavedToken } from './authApi';
+import { apiFetch } from './authApi';
 
-async function authHeaders(): Promise<HeadersInit> {
-  const token = getSavedToken();
-  if (!token) throw new Error('Bạn chưa đăng nhập');
-  return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
-}
+// ── Custom Reminders ─────────────────────────────────────────────────────────
 
 export async function listReminders() {
-  const res = await fetch(`${API_BASE_URL}/reminders`, { headers: await authHeaders() });
-  if (!res.ok) throw new Error('Lỗi tải lời nhắc');
-  return res.json();
+  const res = await apiFetch(`${API_BASE_URL}/reminders`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.detail || 'Lỗi tải lời nhắc');
+  return data;
 }
 
 export async function createReminder(payload: {
-  title: string;
+  name: string;
   frequency: string;
   start_date: string;
   reminder_time?: string;
-  notes?: string;
+  note?: string | null;
 }) {
-  const res = await fetch(`${API_BASE_URL}/reminders`, {
+  const res = await apiFetch(`${API_BASE_URL}/reminders`, {
     method: 'POST',
-    headers: await authHeaders(),
     body: JSON.stringify(payload),
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.detail || 'Tạo thất bại');
-  }
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.detail || 'Tạo thất bại');
+  return data;
 }
 
-export async function updateReminder(id: string, payload: Partial<{
-  title: string;
+export async function updateReminder(id: number | string, payload: Partial<{
+  name: string;
   frequency: string;
   start_date: string;
   reminder_time: string;
-  notes: string;
+  note: string;
+  is_enabled: boolean;
 }>) {
-  const res = await fetch(`${API_BASE_URL}/reminders/${id}`, {
+  const res = await apiFetch(`${API_BASE_URL}/reminders/${id}`, {
     method: 'PATCH',
-    headers: await authHeaders(),
     body: JSON.stringify(payload),
   });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.detail || 'Sửa thất bại');
+  return data;
+}
+
+export async function deleteReminder(id: number | string) {
+  const res = await apiFetch(`${API_BASE_URL}/reminders/${id}`, { method: 'DELETE' });
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.detail || 'Sửa thất bại');
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data?.detail || 'Xóa thất bại');
   }
-  return res.json();
 }
 
-export async function deleteReminder(id: string) {
-  const res = await fetch(`${API_BASE_URL}/reminders/${id}`, {
-    method: 'DELETE',
-    headers: await authHeaders(),
-  });
-  if (!res.ok) throw new Error('Xóa thất bại');
+// ── System Notifications ─────────────────────────────────────────────────────
+
+export async function generateNotifications() {
+  const res = await apiFetch(`${API_BASE_URL}/notifications/generate`, { method: 'POST' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.detail || 'Lỗi tạo thông báo');
+  return data;
 }
 
-export async function listNotifications(type?: string) {
-  const url = type ? `${API_BASE_URL}/notifications?display_type=${type}` : `${API_BASE_URL}/notifications`;
-  const res = await fetch(url, { headers: await authHeaders() });
-  if (!res.ok) throw new Error('Lỗi tải thông báo');
-  return res.json();
+export async function listNotifications(opts: { displayType?: string; unreadOnly?: boolean } = {}) {
+  const params = new URLSearchParams({ unread_only: String(opts.unreadOnly ?? false), skip: '0', limit: '50' });
+  if (opts.displayType && opts.displayType !== 'all') params.append('display_type', opts.displayType);
+  const res = await apiFetch(`${API_BASE_URL}/notifications?${params}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.detail || 'Lỗi tải thông báo');
+  return data; // { items, unread_count }
 }
 
 export async function getUnreadCount(): Promise<number> {
-  const res = await fetch(`${API_BASE_URL}/notifications/unread-count`, { headers: await authHeaders() });
+  const res = await apiFetch(`${API_BASE_URL}/notifications/unread-count`);
   if (!res.ok) return 0;
-  const data = await res.json();
-  return data.count ?? 0;
+  const data = await res.json().catch(() => ({}));
+  return data.unread_count ?? 0;
+}
+
+export async function markRead(notificationId: number | string) {
+  const res = await apiFetch(`${API_BASE_URL}/notifications/${notificationId}/read`, { method: 'PATCH' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.detail || 'Lỗi đánh dấu đã đọc');
+  return data;
 }
 
 export async function markAllRead() {
-  const res = await fetch(`${API_BASE_URL}/notifications/read-all`, {
-    method: 'PATCH',
-    headers: await authHeaders(),
-  });
-  if (!res.ok) throw new Error('Thất bại');
+  const res = await apiFetch(`${API_BASE_URL}/notifications/read-all`, { method: 'PATCH' });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.detail || 'Thất bại');
+  return data;
+}
+
+export async function deleteNotification(notificationId: number | string) {
+  const res = await apiFetch(`${API_BASE_URL}/notifications/${notificationId}`, { method: 'DELETE' });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data?.detail || 'Xóa thất bại');
+  }
 }

@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Footer from '../components/Footer';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { listReminders, updateReminder, deleteReminder as apiDeleteReminder } from '../api/notificationsApi';
 
-interface EditNotificationProps {
-  reminderId: string;
-}
-
-export default function EditNotificationScreen({ reminderId }: EditNotificationProps) {
+function EditNotificationContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const reminderId = searchParams.get('id') ?? '';
+
   const [reminderName, setReminderName] = useState('');
   const [frequency, setFrequency] = useState('weekly');
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
@@ -29,7 +27,7 @@ export default function EditNotificationScreen({ reminderId }: EditNotificationP
         const list = await listReminders();
         const r = list.find((x: any) => String(x.id) === String(reminderId));
         if (r) {
-          setReminderName(r.title || '');
+          setReminderName(r.name || '');
           setFrequency(r.frequency || 'weekly');
           if (r.start_date) setSelectedDate(new Date(r.start_date));
           if (r.reminder_time) {
@@ -37,7 +35,7 @@ export default function EditNotificationScreen({ reminderId }: EditNotificationP
             setSelectedHour(h || '08');
             setSelectedMinute(m || '00');
           }
-          setNotes(r.notes || '');
+          setNotes(r.note || '');
         }
       } catch (e: any) {
         alert(e.message);
@@ -95,13 +93,13 @@ export default function EditNotificationScreen({ reminderId }: EditNotificationP
     const iso = selectedDate.toISOString().split('T')[0];
     try {
       await updateReminder(reminderId, {
-        title: reminderName.trim(),
+        name: reminderName.trim(),
         frequency,
         start_date: iso,
         reminder_time: time,
-        notes: notes.trim() || undefined,
+        note: notes.trim() || undefined,
       });
-      router.back();
+      router.push('/notifications');
     } catch (e: any) {
       alert(e.message);
     }
@@ -111,7 +109,7 @@ export default function EditNotificationScreen({ reminderId }: EditNotificationP
     if (!window.confirm(`Bạn có chắc chắn muốn xóa lời nhắc "${reminderName}"?`)) return;
     try {
       await apiDeleteReminder(reminderId);
-      router.back();
+      router.push('/notifications');
     } catch (e: any) {
       alert(e.message);
     }
@@ -287,5 +285,13 @@ export default function EditNotificationScreen({ reminderId }: EditNotificationP
         </div>
       )}
     </div>
+  );
+}
+
+export default function EditNotificationScreen() {
+  return (
+    <Suspense fallback={<div className="flex justify-center mt-20"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#075c09]" /></div>}>
+      <EditNotificationContent />
+    </Suspense>
   );
 }

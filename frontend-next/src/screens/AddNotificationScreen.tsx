@@ -62,13 +62,13 @@ export default function AddNotificationScreen() {
     const iso = selectedDate.toISOString().split('T')[0];
     try {
       await createReminder({
-        title: reminderName.trim(),
+        name: reminderName.trim(),
         frequency,
         start_date: iso,
         reminder_time: time,
-        notes: notes.trim() || undefined,
+        note: notes.trim() || null,
       });
-      router.back();
+      router.push('/notifications');
     } catch (e: any) {
       alert(e.message);
     }

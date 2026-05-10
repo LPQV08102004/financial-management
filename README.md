@@ -1,62 +1,184 @@
-# financial-management
-## 1. Toản: Nền tảng & Quản lý người dùng (System & Auth)
--Thành viên này đóng vai trò "xây nền", đảm bảo hệ thống chạy ổn định và an toàn.
+# Financial Management System
 
-### Nhiệm vụ chính:
+Hệ thống quản lý tài chính cá nhân theo mô hình **zero-based budgeting** (lấy cảm hứng từ YNAB), cho phép người dùng phân bổ toàn bộ thu nhập vào các danh mục chi tiêu, theo dõi giao dịch, phân tích báo cáo và nhận gợi ý từ AI.
 
-- Thiết lập dự án (Project Setup): Khởi tạo cấu trúc source code, cấu hình Database, Docker (nếu dùng), cấu hình các biến môi trường.
+---
 
-- Hệ thống xác thực :
+## Thành viên nhóm
 
-+ API Đăng ký (Register), Đăng nhập (Login).
+| Thành viên | Vai trò |
+|------------|---------|
+| Toản | Auth, quản lý người dùng, JWT, cấu hình hệ thống |
+| Việt | Giao dịch, danh mục, nghiệp vụ cốt lõi |
+| Triết | Phân tích, báo cáo, thống kê dashboard |
+| Masao | Thiết kế UX/UI (mobile & web) |
 
-+ Xử lý bảo mật (JWT/Session), mã hóa mật khẩu.
+---
 
-+ Middleware/Filter để kiểm tra quyền truy cập cho các API của 2 thành viên còn lại.
+## Kiến trúc tổng quan
 
-+ Quản lý thông tin User: API xem/sửa thông tin cá nhân (Profile).
+```
+financial-management/
+├── finance-backend-api/   # FastAPI + MySQL (Python 3.11)
+├── frontend-next/         # Next.js 16 web app (TypeScript + Tailwind CSS 4)
+├── mobile-app/            # Expo React Native (iOS & Android)
+└── admin-panel/           # React + Vite admin dashboard
+```
 
+---
 
+## Công nghệ sử dụng
 
-## 2. Việt: Nghiệp vụ cốt lõi (Core Transaction)
-Thành viên này sẽ làm việc trực tiếp với dữ liệu "sống" của ứng dụng.
+| Layer | Công nghệ |
+|-------|-----------|
+| Backend | FastAPI, SQLAlchemy 2.0, PyMySQL, Alembic, JWT, Groq AI |
+| Web | Next.js 16, React 19, TypeScript, Tailwind CSS 4 |
+| Mobile | Expo ~55, React Native, React Navigation |
+| Admin | React 18, Vite, Tailwind CSS 3 |
+| Database | MySQL 8 |
+| Container | Docker, Docker Compose |
 
-### Nhiệm vụ chính:
+---
 
-- Quản lý danh mục (Chức năng số 2):
+## Yêu cầu hệ thống
 
-+ Thiết kế bảng Database cho Category (Ăn uống, Di chuyển...).
+- Python 3.11+
+- Node.js 18+
+- Docker & Docker Compose (khuyến nghị cho backend)
+- npm hoặc yarn
 
-+ API CRUD (Tạo, Xem, Sửa, Xóa) danh mục.
+---
 
-- Quản lý thu chi (Chức năng số 1):
+## Hướng dẫn cài đặt
 
-+ API nhập khoản thu/chi (kèm validation dữ liệu đầu vào).
+### 1. Clone repository
 
-+ API sửa/xóa giao dịch.
+```bash
+git clone https://github.com/LPQV08102004/financial-management.git
+cd financial-management
+```
 
-+ Xử lý logic ràng buộc: Ví dụ, khi xóa danh mục thì các giao dịch thuộc danh mục đó xử lý ra sao?
+---
 
+### 2. Backend (`finance-backend-api/`)
 
+#### Cài đặt bằng Docker (khuyến nghị)
 
-## 3. Triết: Phân tích & Báo cáo (Analytics & Dashboard)
-Thành viên này tập trung vào việc truy vấn và tổng hợp dữ liệu (Query & Aggregation).
+```bash
+cd finance-backend-api
 
-### Nhiệm vụ chính:
+# Sao chép file cấu hình môi trường
+cp .env.example .env
+# Chỉnh sửa .env: DATABASE_URL, SECRET_KEY, GROQ_API_KEY
 
-- Tính toán số dư (Chức năng số 4):
+# Khởi chạy MySQL (port 3307) + API (port 8000)
+docker-compose up --build
+```
 
-+ Viết logic tính tổng thu, tổng chi.
+#### Cài đặt thủ công
 
-+ API lấy số dư hiện tại (hoặc theo khoảng thời gian cụ thể).
+```bash
+cd finance-backend-api
 
-- Thống kê trực quan (Chức năng số 3):
+pip install -r requirements.txt
 
-+ API trả về dữ liệu để Frontend vẽ biểu đồ (ví dụ: trả về JSON dạng { "category": "Ăn uống", "amount": 500000 }).
+cp .env.example .env
+# Chỉnh sửa .env
 
-+ Lọc dữ liệu thống kê theo ngày/tuần/tháng/năm.
+# Chạy migration database
+alembic upgrade head
 
-## . Masao: Thiết kế UX/UI
-- Thiết kế front end tương tác của người dùng, có thể linh hoạt trên mobile và web desktop.
+# Khởi chạy server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
+#### Biến môi trường cần thiết (`.env`)
 
+| Biến | Mô tả |
+|------|-------|
+| `DATABASE_URL` | SQLAlchemy MySQL URL, ví dụ: `mysql+pymysql://user:pass@localhost:3307/db` |
+| `SECRET_KEY` | Khóa bí mật để ký JWT |
+| `GROQ_API_KEY` | API key Groq cho trợ lý AI (tuỳ chọn) |
+| `CORS_ORIGINS` | JSON array các origin cho phép, mặc định: `["http://localhost:3000","http://localhost:5173"]` |
+
+API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+### 3. Web App (`frontend-next/`)
+
+```bash
+cd frontend-next
+
+npm install
+
+# (Tuỳ chọn) Tạo file .env.local nếu backend không ở localhost:8000
+echo "NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1" > .env.local
+
+npm run dev
+```
+
+Truy cập: [http://localhost:3000](http://localhost:3000)
+
+> **Lưu ý:** Nếu gặp lỗi liên quan đến `turbopack.root` trong `next.config.ts`, hãy cập nhật đường dẫn cho đúng với máy của bạn, hoặc xóa dòng đó và dùng flag `--webpack` (đã là mặc định trong script `dev`).
+
+---
+
+### 4. Mobile App (`mobile-app/`)
+
+```bash
+cd mobile-app
+
+npm install
+
+# Chạy Expo dev server
+npm start
+
+# Hoặc chạy trực tiếp trên từng nền tảng
+npm run android   # Android emulator / thiết bị thật
+npm run ios       # iOS simulator (cần macOS)
+```
+
+> Backend URL được tự động phát hiện qua LAN khi dùng thiết bị thật. Có thể ghi đè bằng biến môi trường `EXPO_PUBLIC_API_BASE_URL`.
+
+---
+
+### 5. Admin Panel (`admin-panel/`)
+
+```bash
+cd admin-panel
+
+npm install
+npm run dev
+```
+
+Truy cập: [http://localhost:5173](http://localhost:5173)
+
+> Yêu cầu tài khoản có quyền admin trên hệ thống.
+
+---
+
+## Thứ tự khởi chạy khuyến nghị
+
+1. **Backend** — khởi chạy trước, đảm bảo MySQL đang chạy
+2. **Web / Mobile / Admin** — khởi chạy sau khi backend sẵn sàng
+
+---
+
+## Tính năng chính
+
+- **Zero-based budgeting**: phân bổ toàn bộ thu nhập vào danh mục, theo dõi ngân sách theo tháng
+- **Quản lý giao dịch**: thu nhập, chi tiêu, chuyển khoản, giao dịch chia nhỏ (split)
+- **Tài khoản**: ngân hàng, tiền mặt, thẻ tín dụng
+- **Mục tiêu tiết kiệm**: đặt mục tiêu, nạp/rút tiền, theo dõi tiến độ
+- **Giao dịch định kỳ**: tự động nhắc nhở và xử lý
+- **Phân tích & báo cáo**: biểu đồ thu chi, thống kê theo tháng/danh mục
+- **Thông báo & nhắc nhở**: cảnh báo vượt ngân sách, nhắc giao dịch định kỳ
+- **Trợ lý AI**: phân tích tài chính và nhập giao dịch bằng ngôn ngữ tự nhiên (Groq)
+- **Đồng bộ đa nền tảng**: web và mobile cùng kết nối một backend
+
+---
+
+## License
+
+MIT

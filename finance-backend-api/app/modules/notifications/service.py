@@ -18,7 +18,6 @@ from app.modules.savings_goals.models import SavingsGoal
 from app.modules.transactions.models import Transaction
 from app.shared.enums import TransactionType
 
-
 _DISPLAY_TYPE_MAP = {
     NotificationType.recurring_due: "recurring",
     NotificationType.recent_transaction: "reminder",
@@ -33,7 +32,6 @@ _FILTER_TO_TYPES = {
     "reminder": [NotificationType.recent_transaction, NotificationType.custom_reminder_due],
 }
 
-
 def _to_out(n: Notification) -> NotificationOut:
     return NotificationOut(
         id=n.id,
@@ -45,7 +43,6 @@ def _to_out(n: Notification) -> NotificationOut:
         is_read=n.is_read,
         created_at=n.created_at,
     )
-
 
 def _try_insert(
     db: Session,
@@ -72,14 +69,10 @@ def _try_insert(
     ))
     return True
 
-
-# ── Generation logic ──────────────────────────────────────────────────────────
-
 def generate_notifications(db: Session, user_id: int) -> int:
     today = date.today()
     created = 0
 
-    # 1. Giao dịch định kỳ đến hạn trong 2 ngày
     due_limit = today + timedelta(days=2)
     due_templates = db.query(RecurringTemplate).filter(
         RecurringTemplate.user_id == user_id,
@@ -103,7 +96,6 @@ def generate_notifications(db: Session, user_id: int) -> int:
         ):
             created += 1
 
-    # 2. Tổng kết giao dịch 24 giờ qua (1 thông báo / ngày)
     since = datetime.now() - timedelta(hours=24)
     recent = db.query(Transaction).filter(
         Transaction.user_id == user_id,
@@ -130,7 +122,6 @@ def generate_notifications(db: Session, user_id: int) -> int:
         ):
             created += 1
 
-    # 3. Mục tiêu tiết kiệm chưa nạp tiền 7 ngày
     week_ago = datetime.now() - timedelta(days=7)
     iso_week = today.isocalendar()[1]
     stale_goals = db.query(SavingsGoal).filter(
@@ -153,7 +144,6 @@ def generate_notifications(db: Session, user_id: int) -> int:
         ):
             created += 1
 
-    # 4. Mục tiêu tiết kiệm sắp đến hạn (trong 7 ngày)
     deadline_limit = today + timedelta(days=7)
     near_deadline = db.query(SavingsGoal).filter(
         SavingsGoal.user_id == user_id,
@@ -176,11 +166,10 @@ def generate_notifications(db: Session, user_id: int) -> int:
         ):
             created += 1
 
-    # 5. Lời nhắc tùy chỉnh đến hạn
     due_reminders = db.query(CustomReminder).filter(
         CustomReminder.user_id == user_id,
-        CustomReminder.is_enabled == True,  # noqa: E712
-        CustomReminder.next_trigger_date != None,  # noqa: E711
+        CustomReminder.is_enabled == True,
+        CustomReminder.next_trigger_date != None,
         CustomReminder.next_trigger_date <= today,
     ).all()
 
@@ -197,7 +186,6 @@ def generate_notifications(db: Session, user_id: int) -> int:
         ):
             created += 1
 
-        # Advance next_trigger_date to next occurrence
         if r.frequency == ReminderFrequency.once:
             r.next_trigger_date = None
         else:
@@ -205,9 +193,6 @@ def generate_notifications(db: Session, user_id: int) -> int:
 
     db.commit()
     return created
-
-
-# ── CRUD Notifications ────────────────────────────────────────────────────────
 
 def list_notifications(
     db: Session,
@@ -223,23 +208,21 @@ def list_notifications(
         q = q.filter(Notification.type.in_(_FILTER_TO_TYPES[display_type]))
 
     if unread_only:
-        q = q.filter(Notification.is_read == False)  # noqa: E712
+        q = q.filter(Notification.is_read == False)
 
     unread_count = db.query(func.count(Notification.id)).filter(
         Notification.user_id == user_id,
-        Notification.is_read == False,  # noqa: E712
+        Notification.is_read == False,
     ).scalar() or 0
 
     items = q.order_by(Notification.created_at.desc()).offset(skip).limit(limit).all()
     return NotificationListOut(items=[_to_out(n) for n in items], unread_count=unread_count)
 
-
 def get_unread_count(db: Session, user_id: int) -> int:
     return db.query(func.count(Notification.id)).filter(
         Notification.user_id == user_id,
-        Notification.is_read == False,  # noqa: E712
+        Notification.is_read == False,
     ).scalar() or 0
-
 
 def mark_read(db: Session, user_id: int, notification_id: int) -> NotificationOut:
     n = db.query(Notification).filter(
@@ -253,15 +236,13 @@ def mark_read(db: Session, user_id: int, notification_id: int) -> NotificationOu
     db.refresh(n)
     return _to_out(n)
 
-
 def mark_all_read(db: Session, user_id: int) -> int:
     count = db.query(Notification).filter(
         Notification.user_id == user_id,
-        Notification.is_read == False,  # noqa: E712
+        Notification.is_read == False,
     ).update({"is_read": True})
     db.commit()
     return count
-
 
 def delete_notification(db: Session, user_id: int, notification_id: int) -> None:
     n = db.query(Notification).filter(
@@ -272,9 +253,6 @@ def delete_notification(db: Session, user_id: int, notification_id: int) -> None
         raise NotFoundError("Không tìm thấy thông báo")
     db.delete(n)
     db.commit()
-
-
-# ── Custom Reminders ──────────────────────────────────────────────────────────
 
 def _next_trigger(start_date: date, frequency: ReminderFrequency) -> date:
     today = date.today()
@@ -288,7 +266,7 @@ def _next_trigger(start_date: date, frequency: ReminderFrequency) -> date:
         days_elapsed = (today - start_date).days
         weeks_done = days_elapsed // 7
         return start_date + timedelta(weeks=weeks_done + 1)
-    # monthly
+
     target_day = min(start_date.day, 28)
     candidate = date(today.year, today.month, target_day)
     if candidate <= today:
@@ -298,13 +276,11 @@ def _next_trigger(start_date: date, frequency: ReminderFrequency) -> date:
             candidate = date(today.year, today.month + 1, target_day)
     return candidate
 
-
 def list_reminders(db: Session, user_id: int) -> list[CustomReminderOut]:
     rows = db.query(CustomReminder).filter(
         CustomReminder.user_id == user_id,
     ).order_by(CustomReminder.created_at.desc()).all()
     return [CustomReminderOut.model_validate(r) for r in rows]
-
 
 def create_reminder(db: Session, user_id: int, payload: CustomReminderCreate) -> CustomReminderOut:
     reminder = CustomReminder(
@@ -320,7 +296,6 @@ def create_reminder(db: Session, user_id: int, payload: CustomReminderCreate) ->
     db.commit()
     db.refresh(reminder)
     return CustomReminderOut.model_validate(reminder)
-
 
 def update_reminder(
     db: Session, user_id: int, reminder_id: int, payload: CustomReminderUpdate
@@ -342,7 +317,6 @@ def update_reminder(
     db.commit()
     db.refresh(r)
     return CustomReminderOut.model_validate(r)
-
 
 def delete_reminder(db: Session, user_id: int, reminder_id: int) -> None:
     r = db.query(CustomReminder).filter(

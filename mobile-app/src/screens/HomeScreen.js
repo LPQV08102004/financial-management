@@ -45,7 +45,6 @@ export default function HomeScreen({ navigation }) {
   const [showCalendar, setShowCalendar] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // ── Analytics state ────────────────────────────────────────────────────────
   const [totalBalance, setTotalBalance] = useState(null);
   const [balance, setBalance] = useState(null);
   const [categoryStats, setCategoryStats] = useState([]);
@@ -104,7 +103,6 @@ export default function HomeScreen({ navigation }) {
 
   useFocusEffect(useCallback(() => { fetchAll(); }, [fetchAll]));
 
-  // Build pie segments
   const CIRCUMFERENCE = 628.31;
   let _pieOffset = 0;
   const pieSegments = categoryStats.map((item) => {
@@ -183,7 +181,7 @@ export default function HomeScreen({ navigation }) {
           setShowCalendar={setShowCalendar}
         />
 
-        {/* Pie Chart */}
+        {}
         <View style={styles.chartContainer}>
           <Svg width="320" height="320" viewBox="0 0 320 320">
             {pieSegments.length > 0 ? (
@@ -218,7 +216,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Category breakdown */}
+        {}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Theo danh mục</Text>
           {categoryStats.length > 0 ? (
@@ -236,7 +234,7 @@ export default function HomeScreen({ navigation }) {
           )}
         </View>
 
-        {/* Recent transactions */}
+        {}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Giao dịch gần đây</Text>

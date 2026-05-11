@@ -15,9 +15,6 @@ from app.modules.categories.schemas import (
 
 router = APIRouter(tags=["Categories"])
 
-
-# ── Category Group Routes ──────────────────────────────────────────────────────
-
 @router.post("/category-groups", response_model=CategoryGroupOut, status_code=201)
 def create_category_group(
     body: CategoryGroupCreate,
@@ -26,14 +23,12 @@ def create_category_group(
 ):
     return service.create_group(db, current_user.id, body.name, body.sort_order)
 
-
 @router.get("/category-groups", response_model=List[CategoryGroupOut])
 def list_category_groups(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     return service.list_groups(db, current_user.id)
-
 
 @router.delete("/category-groups/{group_id}", status_code=204)
 def delete_category_group(
@@ -43,9 +38,6 @@ def delete_category_group(
 ):
     service.delete_group(db, group_id, current_user.id)
 
-
-# ── Category Routes ────────────────────────────────────────────────────────────
-
 @router.post("/categories", response_model=CategoryOut, status_code=201)
 def create_category(
     body: CategoryCreate,
@@ -53,7 +45,6 @@ def create_category(
     current_user: User = Depends(get_current_user),
 ):
     return service.create_category(db, current_user.id, body.model_dump())
-
 
 @router.get("/categories", response_model=List[CategoryOut])
 def list_categories(
@@ -64,7 +55,6 @@ def list_categories(
 ):
     return service.list_categories(db, current_user.id, type, include_inactive)
 
-
 @router.patch("/categories/{cat_id}", response_model=CategoryOut)
 def update_category(
     cat_id: int,
@@ -74,18 +64,13 @@ def update_category(
 ):
     return service.update_category(db, cat_id, current_user.id, body.model_dump(exclude_none=True))
 
-
 @router.delete("/categories/{cat_id}", status_code=204)
 def deactivate_category(
     cat_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Soft-delete: marks the category inactive. Historical budget data is preserved."""
     service.deactivate_category(db, cat_id, current_user.id)
-
-
-# ── Subcategory Routes ─────────────────────────────────────────────────────────
 
 @router.post("/subcategories", response_model=SubcategoryOut, status_code=201)
 def create_subcategory(
@@ -95,7 +80,6 @@ def create_subcategory(
 ):
     return service.create_subcategory(db, current_user.id, body.category_id, body.name)
 
-
 @router.get("/subcategories", response_model=List[SubcategoryOut])
 def list_subcategories(
     category_id: Optional[int] = Query(None),
@@ -104,9 +88,6 @@ def list_subcategories(
 ):
     return service.list_subcategories(db, current_user.id, category_id)
 
-
-# ── Tag Routes ─────────────────────────────────────────────────────────────────
-
 @router.post("/tags", response_model=TagOut, status_code=201)
 def create_tag(
     body: TagCreate,
@@ -114,7 +95,6 @@ def create_tag(
     current_user: User = Depends(get_current_user),
 ):
     return service.create_tag(db, current_user.id, body.name)
-
 
 @router.get("/tags", response_model=List[TagOut])
 def list_tags(

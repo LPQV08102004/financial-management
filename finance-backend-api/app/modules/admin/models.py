@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum, func
 from app.db.base import Base
 from app.shared.enums import CategoryType
 
-
 class DefaultCategoryTemplate(Base):
     __tablename__ = "default_category_templates"
 

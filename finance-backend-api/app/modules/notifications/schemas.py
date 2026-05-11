@@ -4,11 +4,10 @@ from pydantic import BaseModel
 
 from app.modules.notifications.models import NotificationType, ReminderFrequency
 
-
 class NotificationOut(BaseModel):
     id: int
     type: NotificationType
-    display_type: str  # savings | recurring | reminder — dùng cho frontend filter
+    display_type: str
     title: str
     content: Optional[str]
     related_id: Optional[int]
@@ -17,33 +16,25 @@ class NotificationOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
 class NotificationListOut(BaseModel):
     items: list[NotificationOut]
     unread_count: int
 
-
 class UnreadCountOut(BaseModel):
     unread_count: int
-
 
 class GenerateResult(BaseModel):
     generated: int
 
-
 class MarkAllReadResult(BaseModel):
     marked_read: int
-
-
-# ── Custom Reminder schemas ────────────────────────────────────────────────────
 
 class CustomReminderCreate(BaseModel):
     name: str
     frequency: ReminderFrequency
     start_date: date
-    reminder_time: Optional[str] = None  # HH:MM
+    reminder_time: Optional[str] = None
     note: Optional[str] = None
-
 
 class CustomReminderUpdate(BaseModel):
     name: Optional[str] = None
@@ -52,7 +43,6 @@ class CustomReminderUpdate(BaseModel):
     reminder_time: Optional[str] = None
     note: Optional[str] = None
     is_enabled: Optional[bool] = None
-
 
 class CustomReminderOut(BaseModel):
     id: int

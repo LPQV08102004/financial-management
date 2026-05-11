@@ -153,7 +153,7 @@ function AddRecurringContent() {
         if (editId) {
           const cached = sessionStorage.getItem('edit_recurring');
           if (cached) {
-            try { existing = JSON.parse(cached); } catch { /**/ }
+            try { existing = JSON.parse(cached); } catch {  }
             sessionStorage.removeItem('edit_recurring');
           }
           if (!existing) {
@@ -197,7 +197,7 @@ function AddRecurringContent() {
     try {
       const cats = await listCategories(newType);
       setCategories(cats || []);
-    } catch { /**/ }
+    } catch {  }
   };
 
   const handleAmountChange = (val: string) => {

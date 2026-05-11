@@ -25,10 +25,10 @@ public class UserController {
   @GetMapping("/profile")
   public ResponseEntity<ApiResponse<UserDto>> getProfile() {
     log.info("Get profile request");
-    
+
     String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     UserDto userDto = userService.getProfile(userId);
-    
+
     return ResponseEntity
         .ok(ApiResponse.success("Lấy thông tin thành công", userDto));
   }
@@ -37,10 +37,10 @@ public class UserController {
   public ResponseEntity<ApiResponse<UserDto>> updateProfile(
       @Valid @RequestBody UpdateProfileRequest request) {
     log.info("Update profile request");
-    
+
     String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     UserDto userDto = userService.updateProfile(userId, request);
-    
+
     return ResponseEntity
         .ok(ApiResponse.success("Cập nhật thông tin thành công", userDto));
   }
@@ -49,10 +49,10 @@ public class UserController {
   public ResponseEntity<ApiResponse<Void>> changePassword(
       @Valid @RequestBody ChangePasswordRequest request) {
     log.info("Change password request");
-    
+
     String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     userService.changePassword(userId, request);
-    
+
     return ResponseEntity
         .ok(ApiResponse.success("Đổi mật khẩu thành công"));
   }

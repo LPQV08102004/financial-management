@@ -42,7 +42,6 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
     }, [])
   );
 
-  // Auto-cap when account changes or type switches to expense
   useEffect(() => {
     if (type !== 'expense' || !selectedAccount || !amount) return;
     const num = Number(amount);
@@ -98,7 +97,7 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
     <View style={styles.card}>
       <Text style={styles.cardTitle}>📋 Xác nhận giao dịch</Text>
 
-      {/* Type toggle */}
+      {}
       <View style={styles.row}>
         <Text style={styles.label}>Loại</Text>
         <View style={styles.toggleRow}>
@@ -116,7 +115,7 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
         </View>
       </View>
 
-      {/* Amount */}
+      {}
       <View style={styles.row}>
         <Text style={styles.label}>Số tiền (VND)</Text>
         {type === 'expense' && selectedAccount && (
@@ -135,7 +134,7 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
         />
       </View>
 
-      {/* Date */}
+      {}
       <View style={styles.row}>
         <Text style={styles.label}>Ngày</Text>
         <TextInput
@@ -146,7 +145,7 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
         />
       </View>
 
-      {/* Note */}
+      {}
       <View style={styles.row}>
         <Text style={styles.label}>Ghi chú</Text>
         <TextInput
@@ -157,7 +156,7 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
         />
       </View>
 
-      {/* Category suggestions */}
+      {}
       {type === 'expense' && (
         <View style={styles.section}>
           <Text style={styles.label}>Danh mục</Text>
@@ -187,7 +186,7 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
         </View>
       )}
 
-      {/* Account */}
+      {}
       {accounts.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.label}>Tài khoản</Text>
@@ -210,15 +209,15 @@ export default function TransactionConfirmCard({ parsed, onConfirmed, onCancel }
         </View>
       )}
 
-      {/* Missing fields warning */}
+      {}
       {missingFields.length > 0 && (
         <Text style={styles.warning}>⚠ Cần bổ sung: {missingFields.join(', ')}</Text>
       )}
 
-      {/* Error */}
+      {}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Actions */}
+      {}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
           <Text style={styles.cancelText}>Huỷ</Text>

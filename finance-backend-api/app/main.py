@@ -7,7 +7,6 @@ from app.core.config import settings
 from app.db.session import engine
 from app.db.base import Base
 
-# Import all routers
 from app.modules.auth.router import router as auth_router
 from app.modules.users.router import router as users_router
 from app.modules.accounts.router import router as accounts_router
@@ -24,18 +23,16 @@ from app.modules.chat.router import router as chat_router
 from app.modules.notifications.router import router as notifications_router, reminders_router
 from app.modules.admin.router import router as admin_router
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create all tables (use Alembic in production)
+
     Base.metadata.create_all(bind=engine)
-    # Seed default category templates if table is empty
+
     from sqlalchemy.orm import Session as DBSession
     with DBSession(engine) as db:
         from app.modules.admin.service import seed_default_templates_if_empty
         seed_default_templates_if_empty(db)
     yield
-
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -46,7 +43,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -55,8 +51,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Body size limit: 20 MB (to support base64 avatar images) ──────────────────
-_MAX_BODY = 20 * 1024 * 1024  # 20 MB
+_MAX_BODY = 20 * 1024 * 1024
 
 @app.middleware("http")
 async def limit_body_size(request: Request, call_next):
@@ -65,7 +60,6 @@ async def limit_body_size(request: Request, call_next):
         return JSONResponse(status_code=413, content={"detail": "Request body too large (max 20 MB)"})
     return await call_next(request)
 
-# ── Routers ───────────────────────────────────────────────────────────────────
 PREFIX = settings.API_V1_PREFIX
 
 app.include_router(auth_router, prefix=PREFIX)
@@ -86,7 +80,6 @@ app.include_router(admin_router, prefix=PREFIX)
 @app.get("/", tags=["Health"])
 def root():
     return {"status": "ok", "app": settings.APP_NAME, "version": "1.0.0"}
-
 
 @app.get("/health", tags=["Health"])
 def health():

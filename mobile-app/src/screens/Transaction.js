@@ -31,10 +31,9 @@ const _inputToISO = (str) => {
 };
 
 export default function Transaction({ navigation }) {
-  // ── navigation / layout state
+
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
-  // ── list / filter state
   const [activeTab, setActiveTab] = React.useState('expense');
   const [timePeriod, setTimePeriod] = React.useState('day');
   const [selectedDate, setSelectedDate] = React.useState(new Date());
@@ -46,7 +45,6 @@ export default function Transaction({ navigation }) {
   const [confirmedEndDate, setConfirmedEndDate] = React.useState(null);
   const [showCalendar, setShowCalendar] = React.useState(false);
 
-  // ── search & filter
   const [searchQuery, setSearchQuery] = React.useState('');
   const [debouncedQuery, setDebouncedQuery] = React.useState('');
   const debounceTimer = useRef(null);
@@ -55,13 +53,11 @@ export default function Transaction({ navigation }) {
   const [filterCategoryId, setFilterCategoryId] = React.useState(null);
   const [filterCategoryName, setFilterCategoryName] = React.useState('');
 
-  // ── results
   const [transactions, setTransactions] = React.useState([]);
   const [totalCount, setTotalCount] = React.useState(0);
   const [totalAmount, setTotalAmount] = React.useState(0);
   const [loading, setLoading] = React.useState(false);
 
-  // ── edit modal
   const [showEditModal, setShowEditModal] = React.useState(false);
   const [editingTxn, setEditingTxn] = React.useState(null);
   const [editAmount, setEditAmount] = React.useState('');
@@ -71,13 +67,9 @@ export default function Transaction({ navigation }) {
   const [editCategoryName, setEditCategoryName] = React.useState('');
   const [savingEdit, setSavingEdit] = React.useState(false);
 
-  // ── category sub-picker (inside edit modal)
   const [showCatPicker, setShowCatPicker] = React.useState(false);
   const [editCategories, setEditCategories] = React.useState([]);
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Debounce search input
-  // ──────────────────────────────────────────────────────────────────────────
   const handleSearchChange = (text) => {
     setSearchQuery(text);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -89,9 +81,6 @@ export default function Transaction({ navigation }) {
     setDebouncedQuery('');
   };
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Fetch transactions
-  // ──────────────────────────────────────────────────────────────────────────
   const fetchTransactions = useCallback(async () => {
     const params = { type: activeTab, limit: 100 };
 
@@ -138,15 +127,11 @@ export default function Transaction({ navigation }) {
 
   useFocusEffect(useCallback(() => { fetchTransactions(); }, [fetchTransactions]));
 
-  // When tab changes, clear category filter (categories are type-specific)
   React.useEffect(() => {
     setFilterCategoryId(null);
     setFilterCategoryName('');
   }, [activeTab]);
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Filter modal
-  // ──────────────────────────────────────────────────────────────────────────
   const openFilterModal = async () => {
     try {
       const cats = await listCategories(activeTab);
@@ -171,9 +156,6 @@ export default function Transaction({ navigation }) {
 
   const hasActiveFilters = !!filterCategoryId || !!debouncedQuery.trim();
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Edit modal
-  // ──────────────────────────────────────────────────────────────────────────
   const openEditModal = async (item) => {
     if (item.reconcile_status === 'reconciled') {
       Alert.alert('Không thể sửa', 'Giao dịch đã đối soát không thể chỉnh sửa.');
@@ -186,7 +168,6 @@ export default function Transaction({ navigation }) {
     setEditCategoryId(item.category_id ?? null);
     setEditCategoryName(item.category_name || '');
 
-    // pre-load categories for picker (only for income/expense)
     if (item.type !== 'transfer') {
       try {
         const cats = await listCategories(item.type);
@@ -241,9 +222,6 @@ export default function Transaction({ navigation }) {
     }
   };
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Render
-  // ──────────────────────────────────────────────────────────────────────────
   const renderTransactionItem = ({ item }) => {
     const date = new Date(item.transaction_date);
     const displayDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
@@ -276,7 +254,7 @@ export default function Transaction({ navigation }) {
   return (
     <View style={styles.screenContainer}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled keyboardShouldPersistTaps="handled">
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerMenu} onPress={() => setSidebarOpen(true)}>
             <View style={styles.hamburgerLine} />
@@ -298,7 +276,7 @@ export default function Transaction({ navigation }) {
         </View>
 
         <View style={styles.content}>
-          {/* Type tabs */}
+          {}
           <View style={styles.tabContainer}>
             {[['expense', 'Chi phí'], ['income', 'Thu nhập']].map(([val, label]) => (
               <TouchableOpacity
@@ -311,7 +289,7 @@ export default function Transaction({ navigation }) {
             ))}
           </View>
 
-          {/* Search bar */}
+          {}
           <View style={styles.searchRow}>
             <View style={styles.searchInputWrap}>
               <Text style={styles.searchIcon}>🔍</Text>
@@ -331,7 +309,7 @@ export default function Transaction({ navigation }) {
             </View>
           </View>
 
-          {/* Active filters chips */}
+          {}
           {(filterCategoryId) && (
             <View style={styles.chipsRow}>
               {filterCategoryId && (
@@ -361,7 +339,7 @@ export default function Transaction({ navigation }) {
             setShowCalendar={setShowCalendar}
           />
 
-          {/* Summary bar */}
+          {}
           {!loading && (
             <View style={styles.summaryBar}>
               <Text style={styles.summaryText}>
@@ -396,7 +374,7 @@ export default function Transaction({ navigation }) {
       </ScrollView>
       <Footer />
 
-      {/* ── Filter Modal ─────────────────────────────────────────── */}
+      {}
       <Modal visible={showFilterModal} transparent animationType="slide" onRequestClose={() => setShowFilterModal(false)}>
         <View style={styles.filterModalOverlay}>
           <View style={styles.filterModalSheet}>
@@ -437,7 +415,7 @@ export default function Transaction({ navigation }) {
         </View>
       </Modal>
 
-      {/* ── Edit Modal ───────────────────────────────────────────── */}
+      {}
       <Modal visible={showEditModal} transparent animationType="slide" onRequestClose={closeEditModal}>
         <View style={styles.editModalOverlay}>
           <View style={styles.editModalSheet}>
@@ -449,7 +427,7 @@ export default function Transaction({ navigation }) {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-              {/* Amount */}
+              {}
               <Text style={styles.editLabel}>Số tiền</Text>
               <TextInput
                 style={styles.editInput}
@@ -460,7 +438,7 @@ export default function Transaction({ navigation }) {
                 placeholderTextColor="#999"
               />
 
-              {/* Date */}
+              {}
               <Text style={styles.editLabel}>Ngày (DD/MM/YYYY)</Text>
               <TextInput
                 style={styles.editInput}
@@ -471,7 +449,7 @@ export default function Transaction({ navigation }) {
                 keyboardType="numbers-and-punctuation"
               />
 
-              {/* Category (only for income/expense) */}
+              {}
               {editingTxn?.type !== 'transfer' && (
                 <>
                   <Text style={styles.editLabel}>Danh mục</Text>
@@ -487,7 +465,7 @@ export default function Transaction({ navigation }) {
                 </>
               )}
 
-              {/* Note */}
+              {}
               <Text style={styles.editLabel}>Ghi chú</Text>
               <TextInput
                 style={[styles.editInput, styles.editNoteInput]}
@@ -498,7 +476,7 @@ export default function Transaction({ navigation }) {
                 multiline
               />
 
-              {/* Actions */}
+              {}
               <View style={styles.editActions}>
                 <TouchableOpacity style={styles.editBtnCancel} onPress={closeEditModal} disabled={savingEdit}>
                   <Text style={styles.editBtnCancelText}>Hủy</Text>
@@ -518,7 +496,7 @@ export default function Transaction({ navigation }) {
         </View>
       </Modal>
 
-      {/* ── Category Picker (inside edit) ────────────────────────── */}
+      {}
       <Modal visible={showCatPicker} transparent animationType="slide" onRequestClose={() => setShowCatPicker(false)}>
         <View style={styles.filterModalOverlay}>
           <View style={styles.filterModalSheet}>
@@ -559,7 +537,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f9fa' },
   scrollContent: { paddingBottom: 40 },
 
-  // Header
   header: {
     backgroundColor: '#075c09',
     padding: 20,
@@ -586,7 +563,6 @@ const styles = StyleSheet.create({
 
   content: { padding: 15 },
 
-  // Tabs
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -607,7 +583,6 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 16, color: '#999', fontWeight: '600' },
   tabTextActive: { color: '#075c09' },
 
-  // Search
   searchRow: { marginBottom: 10 },
   searchInputWrap: {
     flexDirection: 'row',
@@ -624,7 +599,6 @@ const styles = StyleSheet.create({
   searchClearBtn: { padding: 6 },
   searchClearText: { fontSize: 14, color: '#999' },
 
-  // Filter chips
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
   filterChip: {
     backgroundColor: 'rgba(7,92,9,0.1)',
@@ -634,7 +608,6 @@ const styles = StyleSheet.create({
   },
   filterChipText: { fontSize: 13, color: '#075c09', fontWeight: '600' },
 
-  // Summary
   summaryBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -652,7 +625,6 @@ const styles = StyleSheet.create({
 
   editHint: { fontSize: 12, color: '#666', marginBottom: 8, marginLeft: 4 },
 
-  // Transaction item
   transactionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -691,7 +663,6 @@ const styles = StyleSheet.create({
   emptyContainer: { alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyText: { fontSize: 15, color: '#999', fontWeight: '500' },
 
-  // ── Filter modal sheet
   filterModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -735,7 +706,6 @@ const styles = StyleSheet.create({
   },
   clearFiltersBtnText: { fontSize: 15, color: '#d9534f', fontWeight: '600' },
 
-  // ── Edit modal sheet
   editModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',

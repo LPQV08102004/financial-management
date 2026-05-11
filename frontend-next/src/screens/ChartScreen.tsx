@@ -13,8 +13,7 @@ export default function ChartScreen() {
   const [activeTab, setActiveTab] = useState<'all' | 'expense' | 'income'>('all');
   const [timePeriod, setTimePeriod] = useState<AnalyticsPeriod>('day');
   const [selectedDate, setSelectedDate] = useState(new Date());
-  
-  // State cho DateTimeSelector
+
   const [confirmedStartDate, setConfirmedStartDate] = useState<Date | null>(null);
   const [confirmedEndDate, setConfirmedEndDate] = useState<Date | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -23,12 +22,10 @@ export default function ChartScreen() {
   const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
   const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
 
-  // API chart data
   const [apiChartData, setApiChartData] = useState<any[]>([]);
   const [apiCategoryColors, setApiCategoryColors] = useState<Record<string, string>>({});
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string[] } | null>(null);
 
-  /** Round up to a clean 'nice' ceiling so Y-axis ticks are whole round numbers */
   const niceMax = (value: number): number => {
     if (value <= 0) return 100_000;
     const exp = Math.floor(Math.log10(value));
@@ -41,7 +38,6 @@ export default function ChartScreen() {
     return 10 * mag;
   };
 
-  /** Format large VND amounts to readable short form */
   const formatAmount = (value: number): string => {
     if (value === 0) return '0';
     if (value >= 1_000_000_000) return `${+(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}tỷ`;
@@ -50,7 +46,6 @@ export default function ChartScreen() {
     return value.toFixed(0);
   };
 
-  /** Format exact amount with thousand separators */
   const formatExact = (value: number): string =>
     new Intl.NumberFormat('vi-VN').format(value) + ' đ';
 
@@ -89,7 +84,6 @@ export default function ChartScreen() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Cấu hình kích thước Chart
   const chartHeight = 300;
   const padding = 40;
   const BAR_WIDTH = 22;
@@ -97,7 +91,6 @@ export default function ChartScreen() {
   const chartWidth = Math.max(300, apiChartData.length * GROUP_SPACING + 60);
   const barSpacing = (chartWidth - 60) / Math.max(apiChartData.length, 1);
 
-  // Tính giá trị lớn nhất để scale cột
   const rawMax = Math.max(
     ...apiChartData.map(d => {
       if (activeTab === 'all') return Math.max(d.income || 0, d.expense || 0);
@@ -119,8 +112,8 @@ export default function ChartScreen() {
   return (
     <div className="bg-[#f8f9fa] flex flex-col relative">
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      {/* Header */}
+
+      {}
       <header className="bg-[#075c09] px-5 py-4 flex justify-between items-center text-white shadow-sm sticky top-0 z-30">
         <button
           onClick={() => setSidebarOpen(true)}
@@ -134,7 +127,7 @@ export default function ChartScreen() {
         <div className="w-10" />
       </header>
 
-      {/* Tabs */}
+      {}
       <div className="flex bg-white border-b shadow-sm">
         {['all', 'expense', 'income'].map((tab) => (
           <button
@@ -152,7 +145,7 @@ export default function ChartScreen() {
       </div>
 
       <div className="p-4 max-w-4xl mx-auto">
-        {/* Date selector */}
+        {}
         <div className="mb-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <DateTimeSelector
             timePeriod={timePeriod}
@@ -174,13 +167,13 @@ export default function ChartScreen() {
           />
         </div>
 
-        {/* Chart card */}
+        {}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-slate-800 text-sm">
               {activeTab === 'all' ? 'Thu - Chi theo thời gian' : activeTab === 'expense' ? 'Chi phí theo danh mục' : 'Thu nhập theo danh mục'}
             </h3>
-            {/* Legend */}
+            {}
             <div className="flex items-center gap-4">
               {activeTab === 'all' ? (
                 <>
@@ -217,7 +210,7 @@ export default function ChartScreen() {
                 ))}
               </div>
               <div className="relative flex-shrink-0 overflow-visible">
-                {/* Tooltip */}
+                {}
                 {tooltip && (
                   <div
                     className="absolute z-20 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 shadow-xl pointer-events-none whitespace-nowrap"

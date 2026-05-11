@@ -40,7 +40,6 @@ export default function ProfileScreen() {
     loadProfile();
   }, []);
 
-  // Sync edit fields when user data loads
   useEffect(() => {
     if (user) {
       setEditName(user.full_name || '');
@@ -85,7 +84,6 @@ export default function ProfileScreen() {
     }
   };
 
-  /** Resize + compress image to max 400×400 JPEG at given quality using Canvas */
   const compressImage = (file: File, maxSize = 400, quality = 0.6): Promise<string> =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -117,7 +115,7 @@ export default function ProfileScreen() {
 
     try {
       setUpdatingAvatar(true);
-      // Compress to max 400×400, quality 0.6 → typically ~20–50KB as base64
+
       const base64String = await compressImage(file);
       const { updateMyProfile } = await import('../api/authApi');
       await updateMyProfile({ avatar_url: base64String });
@@ -127,7 +125,7 @@ export default function ProfileScreen() {
       showToast(error.message || 'Cập nhật ảnh đại diện thất bại', false);
     } finally {
       setUpdatingAvatar(false);
-      // Reset file input so same file can be re-selected
+
       event.target.value = '';
     }
   };
@@ -142,14 +140,14 @@ export default function ProfileScreen() {
 
   return (
     <div className="flex flex-col bg-[#FFF8F0] relative font-sans">
-      {/* Toast notification */}
+      {}
       {toast && (
         <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 rounded-xl shadow-xl text-white font-semibold text-sm transition-all ${toast.ok ? 'bg-[#075c09]' : 'bg-[#e74c3c]'}`}>
           {toast.msg}
         </div>
       )}
 
-      {/* Header */}
+      {}
       <header className="bg-[#075c09] p-5 pt-8 flex items-center justify-between sticky top-0 z-50 shadow-md">
         <button
           onClick={() => window.history.back()}
@@ -161,10 +159,10 @@ export default function ProfileScreen() {
         <div className="w-12"></div>
       </header>
 
-      {/* Main Content */}
+      {}
       <main className="flex-1 p-5 pb-24 overflow-y-auto">
         <div className="flex flex-col items-center my-8 relative">
-          {/* Avatar Circle */}
+          {}
           <div className="w-32 h-32 rounded-full bg-[#075c09]/10 flex items-center justify-center border-4 border-[#075c09] text-6xl overflow-hidden relative">
             {user?.avatar_url ? (
               <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
@@ -177,7 +175,7 @@ export default function ProfileScreen() {
               </div>
             )}
           </div>
-          {/* Edit Icon Overlay */}
+          {}
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={updatingAvatar}
@@ -195,9 +193,9 @@ export default function ProfileScreen() {
           />
         </div>
 
-        {/* User Info Section */}
+        {}
         <div className="space-y-5">
-          {/* Name */}
+          {}
           <div className="space-y-2">
             <label className="text-sm font-bold text-[#075c09] block uppercase tracking-wider">Tên</label>
             {editMode ? (
@@ -214,7 +212,7 @@ export default function ProfileScreen() {
             )}
           </div>
 
-          {/* Email — always read-only */}
+          {}
           <div className="space-y-2">
             <label className="text-sm font-bold text-[#075c09] block uppercase tracking-wider">Địa chỉ email</label>
             <div className="w-full bg-gray-100 border border-gray-200 rounded-lg px-4 py-3 text-gray-500 font-medium shadow-sm">
@@ -222,7 +220,7 @@ export default function ProfileScreen() {
             </div>
           </div>
 
-          {/* Phone */}
+          {}
           <div className="space-y-2">
             <label className="text-sm font-bold text-[#075c09] block uppercase tracking-wider">Số điện thoại</label>
             {editMode ? (
@@ -241,7 +239,7 @@ export default function ProfileScreen() {
             )}
           </div>
 
-          {/* Action Buttons */}
+          {}
           <div className="pt-6 space-y-3">
             {editMode ? (
               <>
@@ -287,22 +285,22 @@ export default function ProfileScreen() {
         </div>
       </main>
 
-            {/* Logout Confirmation Modal Overlay */}
+            {}
       {showLogoutModal && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold text-gray-900 mb-2">Xác nhận đăng xuất</h2>
             <p className="text-gray-600 mb-6 leading-relaxed">Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?</p>
-            
+
             <div className="flex justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setShowLogoutModal(false)}
                 disabled={loggingOut}
                 className="px-5 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition-colors"
               >
                 Hủy
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setShowLogoutModal(false);
                   performLogout();

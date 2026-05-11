@@ -86,7 +86,7 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
       <View style={styles.card}>
         <Text style={styles.cardTitle}>📸 Xác nhận từ hóa đơn</Text>
 
-        {/* Receipt image preview — tap to zoom */}
+        {}
         {imageUri ? (
           <>
             <TouchableOpacity onPress={() => setZoomVisible(true)} activeOpacity={0.85}>
@@ -102,14 +102,14 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           </>
         ) : null}
 
-        {/* Confidence badge */}
+        {}
         <View style={[styles.confidenceBadge, { backgroundColor: conf.bg }]}>
           <Text style={[styles.confidenceText, { color: conf.color }]}>
             {conf.icon} {conf.label}
           </Text>
         </View>
 
-        {/* Warnings */}
+        {}
         {parsed.warnings?.length > 0 && (
           <View style={styles.warningsBox}>
             {parsed.warnings.map((w, i) => (
@@ -118,7 +118,7 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           </View>
         )}
 
-        {/* Type toggle */}
+        {}
         <View style={styles.row}>
           <Text style={styles.label}>Loại</Text>
           <View style={styles.toggleRow}>
@@ -136,7 +136,7 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           </View>
         </View>
 
-        {/* Amount */}
+        {}
         <View style={styles.row}>
           <Text style={styles.label}>Số tiền (VND)</Text>
           <TextInput
@@ -148,7 +148,7 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           />
         </View>
 
-        {/* Date */}
+        {}
         <View style={styles.row}>
           <Text style={styles.label}>Ngày</Text>
           <TextInput
@@ -159,7 +159,7 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           />
         </View>
 
-        {/* Note / Merchant */}
+        {}
         <View style={styles.row}>
           <Text style={styles.label}>Cửa hàng / Ghi chú</Text>
           <TextInput
@@ -170,7 +170,7 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           />
         </View>
 
-        {/* Product items from receipt */}
+        {}
         {parsed.items?.length > 0 && (
           <View style={styles.section}>
             <TouchableOpacity
@@ -234,7 +234,7 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           </View>
         )}
 
-        {/* Category suggestions */}
+        {}
         {type === 'expense' && (
           <View style={styles.section}>
             <Text style={styles.label}>Danh mục</Text>
@@ -258,7 +258,7 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           </View>
         )}
 
-        {/* Account */}
+        {}
         {accounts.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.label}>Tài khoản</Text>
@@ -278,7 +278,7 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           </View>
         )}
 
-        {/* Raw OCR text (collapsible) */}
+        {}
         {parsed.raw_text ? (
           <View style={styles.section}>
             <TouchableOpacity onPress={() => setShowRaw((v) => !v)} style={styles.rawToggle}>
@@ -290,15 +290,15 @@ export default function ReceiptConfirmCard({ parsed, imageUri, onConfirmed, onCa
           </View>
         ) : null}
 
-        {/* Missing fields warning */}
+        {}
         {missingFields.length > 0 && (
           <Text style={styles.missingWarning}>⚠ Cần bổ sung: {missingFields.join(', ')}</Text>
         )}
 
-        {/* Error */}
+        {}
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        {/* Actions */}
+        {}
         <View style={styles.actions}>
           <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
             <Text style={styles.cancelText}>Huỷ</Text>

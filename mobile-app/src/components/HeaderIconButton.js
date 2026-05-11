@@ -3,7 +3,7 @@ import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 export default function HeaderIconButton({ icon, onPress, style }) {
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[styles.button, style]}
       onPress={onPress}
       activeOpacity={0.7}

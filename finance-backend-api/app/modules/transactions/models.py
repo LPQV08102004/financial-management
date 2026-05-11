@@ -4,7 +4,6 @@ from sqlalchemy import (
 from app.db.base import Base
 from app.shared.enums import TransactionType, ReconcileStatus
 
-
 class Transaction(Base):
     __tablename__ = "transactions"
 
@@ -27,9 +26,7 @@ class Transaction(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
-
 class SplitItem(Base):
-    """One row per split leg of a split transaction."""
     __tablename__ = "split_items"
 
     id = Column(Integer, primary_key=True, index=True)

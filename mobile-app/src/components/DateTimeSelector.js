@@ -9,8 +9,7 @@ export default function DateTimeSelector({
   showCalendar,
   currentCalendarMonth,
   selectingStartDate,
-  
-  // State setters
+
   setTimePeriod,
   setSelectedDate,
   setCustomStartDate,
@@ -45,14 +44,14 @@ export default function DateTimeSelector({
   const formatDate = (date) => {
     const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
     const months = ['tháng 1', 'tháng 2', 'tháng 3', 'tháng 4', 'tháng 5', 'tháng 6', 'tháng 7', 'tháng 8', 'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12'];
-    
+
     const today = new Date();
     const isToday = date.toDateString() === today.toDateString();
     const dayName = isToday ? 'hôm nay' : days[date.getDay()];
     const day = date.getDate();
     const month = months[date.getMonth()];
     const year = date.getFullYear();
-    
+
     return `${dayName}, ngày ${day} ${month} năm ${year}`;
   };
 
@@ -265,37 +264,37 @@ export default function DateTimeSelector({
 
   return (
     <>
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={true}
         style={styles.timePeriodScrollContainer}
       >
         <View style={styles.timePeriodContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.timePeriodButton, timePeriod === 'day' && styles.timePeriodButtonActive]}
             onPress={selectDay}
           >
             <Text style={[styles.timePeriodText, timePeriod === 'day' && styles.timePeriodTextActive]}>Ngày</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.timePeriodButton, timePeriod === 'week' && styles.timePeriodButtonActive]}
             onPress={selectWeek}
           >
             <Text style={[styles.timePeriodText, timePeriod === 'week' && styles.timePeriodTextActive]}>Tuần</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.timePeriodButton, timePeriod === 'month' && styles.timePeriodButtonActive]}
             onPress={selectMonth}
           >
             <Text style={[styles.timePeriodText, timePeriod === 'month' && styles.timePeriodTextActive]}>Tháng</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.timePeriodButton, timePeriod === 'year' && styles.timePeriodButtonActive]}
             onPress={selectYear}
           >
             <Text style={[styles.timePeriodText, timePeriod === 'year' && styles.timePeriodTextActive]}>Năm</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.timePeriodButton, timePeriod === 'custom' && styles.timePeriodButtonActive]}
             onPress={selectCustomDateRange}
           >
@@ -354,7 +353,7 @@ export default function DateTimeSelector({
               const isStartDate = customStartDate && dateObj.toDateString() === customStartDate.toDateString();
               const isEndDate = customEndDate && dateObj.toDateString() === customEndDate.toDateString();
               const isInRange = customStartDate && customEndDate && dateObj > customStartDate && dateObj < customEndDate;
-              
+
               return (
                 <TouchableOpacity
                   key={day}
@@ -381,13 +380,13 @@ export default function DateTimeSelector({
           )}
 
           <View style={styles.calendarButtonContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.calendarButton}
               onPress={handleCancelCustomRange}
             >
               <Text style={styles.calendarButtonText}>Hủy</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.calendarButton, styles.calendarButtonOK, !customStartDate || !customEndDate ? styles.calendarButtonDisabled : null]}
               onPress={handleConfirmCustomRange}
               disabled={!customStartDate || !customEndDate}

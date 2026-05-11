@@ -107,7 +107,7 @@ export default function NotificationScreen() {
       const updated = await markRead(notif.id);
       setNotifications(prev => prev.map(n => n.id === notif.id ? updated : n));
       setUnreadCount(c => Math.max(0, c - 1));
-    } catch { /**/ }
+    } catch {  }
   };
 
   const handleDeleteNotif = async (id: number) => {

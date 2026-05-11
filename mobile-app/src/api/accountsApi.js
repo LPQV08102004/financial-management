@@ -18,7 +18,6 @@ const parseError = (detail, fallback) => {
   return fallback;
 };
 
-/** GET /accounts — returns user's active accounts */
 export async function listAccounts() {
   const res = await fetch(`${BASE_URL}/accounts`, {
     headers: await getAuthHeaders(),
@@ -28,11 +27,6 @@ export async function listAccounts() {
   return data;
 }
 
-/**
- * POST /accounts
- * payload: { name, type, current_balance?, note? }
- * type: 'checking' | 'savings' | 'cash' | 'credit_card' | 'investment' | 'other'
- */
 export async function createAccount(payload) {
   const res = await fetch(`${BASE_URL}/accounts`, {
     method: 'POST',

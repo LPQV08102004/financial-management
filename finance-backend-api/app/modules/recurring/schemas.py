@@ -12,7 +12,6 @@ _FREQ_LABELS = {
     RecurringFrequency.yearly: "Hàng năm",
 }
 
-
 class RecurringTemplateCreate(BaseModel):
     name: str = Field(min_length=1, max_length=150)
     type: TransactionType
@@ -32,7 +31,6 @@ class RecurringTemplateCreate(BaseModel):
             raise ValueError("Ngày kết thúc phải sau ngày bắt đầu")
         return self
 
-
 class RecurringTemplateUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=150)
     amount: Optional[Decimal] = Field(default=None, gt=0, decimal_places=2)
@@ -40,7 +38,6 @@ class RecurringTemplateUpdate(BaseModel):
     account_id: Optional[int] = None
     end_date: Optional[date] = None
     note: Optional[str] = None
-
 
 class RecurringTemplateOut(BaseModel):
     id: int
@@ -61,7 +58,6 @@ class RecurringTemplateOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
 class UpcomingOccurrence(BaseModel):
     template_id: int
     name: str
@@ -75,12 +71,10 @@ class UpcomingOccurrence(BaseModel):
     frequency_label: str
     note: Optional[str]
 
-
 class UpcomingListResponse(BaseModel):
     items: List[UpcomingOccurrence]
     total_expense: Decimal
     total_income: Decimal
-
 
 class GenerateResult(BaseModel):
     generated_count: int

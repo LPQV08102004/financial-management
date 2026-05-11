@@ -23,13 +23,13 @@ export default function Header({
           <Text style={styles.backArrow}>←</Text>
         </TouchableOpacity>
       )}
-      
+
       <View style={styles.headerContent}>
         <View style={styles.headerLabelContainer}>
           <Text style={styles.headerText}>{title}</Text>
         </View>
       </View>
-      
+
       {rightIcon ? (
         <HeaderIconButton icon={rightIcon} onPress={onRightPress} />
       ) : (

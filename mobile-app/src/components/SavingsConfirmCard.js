@@ -26,7 +26,6 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
   const [error, setError] = useState('');
   const [cappedInfo, setCappedInfo] = useState('');
 
-  // Fetch full goal when AI suggestion only has id/name (no target_amount)
   useEffect(() => {
     if (selectedGoal?.id && selectedGoal.target_amount == null) {
       getGoal(selectedGoal.id)
@@ -56,7 +55,6 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
     return null;
   };
 
-  // Auto-cap when goal/account/action changes
   useEffect(() => {
     if (!selectedGoal?.target_amount || !amount) return;
     const num = Number(amount);
@@ -109,7 +107,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
     <View style={styles.card}>
       <Text style={styles.cardTitle}>🏦 Xác nhận tiết kiệm</Text>
 
-      {/* Action toggle */}
+      {}
       <View style={styles.row}>
         <Text style={styles.label}>Thao tác</Text>
         <View style={styles.toggleRow}>
@@ -133,7 +131,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
         </View>
       </View>
 
-      {/* Amount */}
+      {}
       <View style={styles.row}>
         <Text style={styles.label}>Số tiền (VND)</Text>
         {action === 'deposit' && selectedGoal?.target_amount != null && (
@@ -157,7 +155,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
         />
       </View>
 
-      {/* Date */}
+      {}
       <View style={styles.row}>
         <Text style={styles.label}>Ngày</Text>
         <TextInput
@@ -168,7 +166,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
         />
       </View>
 
-      {/* Note */}
+      {}
       <View style={styles.row}>
         <Text style={styles.label}>Ghi chú</Text>
         <TextInput
@@ -179,7 +177,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
         />
       </View>
 
-      {/* Goal suggestions */}
+      {}
       <View style={styles.section}>
         <Text style={styles.label}>Mục tiêu tiết kiệm</Text>
         {parsed.goal_suggestions?.length > 0 ? (
@@ -204,7 +202,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
         )}
       </View>
 
-      {/* Account */}
+      {}
       {accounts.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.label}>Tài khoản</Text>
@@ -229,15 +227,15 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }) {
         </View>
       )}
 
-      {/* Missing fields warning */}
+      {}
       {missingFields.length > 0 && (
         <Text style={styles.warning}>⚠ Cần bổ sung: {missingFields.join(', ')}</Text>
       )}
 
-      {/* Error */}
+      {}
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Actions */}
+      {}
       <View style={styles.actions}>
         <TouchableOpacity style={styles.cancelBtn} onPress={onCancel}>
           <Text style={styles.cancelText}>Huỷ</Text>

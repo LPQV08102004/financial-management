@@ -17,7 +17,6 @@ from app.modules.auth.models import User, RefreshToken
 from app.modules.categories.service import seed_default_categories
 from app.modules.accounts.service import create_account
 
-
 def get_user_by_email_or_phone(db: Session, login_str: str) -> User | None:
     return db.query(User).filter(
         (User.email == login_str) | (User.phone_number == login_str)
@@ -26,10 +25,8 @@ def get_user_by_email_or_phone(db: Session, login_str: str) -> User | None:
 def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email).first()
 
-
 def get_user_by_id(db: Session, user_id: int) -> User | None:
     return db.query(User).filter(User.id == user_id).first()
-
 
 def register_user(db: Session, email: str, password: str, full_name: str, phone_number: str | None = None) -> User:
     existing = get_user_by_email(db, email)
@@ -57,7 +54,6 @@ def register_user(db: Session, email: str, password: str, full_name: str, phone_
         traceback.print_exc()
         raise
 
-
 def authenticate_user(db: Session, email: str, password: str) -> User:
     user = get_user_by_email_or_phone(db, email)
     if not user:
@@ -67,7 +63,6 @@ def authenticate_user(db: Session, email: str, password: str) -> User:
     if not verify_password(password, user.hashed_password):
         raise UnauthorizedError("Invalid email or password")
     return user
-
 
 def bootstrap_new_user_data(user_id: int) -> None:
     db = SessionLocal()
@@ -84,7 +79,6 @@ def bootstrap_new_user_data(user_id: int) -> None:
     finally:
         db.close()
 
-
 def create_tokens_for_user(db: Session, user: User) -> tuple[str, str]:
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)
@@ -98,7 +92,6 @@ def create_tokens_for_user(db: Session, user: User) -> tuple[str, str]:
     db.add(refresh_record)
     db.commit()
     return access_token, refresh_token
-
 
 def rotate_refresh_token(db: Session, refresh_token: str) -> tuple[User, str, str]:
     try:
@@ -133,7 +126,6 @@ def rotate_refresh_token(db: Session, refresh_token: str) -> tuple[User, str, st
     access_token, new_refresh_token = create_tokens_for_user(db, user)
     return user, access_token, new_refresh_token
 
-
 def logout_user(db: Session, refresh_token: str) -> None:
     token_row = (
         db.query(RefreshToken)
@@ -144,14 +136,12 @@ def logout_user(db: Session, refresh_token: str) -> None:
         token_row.is_revoked = True
         db.commit()
 
-
 def revoke_all_user_tokens(db: Session, user_id: int) -> None:
     db.query(RefreshToken).filter(
         RefreshToken.user_id == user_id,
         RefreshToken.is_revoked == False,
     ).update({"is_revoked": True})
     db.commit()
-
 
 def change_password(db: Session, user: User, current_password: str, new_password: str) -> User:
     if not verify_password(current_password, user.hashed_password):
@@ -163,7 +153,6 @@ def change_password(db: Session, user: User, current_password: str, new_password
     db.refresh(user)
     revoke_all_user_tokens(db, user.id)
     return user
-
 
 def update_profile(
     db: Session,

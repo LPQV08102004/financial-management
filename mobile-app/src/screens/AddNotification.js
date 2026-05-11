@@ -22,33 +22,30 @@ export default function AddNotification({ navigation }) {
     { label: 'Một lần', value: 'once' },
   ];
 
-  // Format date for display
   const formatDate = (date) => {
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
   };
 
-  // Get calendar days for a specific month
   const getCalendarDaysForMonth = (date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay(); // 0 = Sunday
+    const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
-    // Add empty cells for days before the month starts
+
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
-    // Add all days in the month
+
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(new Date(year, month, i));
     }
     return days;
   };
 
-  // Check if date is in the past
   const isPastDate = (date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -57,14 +54,12 @@ export default function AddNotification({ navigation }) {
     return checkDate < today;
   };
 
-  // Get month and year display
   const getMonthYearDisplay = (date) => {
     const months = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
                     'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
     return `${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
-  // Generate time options
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
   const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
@@ -97,7 +92,7 @@ export default function AddNotification({ navigation }) {
   return (
     <View style={styles.screenContainer}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerMenu} onPress={() => navigation.goBack()}>
             <Text style={styles.backArrow}>←</Text>
@@ -108,7 +103,7 @@ export default function AddNotification({ navigation }) {
           <View style={styles.headerSpacer}></View>
         </View>
 
-        {/* Form Content */}
+        {}
         <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Tên lời nhắc <Text style={styles.required}>*</Text></Text>
@@ -123,7 +118,7 @@ export default function AddNotification({ navigation }) {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Tần suất nhắc nhở</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.selectButton}
               onPress={() => setShowFrequencyModal(true)}
             >
@@ -161,7 +156,7 @@ export default function AddNotification({ navigation }) {
                       </Text>
                     </TouchableOpacity>
                   ))}
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.modalCloseButton}
                     onPress={() => setShowFrequencyModal(false)}
                   >
@@ -174,7 +169,7 @@ export default function AddNotification({ navigation }) {
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Ngày bắt đầu nhắc nhở</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.selectButton}
               onPress={() => setShowDateModal(true)}
             >
@@ -190,14 +185,14 @@ export default function AddNotification({ navigation }) {
               <View style={styles.modalOverlay}>
                 <View style={styles.dateModalContent}>
                   <View style={styles.calendarHeader}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.monthNavButton}
                       onPress={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1))}
                     >
                       <Text style={styles.monthNavButtonText}>←</Text>
                     </TouchableOpacity>
                     <Text style={styles.monthYearText}>{getMonthYearDisplay(selectedDate)}</Text>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.monthNavButton}
                       onPress={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1))}
                     >
@@ -215,7 +210,7 @@ export default function AddNotification({ navigation }) {
                     {getCalendarDaysForMonth(selectedDate).map((date, index) => {
                       const isSelected = date && selectedDate.toDateString() === date.toDateString();
                       const isDisabled = date && isPastDate(date);
-                      
+
                       return (
                         <TouchableOpacity
                           key={index}
@@ -246,7 +241,7 @@ export default function AddNotification({ navigation }) {
                     })}
                   </View>
 
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.modalCloseButton}
                     onPress={() => setShowDateModal(false)}
                   >
@@ -260,7 +255,7 @@ export default function AddNotification({ navigation }) {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Giờ</Text>
             <View style={styles.timePickerContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.timeSelectButton}
                 onPress={() => setShowTimeModal(true)}
               >
@@ -323,7 +318,7 @@ export default function AddNotification({ navigation }) {
                       </ScrollView>
                     </View>
                   </View>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.modalCloseButton}
                     onPress={() => setShowTimeModal(false)}
                   >
@@ -376,17 +371,17 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 40,
   },
-  header: { 
-    backgroundColor: '#075c09', 
-    padding: 20, 
-    paddingTop: 30, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between' 
+  header: {
+    backgroundColor: '#075c09',
+    padding: 20,
+    paddingTop: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
   },
   headerMenu: { paddingHorizontal: 10, paddingVertical: 10 },
-  backArrow: { 
-    fontSize: 28, 
+  backArrow: {
+    fontSize: 28,
     color: '#fff',
     fontWeight: 'bold',
   },

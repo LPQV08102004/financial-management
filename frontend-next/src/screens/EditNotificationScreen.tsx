@@ -117,16 +117,16 @@ function EditNotificationContent() {
 
   return (
     <div className="flex flex-col bg-[#FFF8F0] relative font-sans">
-      {/* Header */}
+      {}
       <header className="bg-[#075c09] p-5 pt-8 flex items-center justify-between sticky top-0 z-50">
         <button onClick={() => router.back()} className="text-white text-2xl font-bold p-2 hover:opacity-80">←</button>
         <h1 className="text-white text-xl font-medium">Sửa lời nhắc</h1>
         <div className="w-12"></div>
       </header>
 
-      {/* Main Content */}
+      {}
       <main className="flex-1 p-5 pb-24 overflow-y-auto space-y-5">
-        {/* Tên lời nhắc */}
+        {}
         <div className="flex flex-col gap-2">
           <label className="text-[#075c09] font-semibold text-base">Tên lời nhắc <span className="text-red-500">*</span></label>
           <input
@@ -138,10 +138,10 @@ function EditNotificationContent() {
           />
         </div>
 
-        {/* Tần suất */}
+        {}
         <div className="flex flex-col gap-2">
           <label className="text-[#075c09] font-semibold text-base">Tần suất nhắc nhở</label>
-          <button 
+          <button
             onClick={() => setShowFrequencyModal(true)}
             className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-left hover:bg-gray-50"
           >
@@ -149,10 +149,10 @@ function EditNotificationContent() {
           </button>
         </div>
 
-        {/* Ngày bắt đầu */}
+        {}
         <div className="flex flex-col gap-2">
           <label className="text-[#075c09] font-semibold text-base">Ngày bắt đầu nhắc nhở</label>
-          <button 
+          <button
             onClick={() => setShowDateModal(true)}
             className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-2"
           >
@@ -160,10 +160,10 @@ function EditNotificationContent() {
           </button>
         </div>
 
-        {/* Giờ nhắc */}
+        {}
         <div className="flex flex-col gap-2">
           <label className="text-[#075c09] font-semibold text-base">Giờ</label>
-          <button 
+          <button
             onClick={() => setShowTimeModal(true)}
             className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-left font-bold hover:bg-gray-50"
           >
@@ -171,7 +171,7 @@ function EditNotificationContent() {
           </button>
         </div>
 
-        {/* Ghi chú */}
+        {}
         <div className="flex flex-col gap-2">
           <label className="text-[#075c09] font-semibold text-base">Ghi chú</label>
           <textarea
@@ -182,7 +182,7 @@ function EditNotificationContent() {
           />
         </div>
 
-        {/* Buttons */}
+        {}
         <div className="flex flex-col gap-3 pt-2">
           <button
             onClick={handleEditReminder}
@@ -200,7 +200,7 @@ function EditNotificationContent() {
         </div>
       </main>
 
-            {/* Tần suất Modal Overlay */}
+            {}
       {showFrequencyModal && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-md rounded-t-3xl p-5 pb-8 animate-in slide-in-from-bottom duration-300">
@@ -221,7 +221,7 @@ function EditNotificationContent() {
         </div>
       )}
 
-      {/* Lịch Modal Overlay */}
+      {}
       {showDateModal && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center">
           <div className="bg-white w-full max-w-md rounded-t-3xl p-5 pb-8">
@@ -230,7 +230,7 @@ function EditNotificationContent() {
               <span className="font-bold text-[#075c09]">{getMonthYearDisplay(selectedDate)}</span>
               <button onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1))} className="bg-[#075c09] text-white px-4 py-1 rounded-md">→</button>
             </div>
-            
+
             <div className="grid grid-cols-7 mb-2">
               {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map(day => (
                 <div key={day} className="text-center text-sm font-bold text-[#075c09] py-2">{day}</div>
@@ -261,7 +261,7 @@ function EditNotificationContent() {
         </div>
       )}
 
-      {/* Chọn giờ Modal Overlay */}
+      {}
       {showTimeModal && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center">
           <div className="bg-white w-full max-w-md rounded-t-3xl p-5 pb-8">

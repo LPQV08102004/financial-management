@@ -10,12 +10,10 @@ from app.modules.auth.models import User
 
 security = HTTPBearer()
 
-
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
 ) -> User:
-    """Extract and validate Bearer JWT token; return authenticated User."""
     token = credentials.credentials
     try:
         payload = decode_token(token)
@@ -31,9 +29,7 @@ def get_current_user(
         raise UnauthorizedError("User not found or inactive")
     return user
 
-
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
-    """Require the authenticated user to be an admin."""
     if not current_user.is_admin:
         raise ForbiddenError("Admin access required")
     return current_user

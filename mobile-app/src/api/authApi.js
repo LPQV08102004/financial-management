@@ -105,7 +105,7 @@ export async function logout() {
       new Promise((_, reject) => setTimeout(() => reject(new Error('Logout timeout')), 4000)),
     ]);
   } catch (error) {
-    // best-effort server revoke
+
     console.warn('Logout revoke request failed:', error);
   }
 }

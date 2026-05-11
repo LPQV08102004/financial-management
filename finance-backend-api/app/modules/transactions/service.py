@@ -13,21 +13,16 @@ from app.modules.budgets import service as budget_service
 from app.shared.enums import TransactionType, ReconcileStatus, AuditAction
 from app.core.exceptions import NotFoundError, ForbiddenError, BadRequestError
 
-
-# ── Internal helpers ───────────────────────────────────────────────────────────
-
 def _get_account(db: Session, account_id: int, user_id: int) -> Account:
     acc = db.query(Account).filter(Account.id == account_id, Account.user_id == user_id).first()
     if not acc:
         raise NotFoundError(f"Account {account_id} not found")
     return acc
 
-
 def _attach_tags(db: Session, txn: Transaction, tag_ids: list[int]) -> None:
     db.query(TransactionTag).filter(TransactionTag.transaction_id == txn.id).delete()
     for tag_id in tag_ids:
         db.add(TransactionTag(transaction_id=txn.id, tag_id=tag_id))
-
 
 def _audit(
     db: Session,
@@ -46,27 +41,17 @@ def _audit(
         after_data=json.dumps(after, default=str) if after else None,
     ))
 
-
 def _check_not_reconciled(txn: Transaction) -> None:
     if txn.reconcile_status == ReconcileStatus.reconciled:
         raise BadRequestError("Reconciled transactions cannot be modified or deleted")
 
-
 def _period_month(dt: datetime) -> str:
     return dt.strftime("%Y-%m")
-
 
 def _to_decimal(value) -> Decimal:
     return Decimal(str(value)) if value is not None else Decimal("0")
 
-
-# ── Create operations ──────────────────────────────────────────────────────────
-
 def create_income(db: Session, user_id: int, data: dict) -> tuple[Transaction, list[str]]:
-    """
-    Record an income transaction.
-    Account balance is credited. Income goes to TBB pool (no BudgetEntry update needed).
-    """
     acc = _get_account(db, data["account_id"], user_id)
     amount = _to_decimal(data["amount"])
 
@@ -98,13 +83,7 @@ def create_income(db: Session, user_id: int, data: dict) -> tuple[Transaction, l
     db.refresh(txn)
     return txn, []
 
-
 def create_expense(db: Session, user_id: int, data: dict) -> tuple[Transaction, list[str]]:
-    """
-    Record an expense transaction.
-    Account balance is debited. BudgetEntry.activity is decremented atomically.
-    Returns overspend warning when available < 0.
-    """
     acc = _get_account(db, data["account_id"], user_id)
     amount = _to_decimal(data["amount"])
     category_id: int = data["category_id"]
@@ -131,7 +110,6 @@ def create_expense(db: Session, user_id: int, data: dict) -> tuple[Transaction, 
     acc.current_balance = _to_decimal(acc.current_balance) - amount
     db.flush()
 
-    # Atomically update BudgetEntry (expense = negative delta)
     entry = budget_service.update_activity(db, user_id, category_id, month, -amount)
 
     if data.get("tag_ids"):
@@ -152,12 +130,7 @@ def create_expense(db: Session, user_id: int, data: dict) -> tuple[Transaction, 
         )
     return txn, warnings
 
-
 def create_split_expense(db: Session, user_id: int, data: dict) -> tuple[Transaction, list[str]]:
-    """
-    Record a split expense: one transaction spanning multiple categories.
-    Each split leg updates its own BudgetEntry atomically.
-    """
     acc = _get_account(db, data["account_id"], user_id)
     total = _to_decimal(data["amount"])
     month = _period_month(data["transaction_date"])
@@ -165,7 +138,7 @@ def create_split_expense(db: Session, user_id: int, data: dict) -> tuple[Transac
     txn = Transaction(
         user_id=user_id,
         account_id=data["account_id"],
-        category_id=None,   # split parent has no single category
+        category_id=None,
         type=TransactionType.expense,
         amount=total,
         note=data.get("note"),
@@ -205,9 +178,7 @@ def create_split_expense(db: Session, user_id: int, data: dict) -> tuple[Transac
     db.refresh(txn)
     return txn, warnings
 
-
 def create_transfer(db: Session, user_id: int, data: dict) -> Transaction:
-    """Move funds between two accounts. No category or BudgetEntry involved."""
     src = _get_account(db, data["account_id"], user_id)
     dst = _get_account(db, data["target_account_id"], user_id)
     if src.id == dst.id:
@@ -239,9 +210,6 @@ def create_transfer(db: Session, user_id: int, data: dict) -> Transaction:
     db.refresh(txn)
     return txn
 
-
-# ── Read operations ────────────────────────────────────────────────────────────
-
 def list_transactions(
     db: Session,
     user_id: int,
@@ -254,10 +222,6 @@ def list_transactions(
     skip: int,
     limit: int,
 ) -> tuple[list[Transaction], int, Decimal]:
-    """
-    Returns (items, total_count, total_amount) where total_count and total_amount
-    reflect all matching rows (before pagination) — used for US-F summary display.
-    """
     q = db.query(Transaction).filter(Transaction.user_id == user_id)
     if type_filter:
         q = q.filter(Transaction.type == type_filter)
@@ -279,7 +243,6 @@ def list_transactions(
     items = q.order_by(Transaction.transaction_date.desc()).offset(skip).limit(limit).all()
     return items, total_count, total_amount
 
-
 def get_transaction(db: Session, txn_id: int, user_id: int) -> Transaction:
     txn = db.query(Transaction).filter(Transaction.id == txn_id).first()
     if not txn:
@@ -288,17 +251,9 @@ def get_transaction(db: Session, txn_id: int, user_id: int) -> Transaction:
         raise ForbiddenError()
     return txn
 
-
-# ── Update operation ───────────────────────────────────────────────────────────
-
 def update_transaction(
     db: Session, txn_id: int, user_id: int, data: dict
 ) -> tuple[Transaction, list[str]]:
-    """
-    Update a non-reconciled transaction.
-    If amount, category, or date changes on an expense, the BudgetEntry activity
-    is reversed and re-applied atomically.
-    """
     txn = get_transaction(db, txn_id, user_id)
     _check_not_reconciled(txn)
 
@@ -329,9 +284,9 @@ def update_transaction(
         month_changed = new_month != old_month
 
         if amount_changed or cat_changed or month_changed:
-            # Reverse old BudgetEntry impact (+old_amount restores the previous deduction)
+
             budget_service.update_activity(db, user_id, old_cat, old_month, old_amount)
-            # Apply new BudgetEntry impact
+
             entry = budget_service.update_activity(db, user_id, new_cat, new_month, -new_amount)
             if _to_decimal(entry.available) < Decimal("0"):
                 warnings.append(
@@ -341,7 +296,7 @@ def update_transaction(
         if amount_changed:
             acc = db.query(Account).filter(Account.id == txn.account_id).first()
             if acc:
-                # old_amount > new_amount → refund the difference; reverse otherwise
+
                 acc.current_balance = _to_decimal(acc.current_balance) + (old_amount - new_amount)
 
     elif txn.type == TransactionType.income:
@@ -376,21 +331,13 @@ def update_transaction(
     db.refresh(txn)
     return txn, warnings
 
-
-# ── Delete operation ───────────────────────────────────────────────────────────
-
 def delete_transaction(db: Session, txn_id: int, user_id: int) -> None:
-    """
-    Delete a non-reconciled transaction.
-    Reverses account balance and BudgetEntry activity atomically.
-    """
     txn = get_transaction(db, txn_id, user_id)
     _check_not_reconciled(txn)
 
     amount = _to_decimal(txn.amount)
     month = _period_month(txn.transaction_date)
 
-    # Reverse account balance
     acc = db.query(Account).filter(Account.id == txn.account_id).first()
     if acc:
         if txn.type == TransactionType.income:
@@ -403,7 +350,6 @@ def delete_transaction(db: Session, txn_id: int, user_id: int) -> None:
                 acc.current_balance = _to_decimal(acc.current_balance) + amount
                 dst.current_balance = _to_decimal(dst.current_balance) - amount
 
-    # Reverse BudgetEntry activity for expenses
     if txn.type == TransactionType.expense:
         if txn.is_split:
             splits = db.query(SplitItem).filter(SplitItem.transaction_id == txn.id).all()
@@ -425,16 +371,9 @@ def delete_transaction(db: Session, txn_id: int, user_id: int) -> None:
     db.delete(txn)
     db.commit()
 
-
-# ── Reconciliation ─────────────────────────────────────────────────────────────
-
 def update_reconcile_status(
     db: Session, txn_id: int, user_id: int, status: ReconcileStatus
 ) -> Transaction:
-    """
-    Progress reconcile status: uncleared → cleared → reconciled.
-    Once reconciled, the transaction becomes immutable.
-    """
     txn = get_transaction(db, txn_id, user_id)
 
     if txn.reconcile_status == ReconcileStatus.reconciled:

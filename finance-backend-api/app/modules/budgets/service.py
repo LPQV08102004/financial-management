@@ -9,15 +9,11 @@ from app.modules.categories.models import Category
 from app.shared.enums import AuditAction
 from app.core.exceptions import NotFoundError, ForbiddenError, BadRequestError
 
-
-# ── Internal helpers ───────────────────────────────────────────────────────────
-
 def _validate_period_month(period_month: str) -> None:
     try:
         datetime.strptime(period_month, "%Y-%m")
     except ValueError:
         raise BadRequestError("period_month must be in YYYY-MM format")
-
 
 def _create_audit_log(
     db: Session,
@@ -37,18 +33,12 @@ def _create_audit_log(
         after_data=json.dumps(after_data, default=str) if after_data else None,
     ))
 
-
 def _to_decimal(value) -> Decimal:
-    """Safely coerce any numeric DB value to Decimal."""
     return Decimal(str(value)) if value is not None else Decimal("0")
-
-
-# ── Core BudgetEntry operations ────────────────────────────────────────────────
 
 def get_or_create_entry(
     db: Session, user_id: int, category_id: int, period_month: str
 ) -> BudgetEntry:
-    """Fetch or create a BudgetEntry for user/category/month with zero balances."""
     entry = (
         db.query(BudgetEntry)
         .filter(
@@ -68,9 +58,8 @@ def get_or_create_entry(
             available=Decimal("0"),
         )
         db.add(entry)
-        db.flush()  # get entry.id without committing
+        db.flush()
     return entry
-
 
 def update_activity(
     db: Session,
@@ -79,29 +68,17 @@ def update_activity(
     period_month: str,
     delta: Decimal,
 ) -> BudgetEntry:
-    """
-    Adjust BudgetEntry.activity by delta and recalculate available.
-    delta is negative for expenses (outflow), positive for reversals.
-    Caller must call db.commit() after all related writes are done.
-    """
     entry = get_or_create_entry(db, user_id, category_id, period_month)
     entry.activity = _to_decimal(entry.activity) + delta
     entry.available = _to_decimal(entry.budgeted) + entry.activity
     return entry
 
-
-# ── TBB calculation ────────────────────────────────────────────────────────────
-
 def get_to_be_budgeted(db: Session, user_id: int, period_month: str) -> Decimal:
-    """
-    To Be Budgeted = Sum(account.current_balance) - Sum(BudgetEntry.budgeted for month).
-    Lazy-imports Account to avoid circular dependency.
-    """
     from app.modules.accounts.models import Account
 
     total_balance = _to_decimal(
         db.query(func.coalesce(func.sum(Account.current_balance), 0))
-        .filter(Account.user_id == user_id, Account.is_active == True)  # noqa: E712
+        .filter(Account.user_id == user_id, Account.is_active == True)
         .scalar()
     )
     total_budgeted = _to_decimal(
@@ -111,9 +88,6 @@ def get_to_be_budgeted(db: Session, user_id: int, period_month: str) -> Decimal:
     )
     return total_balance - total_budgeted
 
-
-# ── Public service functions ───────────────────────────────────────────────────
-
 def assign_money(
     db: Session,
     user_id: int,
@@ -121,15 +95,10 @@ def assign_money(
     period_month: str,
     amount: Decimal,
 ) -> tuple[BudgetEntry, Decimal]:
-    """
-    Set the budgeted amount for a category in a given month.
-    Returns (entry, to_be_budgeted_after).
-    Over-budgeting (TBB < 0) is allowed with a warning flag from the caller.
-    """
     _validate_period_month(period_month)
     cat = (
         db.query(Category)
-        .filter(Category.id == category_id, Category.user_id == user_id, Category.is_active == True)  # noqa: E712
+        .filter(Category.id == category_id, Category.user_id == user_id, Category.is_active == True)
         .first()
     )
     if not cat:
@@ -153,7 +122,6 @@ def assign_money(
     tbb = get_to_be_budgeted(db, user_id, period_month)
     return entry, tbb
 
-
 def move_money(
     db: Session,
     user_id: int,
@@ -162,10 +130,6 @@ def move_money(
     period_month: str,
     amount: Decimal,
 ) -> tuple[BudgetEntry, BudgetEntry]:
-    """
-    Move budgeted amount from one category to another in the same month.
-    Both entries are updated atomically. Negative available (overspent) is allowed.
-    """
     _validate_period_month(period_month)
     if from_category_id == to_category_id:
         raise BadRequestError("Cannot move money to the same category")
@@ -173,7 +137,7 @@ def move_money(
     for cat_id in (from_category_id, to_category_id):
         cat = (
             db.query(Category)
-            .filter(Category.id == cat_id, Category.user_id == user_id, Category.is_active == True)  # noqa: E712
+            .filter(Category.id == cat_id, Category.user_id == user_id, Category.is_active == True)
             .first()
         )
         if not cat:
@@ -206,7 +170,6 @@ def move_money(
     db.refresh(to_entry)
     return from_entry, to_entry
 
-
 def get_month_summary(db: Session, user_id: int, period_month: str) -> dict:
     _validate_period_month(period_month)
     entries = (
@@ -227,7 +190,6 @@ def get_month_summary(db: Session, user_id: int, period_month: str) -> dict:
         "entries": entries,
     }
 
-
 def get_entry(db: Session, user_id: int, entry_id: int) -> BudgetEntry:
     entry = db.query(BudgetEntry).filter(BudgetEntry.id == entry_id).first()
     if not entry:
@@ -236,13 +198,11 @@ def get_entry(db: Session, user_id: int, entry_id: int) -> BudgetEntry:
         raise ForbiddenError()
     return entry
 
-
 def list_alerts(db: Session, user_id: int, unread_only: bool) -> list[BudgetAlert]:
     q = db.query(BudgetAlert).filter(BudgetAlert.user_id == user_id)
     if unread_only:
-        q = q.filter(BudgetAlert.is_read == False)  # noqa: E712
+        q = q.filter(BudgetAlert.is_read == False)
     return q.order_by(BudgetAlert.triggered_at.desc()).all()
-
 
 def mark_alert_read(db: Session, user_id: int, alert_id: int) -> BudgetAlert:
     alert = (

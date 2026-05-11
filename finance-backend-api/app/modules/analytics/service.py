@@ -10,16 +10,12 @@ from app.modules.categories.models import Category
 from app.shared.enums import TransactionType
 from app.core.exceptions import BadRequestError
 
-
-# ── Date-range helper ──────────────────────────────────────────────────────────
-
 def _parse_date_range(
     period: str,
     date_str: Optional[str],
     from_date_str: Optional[str],
     to_date_str: Optional[str],
 ) -> Tuple[datetime, datetime]:
-    """Return (start_dt, end_dt) inclusive range derived from period parameters."""
     if period == "custom":
         if not from_date_str or not to_date_str:
             raise BadRequestError("from_date and to_date are required for custom period")
@@ -44,7 +40,7 @@ def _parse_date_range(
         end = start.replace(hour=23, minute=59, second=59)
 
     elif period == "week":
-        # Monday-based week containing ref
+
         start = (ref - timedelta(days=ref.weekday())).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -69,12 +65,8 @@ def _parse_date_range(
 
     return start, end
 
-
 def _to_decimal(value) -> Decimal:
     return Decimal(str(value)) if value is not None else Decimal("0")
-
-
-# ── Public service functions ───────────────────────────────────────────────────
 
 def get_balance(
     db: Session,
@@ -84,7 +76,6 @@ def get_balance(
     from_date_str: Optional[str] = None,
     to_date_str: Optional[str] = None,
 ) -> dict:
-    """Return total_income, total_expense, and net balance for the requested period."""
     start, end = _parse_date_range(period, date_str, from_date_str, to_date_str)
 
     base_q = db.query(Transaction).filter(
@@ -113,7 +104,6 @@ def get_balance(
         "to_date": end.strftime("%Y-%m-%d"),
     }
 
-
 def get_stats_by_category(
     db: Session,
     user_id: int,
@@ -123,7 +113,6 @@ def get_stats_by_category(
     from_date_str: Optional[str] = None,
     to_date_str: Optional[str] = None,
 ) -> List[dict]:
-    """Return per-category totals sorted by amount descending (for pie/donut charts)."""
     if txn_type not in ("income", "expense", "all"):
         raise BadRequestError("type must be income, expense, or all")
 
@@ -169,7 +158,6 @@ def get_stats_by_category(
         for r in rows
     ]
 
-
 def get_over_time(
     db: Session,
     user_id: int,
@@ -179,17 +167,11 @@ def get_over_time(
     from_date_str: Optional[str] = None,
     to_date_str: Optional[str] = None,
 ) -> List[dict]:
-    """
-    Return time-series income/expense grouped by sub-intervals of the period.
-    - year  → group by month  (12 points, labels: T1..T12)
-    - others → group by day   (labels: DD/MM)
-    """
     if txn_type not in ("income", "expense", "all"):
         raise BadRequestError("type must be income, expense, or all")
 
     start, end = _parse_date_range(period, date_str, from_date_str, to_date_str)
 
-    # Choose grouping granularity
     use_monthly = period == "year"
     if use_monthly:
         group_expr = func.date_format(Transaction.transaction_date, "%Y-%m")
@@ -220,7 +202,6 @@ def get_over_time(
     if txn_type in ("expense", "all"):
         expense_map = {r.slot: _to_decimal(r.total) for r in _query_type(TransactionType.expense)}
 
-    # Build all slots in the date range
     slots: List[str] = []
     if use_monthly:
         for m in range(1, 13):
@@ -236,7 +217,6 @@ def get_over_time(
         inc = income_map.get(slot, Decimal("0"))
         exp = expense_map.get(slot, Decimal("0"))
 
-        # Human-readable label
         if use_monthly:
             label = f"T{int(slot.split('-')[1])}"
         else:

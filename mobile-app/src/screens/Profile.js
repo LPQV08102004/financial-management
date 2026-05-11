@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Modal, InteractionManager, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext';
@@ -42,7 +42,7 @@ export default function Profile({ navigation }) {
   return (
     <View style={styles.screenContainer}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerMenu} onPress={() => navigation.goBack()}>
             <Text style={styles.backArrow}>←</Text>
@@ -53,9 +53,9 @@ export default function Profile({ navigation }) {
           <View style={styles.headerSpacer}></View>
         </View>
 
-        {/* Content */}
+        {}
         <View style={styles.contentWrapper}>
-          {/* Avatar */}
+          {}
           <View style={styles.avatarContainer}>
             {user?.avatar_url ? (
               <View style={styles.avatarCircle}>
@@ -66,7 +66,7 @@ export default function Profile({ navigation }) {
                 <Text style={styles.avatarText}>👤</Text>
               </View>
             )}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.editAvatarButton}
               onPress={() => navigation.navigate('EditProfile')}
             >
@@ -74,9 +74,9 @@ export default function Profile({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* User Info */}
+          {}
           <View style={styles.infoSection}>
-            {/* Name */}
+            {}
             <View style={styles.infoGroup}>
               <Text style={styles.infoLabel}>Tên</Text>
               <View style={styles.infoBox}>
@@ -84,7 +84,7 @@ export default function Profile({ navigation }) {
               </View>
             </View>
 
-            {/* Email */}
+            {}
             <View style={styles.infoGroup}>
               <Text style={styles.infoLabel}>Địa chỉ email</Text>
               <View style={styles.infoBox}>
@@ -92,7 +92,7 @@ export default function Profile({ navigation }) {
               </View>
             </View>
 
-            {/* Phone */}
+            {}
             <View style={styles.infoGroup}>
               <Text style={styles.infoLabel}>Số điện thoại</Text>
               <View style={styles.infoBox}>
@@ -100,15 +100,15 @@ export default function Profile({ navigation }) {
               </View>
             </View>
 
-            {/* Edit Button */}
-            <TouchableOpacity 
+            {}
+            <TouchableOpacity
               style={styles.editButton}
               onPress={() => navigation.navigate('EditProfile')}
             >
               <Text style={styles.editButtonText}>Chỉnh sửa hồ sơ</Text>
             </TouchableOpacity>
 
-            {/* Change Password Button */}
+            {}
             <TouchableOpacity
               style={styles.changePasswordButton}
               onPress={() => navigation.navigate('ChangePassword')}
@@ -116,7 +116,7 @@ export default function Profile({ navigation }) {
               <Text style={styles.changePasswordButtonText}>Đổi mật khẩu</Text>
             </TouchableOpacity>
 
-            {/* Logout Button */}
+            {}
             <TouchableOpacity
               style={[styles.logoutButton, loggingOut && styles.logoutButtonDisabled]}
               onPress={handleLogout}

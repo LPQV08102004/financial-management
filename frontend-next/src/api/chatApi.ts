@@ -1,14 +1,13 @@
-// src/api/chatApi.ts
+
 import { API_BASE_URL } from './config';
-import { 
-  ChatMessage, 
-  ChatResponse, 
-  SavingsParseResponse, 
-  TransactionParseResponse 
+import {
+  ChatMessage,
+  ChatResponse,
+  SavingsParseResponse,
+  TransactionParseResponse
 } from '../types/chat';
 import { apiFetch } from './authApi';
 
-/** Gửi tin nhắn đến trợ lý tài chính AI */
 export async function sendChatMessage(message: string, history: ChatMessage[] = []): Promise<string> {
   const res = await apiFetch(`${API_BASE_URL}/chat`, {
     method: 'POST',
@@ -24,7 +23,6 @@ export async function sendChatMessage(message: string, history: ChatMessage[] = 
   return data.reply;
 }
 
-/** Phân tích ngôn ngữ tự nhiên cho các thao tác tiết kiệm */
 export async function parseSavingsAction(message: string): Promise<SavingsParseResponse> {
   const res = await apiFetch(`${API_BASE_URL}/chat/parse-savings`, {
     method: 'POST',
@@ -39,7 +37,6 @@ export async function parseSavingsAction(message: string): Promise<SavingsParseR
   return res.json();
 }
 
-/** Phân tích ngôn ngữ tự nhiên cho các mô tả giao dịch */
 export async function parseTransaction(message: string): Promise<TransactionParseResponse> {
   const res = await apiFetch(`${API_BASE_URL}/chat/parse-transaction`, {
     method: 'POST',

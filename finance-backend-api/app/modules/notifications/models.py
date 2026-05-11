@@ -5,7 +5,6 @@ from sqlalchemy import (
 )
 from app.db.base import Base
 
-
 class NotificationType(str, enum.Enum):
     recurring_due = "recurring_due"
     recent_transaction = "recent_transaction"
@@ -13,13 +12,11 @@ class NotificationType(str, enum.Enum):
     savings_deadline = "savings_deadline"
     custom_reminder_due = "custom_reminder_due"
 
-
 class ReminderFrequency(str, enum.Enum):
     daily = "daily"
     weekly = "weekly"
     monthly = "monthly"
     once = "once"
-
 
 class Notification(Base):
     __tablename__ = "notifications"
@@ -38,7 +35,6 @@ class Notification(Base):
         UniqueConstraint("user_id", "dedup_key", name="uq_notification_dedup"),
     )
 
-
 class CustomReminder(Base):
     __tablename__ = "custom_reminders"
 
@@ -47,7 +43,7 @@ class CustomReminder(Base):
     name = Column(String(150), nullable=False)
     frequency = Column(SAEnum(ReminderFrequency), nullable=False)
     start_date = Column(Date, nullable=False)
-    reminder_time = Column(String(5), nullable=True)  # HH:MM
+    reminder_time = Column(String(5), nullable=True)
     note = Column(Text, nullable=True)
     is_enabled = Column(Boolean, nullable=False, default=True)
     next_trigger_date = Column(Date, nullable=True)

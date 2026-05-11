@@ -70,13 +70,12 @@ export function AuthProvider({ children }) {
           payload: { token, user: cachedUser },
         });
 
-        // Validate token is still accepted by backend
         getMyProfile()
           .then((user) => {
             dispatch({ type: 'UPDATE_USER', payload: user });
           })
           .catch(async () => {
-            // Token expired or invalid — force logout
+
             await logout().catch(() => {});
             dispatch({ type: 'SIGN_OUT' });
           });
@@ -90,7 +89,6 @@ export function AuthProvider({ children }) {
     bootstrapAsync();
   }, []);
 
-  // Re-fetch profile whenever the app comes back to foreground (picks up PC edits)
   useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
       if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
@@ -107,7 +105,6 @@ export function AuthProvider({ children }) {
     return () => sub.remove();
   }, []);
 
-  // Poll for profile updates every 30s while app is running (picks up changes from other devices)
   useEffect(() => {
     const interval = setInterval(() => {
       getSavedToken().then((token) => {

@@ -9,7 +9,6 @@ import DateTimeSelector from '../components/DateTimeSelector';
 import { listTransactions, updateTransaction } from '../api/transactionApi';
 import { listCategories } from '../api/categoriesApi';
 
-// Helper functions
 const _toDateStr = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -52,8 +51,7 @@ export default function TransactionScreen() {
   const [selectingStartDate, setSelectingStartDate] = useState(true);
   const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
   const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
-  
-  // Filter & Search state
+
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -62,13 +60,11 @@ export default function TransactionScreen() {
   const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
   const [filterCategoryName, setFilterCategoryName] = useState('');
 
-  // Results state
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // Edit Modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingTxn, setEditingTxn] = useState<TransactionItem | null>(null);
   const [editAmount, setEditAmount] = useState('');
@@ -80,7 +76,6 @@ export default function TransactionScreen() {
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [editCategories, setEditCategories] = useState<any[]>([]);
 
-  // Search Debounce
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
     setSearchQuery(text);
@@ -90,7 +85,7 @@ export default function TransactionScreen() {
 
   const fetchTransactions = useCallback(async () => {
     const params: any = { type: activeTab, limit: 100 };
-    // Logic xử lý timePeriod tương tự code gốc...
+
     if (timePeriod === 'day') {
         params.from_date = _toDateStr(selectedDate) + 'T00:00:00';
         params.to_date = _toDateStr(selectedDate) + 'T23:59:59';
@@ -127,7 +122,7 @@ export default function TransactionScreen() {
     setEditDate(_dateToInput(item.transaction_date));
     setEditCategoryId(typeof item.category_id === 'string' ? parseInt(item.category_id) : (item.category_id ?? null));
     setEditCategoryName(item.category_name || '');
-    
+
     if (item.type !== 'transfer') {
       const cats = await listCategories(item.type);
       setEditCategories(cats);
@@ -137,7 +132,7 @@ export default function TransactionScreen() {
 
   return (
     <div className="flex flex-col bg-gray-50 relative font-sans">
-      {/* Header */}
+      {}
       <header className="bg-[#075c09] px-5 py-4 flex items-center justify-between text-white sticky top-0 z-40 shadow-sm">
         <button
           onClick={() => setSidebarOpen(true)}
@@ -165,7 +160,7 @@ export default function TransactionScreen() {
       </header>
 
       <main className="p-4 pb-8 max-w-4xl mx-auto">
-        {/* Type Tabs */}
+        {}
         <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100 mb-4">
           {['expense', 'income'].map((type) => (
             <button
@@ -182,7 +177,7 @@ export default function TransactionScreen() {
           ))}
         </div>
 
-        {/* Search Bar */}
+        {}
         <div className="relative mb-4">
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
           <input
@@ -202,7 +197,7 @@ export default function TransactionScreen() {
           )}
         </div>
 
-        {/* Date Time Selector */}
+        {}
         <div className="mb-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <DateTimeSelector
             timePeriod={timePeriod}
@@ -224,7 +219,7 @@ export default function TransactionScreen() {
           />
         </div>
 
-        {/* Summary Bar */}
+        {}
         <div className="flex justify-between items-center bg-white rounded-2xl px-5 py-3.5 mb-4 shadow-sm border border-slate-100">
           <span className="text-sm text-slate-500 font-medium">{totalCount} giao dịch</span>
           <span className={`text-base font-bold ${activeTab === 'income' ? 'text-green-600' : 'text-red-500'}`}>
@@ -232,7 +227,7 @@ export default function TransactionScreen() {
           </span>
         </div>
 
-        {/* Transaction List */}
+        {}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           {loading ? (
             <div className="flex justify-center py-16">
@@ -284,7 +279,7 @@ export default function TransactionScreen() {
         </div>
       </main>
 
-      {/* Edit Modal */}
+      {}
       {showEditModal && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center backdrop-blur-sm p-4">
           <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">

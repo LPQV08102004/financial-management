@@ -22,7 +22,6 @@ export default function ChatScreen() {
   const [savingsMode, setSavingsMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Cuộn xuống cuối khi có tin nhắn mới
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -113,14 +112,14 @@ export default function ChatScreen() {
 
   return (
     <div className="flex flex-col h-full bg-[#f5f5f5] overflow-hidden">
-      {/* Header[cite: 9] */}
+      {}
       <header className="flex items-center bg-[#075c09] pt-12 pb-4 px-4 text-white shrink-0">
         <button onClick={() => window.history.back()} className="mr-3 text-2xl">←</button>
         <h1 className="text-lg font-bold text-white">🤖 Trợ lý tài chính</h1>
       </header>
 
-      {/* Message List */}
-      <div 
+      {}
+      <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
       >
@@ -150,11 +149,11 @@ export default function ChatScreen() {
           }
 
           return (
-            <div 
+            <div
               key={item.id}
               className={`max-w-[85%] p-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
-                isUser 
-                ? 'ml-auto bg-[#075c09] text-white rounded-br-none' 
+                isUser
+                ? 'ml-auto bg-[#075c09] text-white rounded-br-none'
                 : item.content.startsWith('⚠️')
                   ? 'mr-auto bg-orange-50 text-orange-800 rounded-bl-none border border-orange-200'
                   : 'mr-auto bg-white text-gray-800 rounded-bl-none border border-gray-100'
@@ -178,7 +177,7 @@ export default function ChatScreen() {
         )}
       </div>
 
-      {/* Banners & Suggestions[cite: 9] */}
+      {}
       <section className="shrink-0">
         {nlpMode && !loading && (
           <div className="bg-[#e8f5e9] px-4 py-2 border-t border-[#c8e6c9] flex justify-between items-center text-[13px]">
@@ -197,8 +196,8 @@ export default function ChatScreen() {
         {messages.length <= 1 && !loading && !nlpMode && !savingsMode && (
           <div className="flex flex-wrap gap-2 px-3 pb-3">
             {SUGGESTED.map((s, i) => (
-              <button 
-                key={i} 
+              <button
+                key={i}
                 onClick={() => send(s)}
                 className="bg-[#e8f5e9] text-[#075c09] border border-[#c8e6c9] rounded-full px-3 py-1.5 text-xs hover:bg-[#c8e6c9] transition-colors"
               >
@@ -209,9 +208,9 @@ export default function ChatScreen() {
         )}
       </section>
 
-      {/* Input Bar[cite: 9] */}
+      {}
       <footer className="bg-white border-t p-3 flex items-end gap-2 shrink-0 pb-20">
-        <button 
+        <button
           onClick={() => { setNlpMode(!nlpMode); setSavingsMode(false); }}
           className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${
             nlpMode ? 'bg-[#075c09] border-[#075c09]' : 'bg-[#e8f5e9] border-[#c8e6c9]'
@@ -220,7 +219,7 @@ export default function ChatScreen() {
           <span className="text-lg">🧾</span>
         </button>
 
-        <button 
+        <button
           onClick={() => { setSavingsMode(!savingsMode); setNlpMode(false); }}
           className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${
             savingsMode ? 'bg-[#1565c0] border-[#1565c0]' : 'bg-[#e3f2fd] border-[#90caf9]'
@@ -243,7 +242,7 @@ export default function ChatScreen() {
           }}
         />
 
-        <button 
+        <button
           onClick={() => send()}
           disabled={!input.trim() || loading}
           className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-colors ${

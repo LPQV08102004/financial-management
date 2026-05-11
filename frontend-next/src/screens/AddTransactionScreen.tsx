@@ -7,7 +7,6 @@ import { listCategories } from '../api/categoriesApi';
 import { listAccounts } from '../api/accountsApi';
 import { createIncome, createExpense } from '../api/transactionApi';
 
-// Kiểu dữ liệu cho TypeScript
 interface Category {
   id: string;
   name: string;
@@ -72,7 +71,7 @@ export default function AddTransactionScreen() {
     let val = e.target.value.replace(/\D/g, '');
     if (!val) { setAmount(''); return; }
     let num = parseInt(val, 10);
-    // Cap at account balance for expense and savings
+
     if (activeTab === 'expense' && selectedAccount) {
       const cap = Math.floor(selectedAccount.current_balance);
       if (num > cap) num = cap;
@@ -94,7 +93,7 @@ export default function AddTransactionScreen() {
   const handleCalculatorInput = (btn: string) => {
     if (btn === '=') {
       try {
-        // Thay thế ký hiệu hiển thị sang ký hiệu toán học để eval
+
         const expression = calculatorDisplay.replace(/×/g, '*').replace(/÷/g, '/');
         const res = eval(expression);
         setCalculatorDisplay(String(res));
@@ -128,14 +127,14 @@ export default function AddTransactionScreen() {
 
   return (
     <div className="flex flex-col bg-[#f8f9fa] relative font-sans">
-      {/* Header */}
+      {}
       <header className="bg-[#075c09] pt-10 pb-5 px-5 flex items-center justify-between text-white sticky top-0 z-50">
         <button onClick={() => window.history.back()} className="text-2xl font-bold">←</button>
         <h1 className="text-xl font-bold">Thêm giao dịch</h1>
         <div className="w-6"></div>
       </header>
 
-      {/* Tabs */}
+      {}
       <div className="flex bg-white border-b border-gray-200 sticky top-[84px] z-40">
         {(['expense', 'income'] as const).map(tab => (
           <button
@@ -149,7 +148,7 @@ export default function AddTransactionScreen() {
       </div>
 
       <main className="flex-1 p-5 pb-24 space-y-6 overflow-y-auto">
-        {/* Số tiền */}
+        {}
         <section>
           <label className="block text-sm font-bold text-gray-700 mb-2">Số tiền</label>
           {activeTab === 'expense' && selectedAccount && (
@@ -169,7 +168,7 @@ export default function AddTransactionScreen() {
           </div>
         </section>
 
-        {/* Danh mục */}
+        {}
         <section>
           <label className="block text-sm font-bold text-gray-700 mb-3">Danh mục</label>
           <div className="grid grid-cols-3 gap-3">
@@ -186,10 +185,10 @@ export default function AddTransactionScreen() {
           </div>
         </section>
 
-        {/* Ngày */}
+        {}
         <section>
           <label className="block text-sm font-bold text-gray-700 mb-2">Ngày</label>
-          <button 
+          <button
             onClick={() => setShowDatePicker(true)}
             className="w-full flex justify-between items-center bg-white border border-gray-200 p-4 rounded-xl active:bg-gray-50"
           >
@@ -198,7 +197,7 @@ export default function AddTransactionScreen() {
           </button>
         </section>
 
-        {/* Ghi chú */}
+        {}
         <section>
           <label className="block text-sm font-bold text-gray-700 mb-2">Ghi chú</label>
           <textarea
@@ -209,14 +208,14 @@ export default function AddTransactionScreen() {
           />
         </section>
 
-        {/* Ảnh */}
+        {}
         <section>
           <label className="block text-sm font-bold text-gray-700 mb-3">Ảnh (Tối đa 3)</label>
           <div className="flex gap-3">
             {images.map((img, i) => (
               <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200">
                 <img src={img} alt="upload" className="w-full h-full object-cover" />
-                <button 
+                <button
                   onClick={() => setImages(images.filter((_, idx) => idx !== i))}
                   className="absolute top-1 right-1 bg-black/50 text-white w-6 h-6 rounded-full text-sm"
                 >×</button>
@@ -240,7 +239,7 @@ export default function AddTransactionScreen() {
         </button>
       </main>
 
-            {/* Date Picker Modal */}
+            {}
       {showDatePicker && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center">
           <div className="bg-white w-full max-w-md rounded-t-3xl p-5 pb-8">
@@ -289,7 +288,7 @@ export default function AddTransactionScreen() {
         </div>
       )}
 
-      {/* Date Picker Modal */}
+      {}
       {showDatePicker && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center">
           <div className="bg-white w-full max-w-md rounded-t-3xl p-5 pb-8">
@@ -338,7 +337,7 @@ export default function AddTransactionScreen() {
         </div>
       )}
 
-      {/* Calculator Modal */}
+      {}
       {showCalculator && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-5">
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
@@ -359,7 +358,7 @@ export default function AddTransactionScreen() {
               ))}
               <button onClick={() => handleCalculatorInput('C')} className="col-span-2 p-4 bg-red-100 text-red-600 rounded-xl font-bold">C</button>
               <button onClick={() => handleCalculatorInput('←')} className="p-4 bg-orange-100 text-orange-600 rounded-xl font-bold">←</button>
-              <button 
+              <button
                 onClick={() => {
                   setAmount(calculatorDisplay.replace(/\D/g, ''));
                   setShowCalculator(false);

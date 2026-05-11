@@ -31,13 +31,11 @@ public class UserService {
 
   public UserDto signup(SignupRequest request) {
     log.info("Creating new user with email: {}", request.getEmail());
-    
-    // Check if user already exists
+
     if (userRepository.existsByEmail(request.getEmail())) {
       throw new UserAlreadyExistsException("Email đã được đăng ký");
     }
 
-    // Create new user
     User user = User.builder()
         .id(UUID.randomUUID().toString())
         .email(request.getEmail())
@@ -50,7 +48,7 @@ public class UserService {
 
     User savedUser = userRepository.save(user);
     log.info("User created successfully with id: {}", savedUser.getId());
-    
+
     return UserDto.fromEntity(savedUser);
   }
 
@@ -71,43 +69,40 @@ public class UserService {
 
   public UserDto updateProfile(String userId, UpdateProfileRequest request) {
     log.info("Updating profile for user: {}", userId);
-    
+
     User user = getUserById(userId);
     user.setFullname(request.getFullname());
     user.setSdt(request.getSdt());
-    
+
     User updatedUser = userRepository.save(user);
     log.info("Profile updated for user: {}", userId);
-    
+
     return UserDto.fromEntity(updatedUser);
   }
 
   public void changePassword(String userId, ChangePasswordRequest request) {
     log.info("Changing password for user: {}", userId);
-    
-    // Validate new password matches confirm password
+
     if (!request.getNewPassword().equals(request.getConfirmPassword())) {
       throw new InvalidCredentialsException("Mật khẩu mới không khớp");
     }
 
     User user = getUserById(userId);
 
-    // Verify old password
     if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
       throw new InvalidCredentialsException("Mật khẩu cũ không chính xác");
     }
 
-    // Update password
     user.setPassword(passwordEncoder.encode(request.getNewPassword()));
     userRepository.save(user);
-    
+
     log.info("Password changed for user: {}", userId);
   }
 
   public boolean validatePassword(String email, String password) {
     User user = userRepository.findByEmailAndDeletedAtIsNull(email)
         .orElseThrow(() -> new UserNotFoundException("Người dùng không tồn tại"));
-    
+
     return passwordEncoder.matches(password, user.getPassword());
   }
 }

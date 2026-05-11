@@ -1,4 +1,3 @@
-// src/types/recurring.ts
 
 export type RecurringFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 

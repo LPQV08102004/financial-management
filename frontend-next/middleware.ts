@@ -9,12 +9,10 @@ export function middleware(request: NextRequest) {
 
   const isPublic = PUBLIC_PATHS.some(p => pathname === p || pathname.startsWith(p + '/'));
 
-  // Unauthenticated user trying to access protected route
   if (!token && !isPublic) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // Authenticated user trying to access auth pages
   if (token && isPublic) {
     return NextResponse.redirect(new URL('/home', request.url));
   }

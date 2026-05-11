@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, DateTime, Numeric, Boolean, Text, ForeignKey, func
 from app.db.base import Base
 
-
 class SavingsGoal(Base):
     __tablename__ = "savings_goals"
 

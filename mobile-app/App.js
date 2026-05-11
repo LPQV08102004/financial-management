@@ -86,7 +86,7 @@ function AppNavigationShell() {
       setUnreadCount(0);
       return;
     }
-    // Sinh thông báo mới rồi lấy số chưa đọc khi user đăng nhập
+
     generateNotifications()
       .then(() => getUnreadCount())
       .then(setUnreadCount)

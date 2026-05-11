@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Footer from '../components/Footer';
 import { listGoals, deleteGoal } from '../api/savingsApi';
 
-// Khai báo kiểu dữ liệu cho Goal
 interface Goal {
   id: number;
   name: string;
@@ -39,12 +38,11 @@ const _fmtDate = (dateStr: string) => {
   return `${d}/${m}/${y}`;
 };
 
-// Component thanh tiến trình
 function ProgressBar({ pct, color }: { pct: number; color: string }) {
   return (
     <div className="h-2 w-full bg-gray-100 rounded-full mb-2 overflow-hidden">
-      <div 
-        className="h-full rounded-full transition-all duration-500" 
+      <div
+        className="h-full rounded-full transition-all duration-500"
         style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: color }}
       />
     </div>
@@ -150,7 +148,7 @@ export default function SavingsGoalsScreen() {
 
   return (
     <div className="flex flex-col bg-gray-50 relative">
-      {/* Header */}
+      {}
       <div className="bg-gradient-to-br from-[#075c09] to-[#054d07] text-white px-5 pt-5 pb-6">
         <div className="flex items-center justify-between mb-4">
           <button
@@ -176,7 +174,7 @@ export default function SavingsGoalsScreen() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {}
       <div className="flex bg-white border-b sticky top-0 z-10 shadow-sm">
         {STATUS_TABS.map((tab) => {
           const count = allGoals.filter((g) => g.status === tab.key).length;
@@ -205,7 +203,7 @@ export default function SavingsGoalsScreen() {
         })}
       </div>
 
-      {/* List Content */}
+      {}
       <div className="p-4 max-w-4xl mx-auto">
         {loading ? (
           <div className="flex justify-center mt-16">

@@ -1,4 +1,3 @@
-// src/types/auth.ts
 
 export interface AuthResponse {
   access_token: string;
@@ -13,7 +12,7 @@ export interface UserProfile {
   full_name: string;
   phone_number?: string | null;
   avatar_url?: string;
-  // Thêm các field khác từ backend của bạn
+
 }
 
 export interface LoginPayload {

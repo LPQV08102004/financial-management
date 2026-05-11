@@ -16,17 +16,14 @@ from app.modules.transactions.schemas import (
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
 
-
 @router.post("/income", response_model=TransactionWithWarnings, status_code=201)
 def create_income(
     body: IncomeCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Record income. Credited to account; increases To Be Budgeted pool."""
     txn, warnings = service.create_income(db, current_user.id, body.model_dump())
     return TransactionWithWarnings(transaction=TransactionOut.model_validate(txn), warnings=warnings)
-
 
 @router.post("/expense", response_model=TransactionWithWarnings, status_code=201)
 def create_expense(
@@ -34,10 +31,8 @@ def create_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Record an expense. Debits account and updates BudgetEntry.activity atomically."""
     txn, warnings = service.create_expense(db, current_user.id, body.model_dump())
     return TransactionWithWarnings(transaction=TransactionOut.model_validate(txn), warnings=warnings)
-
 
 @router.post("/expense/split", response_model=TransactionWithWarnings, status_code=201)
 def create_split_expense(
@@ -45,10 +40,8 @@ def create_split_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Record a split expense across multiple categories."""
     txn, warnings = service.create_split_expense(db, current_user.id, body.model_dump())
     return TransactionWithWarnings(transaction=TransactionOut.model_validate(txn), warnings=warnings)
-
 
 @router.post("/transfer", response_model=TransactionOut, status_code=201)
 def create_transfer(
@@ -56,9 +49,7 @@ def create_transfer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Transfer funds between two accounts. No category or budget entry involved."""
     return service.create_transfer(db, current_user.id, body.model_dump())
-
 
 @router.get("", response_model=TransactionListResponse)
 def list_transactions(
@@ -76,7 +67,7 @@ def list_transactions(
     txns, total_count, total_amount = service.list_transactions(
         db, current_user.id, type, account_id, category_id, from_date, to_date, q, skip, limit
     )
-    # Bulk-load category names to avoid N+1 queries
+
     cat_ids = {t.category_id for t in txns if t.category_id}
     cat_map = {}
     if cat_ids:
@@ -90,7 +81,6 @@ def list_transactions(
         items.append(out)
     return TransactionListResponse(items=items, total_count=total_count, total_amount=total_amount)
 
-
 @router.get("/{txn_id}", response_model=TransactionOut)
 def get_transaction(
     txn_id: int,
@@ -99,7 +89,6 @@ def get_transaction(
 ):
     return service.get_transaction(db, txn_id, current_user.id)
 
-
 @router.patch("/{txn_id}", response_model=TransactionWithWarnings)
 def update_transaction(
     txn_id: int,
@@ -107,12 +96,10 @@ def update_transaction(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Update a non-reconciled transaction. BudgetEntry is re-computed if needed."""
     txn, warnings = service.update_transaction(
         db, txn_id, current_user.id, body.model_dump(exclude_none=True)
     )
     return TransactionWithWarnings(transaction=TransactionOut.model_validate(txn), warnings=warnings)
-
 
 @router.delete("/{txn_id}", status_code=204)
 def delete_transaction(
@@ -120,9 +107,7 @@ def delete_transaction(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Delete a non-reconciled transaction. Reverses account balance and budget activity."""
     service.delete_transaction(db, txn_id, current_user.id)
-
 
 @router.patch("/{txn_id}/reconcile", response_model=TransactionOut)
 def update_reconcile_status(
@@ -131,9 +116,4 @@ def update_reconcile_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Update reconciliation status.
-    Valid transitions: uncleared → cleared → reconciled.
-    Once reconciled the transaction is immutable.
-    """
     return service.update_reconcile_status(db, txn_id, current_user.id, body.status)

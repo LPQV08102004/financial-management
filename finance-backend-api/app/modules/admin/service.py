@@ -21,7 +21,6 @@ from app.modules.categories.models import Category
 from app.modules.transactions.models import Transaction
 from app.shared.enums import AuditAction, CategoryType
 
-
 def _write_audit(db, actor_id, action, entity_type, entity_id, before=None, after=None):
     db.add(AuditLog(
         user_id=actor_id,
@@ -31,9 +30,6 @@ def _write_audit(db, actor_id, action, entity_type, entity_id, before=None, afte
         before_data=json.dumps(before, default=str) if before else None,
         after_data=json.dumps(after, default=str) if after else None,
     ))
-
-
-# ── User management ────────────────────────────────────────────────────────────
 
 def list_users(db, page=1, page_size=20, search=None, is_active=None):
     q = db.query(User)
@@ -46,7 +42,6 @@ def list_users(db, page=1, page_size=20, search=None, is_active=None):
     return AdminUserList(total=total, page=page, page_size=page_size,
                          items=[AdminUserItem.model_validate(u) for u in users])
 
-
 def get_user_detail(db, user_id):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -55,7 +50,6 @@ def get_user_detail(db, user_id):
     acc = db.query(func.count(Account.id)).filter(Account.user_id == user_id).scalar()
     return AdminUserDetail(**AdminUserItem.model_validate(user).model_dump(),
                            total_transactions=tx or 0, total_accounts=acc or 0)
-
 
 def create_user(db, actor_id, email, password, full_name):
     from app.modules.auth.service import register_user
@@ -66,7 +60,6 @@ def create_user(db, actor_id, email, password, full_name):
                  after={"action": "created", "email": email})
     db.commit()
     return AdminUserItem.model_validate(user)
-
 
 def toggle_user_status(db, actor_id, user_id):
     user = db.query(User).filter(User.id == user_id).first()
@@ -82,7 +75,6 @@ def toggle_user_status(db, actor_id, user_id):
     db.refresh(user)
     return AdminUserItem.model_validate(user)
 
-
 def set_user_role(db, actor_id, user_id, is_admin):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
@@ -97,7 +89,6 @@ def set_user_role(db, actor_id, user_id, is_admin):
     db.refresh(user)
     return AdminUserItem.model_validate(user)
 
-
 def reset_user_password(db, actor_id, user_id, new_password):
     if len(new_password) < 8:
         raise BadRequestError("Password must be at least 8 characters")
@@ -107,9 +98,6 @@ def reset_user_password(db, actor_id, user_id, new_password):
     user.hashed_password = hash_password(new_password)
     _write_audit(db, actor_id, AuditAction.admin_reset_password, "user", user_id)
     db.commit()
-
-
-# ── System stats ───────────────────────────────────────────────────────────────
 
 def get_system_stats(db):
     now = datetime.now(timezone.utc)
@@ -124,9 +112,6 @@ def get_system_stats(db):
         total_categories=db.query(func.count(Category.id)).scalar() or 0,
     )
 
-
-# ── Audit logs ─────────────────────────────────────────────────────────────────
-
 def list_audit_logs(db, page=1, page_size=50, user_id=None, action=None):
     q = db.query(AuditLog)
     if user_id is not None:
@@ -137,9 +122,6 @@ def list_audit_logs(db, page=1, page_size=50, user_id=None, action=None):
     logs = q.order_by(AuditLog.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
     return AuditLogList(total=total, page=page, page_size=page_size,
                         items=[AuditLogItem.model_validate(l) for l in logs])
-
-
-# ── User Categories ────────────────────────────────────────────────────────────
 
 def list_user_categories(db, page=1, page_size=20, user_id=None, type_filter=None, include_inactive=False):
     q = db.query(Category, User).join(User, Category.user_id == User.id)
@@ -158,7 +140,6 @@ def list_user_categories(db, page=1, page_size=20, user_id=None, type_filter=Non
     ) for cat, user in rows]
     return UserCategoryList(total=total, page=page, page_size=page_size, items=items)
 
-
 def deactivate_user_category(db, actor_id, cat_id):
     cat = db.query(Category).filter(Category.id == cat_id).first()
     if not cat:
@@ -168,15 +149,11 @@ def deactivate_user_category(db, actor_id, cat_id):
                  before={"is_active": True}, after={"is_active": False})
     db.commit()
 
-
-# ── Default Category Templates ─────────────────────────────────────────────────
-
 def list_default_templates(db, include_inactive=False):
     q = db.query(DefaultCategoryTemplate)
     if not include_inactive:
         q = q.filter(DefaultCategoryTemplate.is_active == True)
     return q.order_by(DefaultCategoryTemplate.group_sort_order, DefaultCategoryTemplate.id).all()
-
 
 def create_default_template(db, data: dict):
     tpl = DefaultCategoryTemplate(**data, is_active=True)
@@ -184,7 +161,6 @@ def create_default_template(db, data: dict):
     db.commit()
     db.refresh(tpl)
     return tpl
-
 
 def update_default_template(db, tpl_id, data: dict):
     tpl = db.query(DefaultCategoryTemplate).filter(DefaultCategoryTemplate.id == tpl_id).first()
@@ -197,7 +173,6 @@ def update_default_template(db, tpl_id, data: dict):
     db.refresh(tpl)
     return tpl
 
-
 def delete_default_template(db, tpl_id):
     tpl = db.query(DefaultCategoryTemplate).filter(DefaultCategoryTemplate.id == tpl_id).first()
     if not tpl:
@@ -205,9 +180,7 @@ def delete_default_template(db, tpl_id):
     tpl.is_active = False
     db.commit()
 
-
 def seed_default_templates_if_empty(db):
-    """Called on app startup — seed DB with hardcoded defaults if table is empty."""
     from app.shared.enums import CategoryType
     count = db.query(func.count(DefaultCategoryTemplate.id)).scalar()
     if count and count > 0:

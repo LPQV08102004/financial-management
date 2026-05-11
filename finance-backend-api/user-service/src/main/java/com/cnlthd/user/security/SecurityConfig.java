@@ -39,19 +39,16 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(authz -> authz
-            // Public endpoints
-            .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/verify-email", 
-                           "/api/auth/forgot-password", "/api/auth/reset-password", 
+
+            .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/verify-email",
+                           "/api/auth/forgot-password", "/api/auth/reset-password",
                            "/api/auth/refresh-token", "/api/test/**").permitAll()
-            
-            // Protected endpoints
+
             .requestMatchers("/api/users/**").authenticated()
             .requestMatchers("/api/auth/logout").authenticated()
-            
-            // Admin endpoints
+
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            
-            // Any other request requires authentication
+
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

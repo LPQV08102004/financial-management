@@ -3,13 +3,9 @@ from typing import Optional, List
 from pydantic import BaseModel
 from app.shared.enums import CategoryType
 
-
-# ── Category Group ─────────────────────────────────────────────────────────────
-
 class CategoryGroupCreate(BaseModel):
     name: str
     sort_order: int = 0
-
 
 class CategoryGroupOut(BaseModel):
     id: int
@@ -21,9 +17,6 @@ class CategoryGroupOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-# ── Category ──────────────────────────────────────────────────────────────────
-
 class CategoryCreate(BaseModel):
     name: str
     type: CategoryType
@@ -31,14 +24,11 @@ class CategoryCreate(BaseModel):
     color: Optional[str] = None
     icon: Optional[str] = None
 
-
 class CategoryUpdate(BaseModel):
-    """Name, color, icon, and group_id are mutable. Type is immutable after creation."""
     name: Optional[str] = None
     group_id: Optional[int] = None
     color: Optional[str] = None
     icon: Optional[str] = None
-
 
 class CategoryOut(BaseModel):
     id: int
@@ -53,13 +43,9 @@ class CategoryOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-# ── Subcategory ───────────────────────────────────────────────────────────────
-
 class SubcategoryCreate(BaseModel):
     category_id: int
     name: str
-
 
 class SubcategoryOut(BaseModel):
     id: int
@@ -69,12 +55,8 @@ class SubcategoryOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-# ── Tag ───────────────────────────────────────────────────────────────────────
-
 class TagCreate(BaseModel):
     name: str
-
 
 class TagOut(BaseModel):
     id: int

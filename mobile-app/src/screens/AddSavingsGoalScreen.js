@@ -20,7 +20,6 @@ const _fmtDate = (dateStr) => {
   return `${d}/${m}/${y}`;
 };
 
-// Parse DD/MM/YYYY → YYYY-MM-DD or null
 const _parseDate = (str) => {
   if (!str) return null;
   const parts = str.split('/');
@@ -32,7 +31,6 @@ const _parseDate = (str) => {
   return iso;
 };
 
-// Format date input DDMMYYYY → DD/MM/YYYY
 const _formatDateInput = (str) => {
   if (!str) return '';
   const cleaned = str.replace(/\D/g, '');
@@ -42,7 +40,6 @@ const _formatDateInput = (str) => {
   return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
 };
 
-// Get calendar days for a specific month
 const _getCalendarDaysForMonth = (date) => {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -60,7 +57,6 @@ const _getCalendarDaysForMonth = (date) => {
   return days;
 };
 
-// Check if date is in the past
 const _isPastDate = (date) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -69,7 +65,6 @@ const _isPastDate = (date) => {
   return checkDate < today;
 };
 
-// Get month and year display
 const _getMonthYearDisplay = (date) => {
   const months = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
                   'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
@@ -94,13 +89,11 @@ function Field({ label, children }) {
   );
 }
 
-// Build today's date as YYYY-MM-DD
 const _todayISO = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-// "DD/MM/YYYY" → "YYYY-MM-DDTHH:00:00" or null
 const _dateInputToISO = (str) => {
   if (!str || str.length < 10) return null;
   const parts = str.split('/');
@@ -110,7 +103,6 @@ const _dateInputToISO = (str) => {
   return `${iso}T00:00:00`;
 };
 
-// "YYYY-MM-DD" → "DD/MM/YYYY"
 const _isoToDisplay = (iso) => {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
@@ -126,7 +118,6 @@ function ActionModal({ visible, onClose, goal, onDone }) {
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Load accounts and reset form whenever modal opens
   useEffect(() => {
     if (!visible) return;
     setAmount('');
@@ -192,7 +183,7 @@ function ActionModal({ visible, onClose, goal, onDone }) {
           Hiện tại: {_fmtVND(goal.saved_amount)} đ / {_fmtVND(goal.target_amount)} đ
         </Text>
 
-        {/* Deposit / Withdraw toggle */}
+        {}
         <View style={styles.modeRow}>
           <TouchableOpacity
             style={[styles.modeBtn, mode === 'deposit' && styles.modeBtnActive]}
@@ -215,7 +206,7 @@ function ActionModal({ visible, onClose, goal, onDone }) {
           }
         </Text>
 
-        {/* Amount */}
+        {}
         <Text style={styles.modalFieldLabel}>Số tiền (đ)</Text>
         <TextInput
           style={styles.modalInput}
@@ -225,7 +216,7 @@ function ActionModal({ visible, onClose, goal, onDone }) {
           onChangeText={handleAmountChange}
         />
 
-        {/* Date */}
+        {}
         <Text style={styles.modalFieldLabel}>Ngày giao dịch</Text>
         <TextInput
           style={styles.modalInput}
@@ -236,7 +227,7 @@ function ActionModal({ visible, onClose, goal, onDone }) {
           keyboardType="numeric"
         />
 
-        {/* Account picker */}
+        {}
         <Text style={styles.modalFieldLabel}>Tài khoản</Text>
         {loadingAccounts ? (
           <ActivityIndicator color="#075c09" style={{ marginBottom: 12 }} />
@@ -305,7 +296,6 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
     existingGoal && existingGoal.deadline ? new Date(existingGoal.deadline) : new Date()
   );
 
-  // Live-compute monthly_needed when target/deadline change
   const [monthlyPreview, setMonthlyPreview] = useState(null);
 
   useEffect(() => {
@@ -364,7 +354,7 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      {/* Date Picker Modal */}
+      {}
       <Modal visible={showDateModal} transparent animationType="fade" onRequestClose={() => setShowDateModal(false)}>
         <TouchableOpacity style={styles.dateModalOverlay} activeOpacity={1} onPress={() => setShowDateModal(false)} />
         <View style={styles.dateModalContent}>
@@ -429,7 +419,7 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
         </View>
       </Modal>
 
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backText}>←</Text>
@@ -440,7 +430,7 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
 
-        {/* Progress summary (edit mode) */}
+        {}
         {isEdit && currentGoal && (
           <View style={styles.progressBox}>
             <View style={styles.progressTrack}>
@@ -515,7 +505,7 @@ export default function AddSavingsGoalScreen({ navigation, route }) {
           </Field>
         </Section>
 
-        {/* Monthly plan preview */}
+        {}
         {monthlyPreview != null && (
           <View style={styles.previewBox}>
             <Text style={styles.previewLabel}>Cần để dành mỗi tháng</Text>
@@ -607,7 +597,6 @@ const styles = StyleSheet.create({
   },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 
-  // Action Modal
   modalOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -652,7 +641,6 @@ const styles = StyleSheet.create({
   submitBtnRed: { backgroundColor: '#CC3300' },
   submitBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 
-  // Date Picker Styles
   dateInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',

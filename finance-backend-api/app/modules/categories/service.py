@@ -3,9 +3,6 @@ from app.modules.categories.models import Category, CategoryGroup, Subcategory, 
 from app.core.exceptions import NotFoundError, ForbiddenError, BadRequestError
 from app.shared.enums import CategoryType
 
-
-# ── Default category seed ──────────────────────────────────────────────────────
-
 _DEFAULT_CATEGORIES = [
     {
         "group": "Chi tiêu thiết yếu",
@@ -64,9 +61,7 @@ _DEFAULT_CATEGORIES = [
     },
 ]
 
-
 def seed_default_categories(db: Session, user_id: int) -> None:
-    """Create default category groups/categories for a new user using DB templates."""
     from app.modules.admin.models import DefaultCategoryTemplate
     templates = (
         db.query(DefaultCategoryTemplate)
@@ -75,12 +70,10 @@ def seed_default_categories(db: Session, user_id: int) -> None:
         .all()
     )
 
-    # Fall back to hardcoded list if DB has no templates yet
     if not templates:
         _seed_from_hardcoded(db, user_id)
         return
 
-    # Group by group_name
     groups: dict = {}
     for t in templates:
         if t.group_name not in groups:
@@ -101,9 +94,7 @@ def seed_default_categories(db: Session, user_id: int) -> None:
             ))
     db.commit()
 
-
 def _seed_from_hardcoded(db: Session, user_id: int) -> None:
-    """Fallback: use the hardcoded list (used before DB templates are seeded)."""
     for group_def in _DEFAULT_CATEGORIES:
         group = CategoryGroup(
             user_id=user_id,
@@ -125,16 +116,12 @@ def _seed_from_hardcoded(db: Session, user_id: int) -> None:
             ))
     db.commit()
 
-
-# ── Category Groups ────────────────────────────────────────────────────────────
-
 def create_group(db: Session, user_id: int, name: str, sort_order: int = 0) -> CategoryGroup:
     group = CategoryGroup(user_id=user_id, name=name, sort_order=sort_order, is_system=False)
     db.add(group)
     db.commit()
     db.refresh(group)
     return group
-
 
 def list_groups(db: Session, user_id: int) -> list[CategoryGroup]:
     return (
@@ -143,7 +130,6 @@ def list_groups(db: Session, user_id: int) -> list[CategoryGroup]:
         .order_by(CategoryGroup.sort_order)
         .all()
     )
-
 
 def delete_group(db: Session, group_id: int, user_id: int) -> None:
     group = (
@@ -155,13 +141,10 @@ def delete_group(db: Session, group_id: int, user_id: int) -> None:
         raise NotFoundError("Category group not found")
     if group.is_system:
         raise BadRequestError("System groups cannot be deleted")
-    # Unlink categories from this group rather than cascading
+
     db.query(Category).filter(Category.group_id == group_id).update({"group_id": None})
     db.delete(group)
     db.commit()
-
-
-# ── Categories ────────────────────────────────────────────────────────────────
 
 def create_category(db: Session, user_id: int, data: dict) -> Category:
     if data.get("group_id"):
@@ -178,7 +161,6 @@ def create_category(db: Session, user_id: int, data: dict) -> Category:
     db.refresh(cat)
     return cat
 
-
 def list_categories(
     db: Session,
     user_id: int,
@@ -187,14 +169,12 @@ def list_categories(
 ) -> list[Category]:
     q = db.query(Category).filter(Category.user_id == user_id)
     if not include_inactive:
-        q = q.filter(Category.is_active == True)  # noqa: E712
+        q = q.filter(Category.is_active == True)
     if type_filter:
         q = q.filter(Category.type == type_filter)
     return q.all()
 
-
 def update_category(db: Session, cat_id: int, user_id: int, data: dict) -> Category:
-    """Name, color, icon, and group_id are mutable. Type is immutable after creation."""
     cat = db.query(Category).filter(Category.id == cat_id, Category.user_id == user_id).first()
     if not cat:
         raise NotFoundError("Category not found")
@@ -220,22 +200,17 @@ def update_category(db: Session, cat_id: int, user_id: int, data: dict) -> Categ
     db.refresh(cat)
     return cat
 
-
 def deactivate_category(db: Session, cat_id: int, user_id: int) -> None:
-    """Soft-delete: mark category as inactive."""
     cat = db.query(Category).filter(Category.id == cat_id, Category.user_id == user_id).first()
     if not cat:
         raise NotFoundError("Category not found")
     cat.is_active = False
     db.commit()
 
-
-# ── Subcategories ─────────────────────────────────────────────────────────────
-
 def create_subcategory(db: Session, user_id: int, category_id: int, name: str) -> Subcategory:
     cat = (
         db.query(Category)
-        .filter(Category.id == category_id, Category.user_id == user_id, Category.is_active == True)  # noqa: E712
+        .filter(Category.id == category_id, Category.user_id == user_id, Category.is_active == True)
         .first()
     )
     if not cat:
@@ -245,7 +220,6 @@ def create_subcategory(db: Session, user_id: int, category_id: int, name: str) -
     db.commit()
     db.refresh(sub)
     return sub
-
 
 def list_subcategories(db: Session, user_id: int, category_id: int | None) -> list[Subcategory]:
     q = (
@@ -257,16 +231,12 @@ def list_subcategories(db: Session, user_id: int, category_id: int | None) -> li
         q = q.filter(Subcategory.category_id == category_id)
     return q.all()
 
-
-# ── Tags ──────────────────────────────────────────────────────────────────────
-
 def create_tag(db: Session, user_id: int, name: str) -> Tag:
     tag = Tag(user_id=user_id, name=name)
     db.add(tag)
     db.commit()
     db.refresh(tag)
     return tag
-
 
 def list_tags(db: Session, user_id: int) -> list[Tag]:
     return db.query(Tag).filter(Tag.user_id == user_id).all()

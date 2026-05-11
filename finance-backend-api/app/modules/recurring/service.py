@@ -22,14 +22,9 @@ _FREQ_LABELS = {
     RecurringFrequency.yearly: "Hàng năm",
 }
 
-# Max transactions to auto-generate per template per call (safety cap)
 _MAX_GEN_PER_TEMPLATE = 12
 
-
-# ── Date helpers ───────────────────────────────────────────────────────────────
-
 def _advance_date(current: date, freq: RecurringFrequency, original_day: int) -> date:
-    """Return the next occurrence date after `current` for the given frequency."""
     if freq == RecurringFrequency.daily:
         return current + timedelta(days=1)
     if freq == RecurringFrequency.weekly:
@@ -44,22 +39,18 @@ def _advance_date(current: date, freq: RecurringFrequency, original_day: int) ->
         return date(year, month, min(original_day, last_day))
     if freq == RecurringFrequency.yearly:
         year = current.year + 1
-        # Handle Feb 29 in non-leap years
+
         try:
             return date(year, current.month, current.day)
         except ValueError:
             return date(year, current.month, 28)
 
-
 def _first_run_date(start: date, freq: RecurringFrequency) -> date:
-    """Compute next_run_date when creating a template."""
     return start
-
 
 def _occurrences_in_range(
     template: RecurringTemplate, from_date: date, to_date: date
 ) -> List[date]:
-    """List all scheduled dates for `template` within [from_date, to_date]."""
     original_day = template.start_date.day
     results = []
     current = template.next_run_date
@@ -73,18 +64,13 @@ def _occurrences_in_range(
         current = _advance_date(current, template.frequency, original_day)
     return results
 
-
-# ── Mapping helpers ────────────────────────────────────────────────────────────
-
 def _build_cat_map(db: Session, user_id: int) -> dict:
     cats = db.query(Category).filter(Category.user_id == user_id).all()
     return {c.id: c.name for c in cats}
 
-
 def _build_acc_map(db: Session, user_id: int) -> dict:
     accs = db.query(Account).filter(Account.user_id == user_id).all()
     return {a.id: a.name for a in accs}
-
 
 def _to_out(tmpl: RecurringTemplate, cat_map: dict, acc_map: dict) -> RecurringTemplateOut:
     return RecurringTemplateOut(
@@ -105,7 +91,6 @@ def _to_out(tmpl: RecurringTemplate, cat_map: dict, acc_map: dict) -> RecurringT
         is_active=tmpl.is_active,
     )
 
-
 def _get_own(db: Session, template_id: int, user_id: int) -> RecurringTemplate:
     tmpl = db.query(RecurringTemplate).filter(
         RecurringTemplate.id == template_id,
@@ -116,18 +101,14 @@ def _get_own(db: Session, template_id: int, user_id: int) -> RecurringTemplate:
         raise NotFoundError("Không tìm thấy giao dịch định kỳ")
     return tmpl
 
-
-# ── CRUD ───────────────────────────────────────────────────────────────────────
-
 def create_template(db: Session, user_id: int, payload: dict) -> RecurringTemplateOut:
-    # Verify account belongs to user
+
     acc = db.query(Account).filter(
         Account.id == payload["account_id"], Account.user_id == user_id
     ).first()
     if not acc:
         raise NotFoundError("Tài khoản không tồn tại")
 
-    # Verify category belongs to user (if provided)
     cat_id = payload.get("category_id")
     if cat_id:
         cat = db.query(Category).filter(
@@ -153,7 +134,6 @@ def create_template(db: Session, user_id: int, payload: dict) -> RecurringTempla
     acc_map = _build_acc_map(db, user_id)
     return _to_out(tmpl, cat_map, acc_map)
 
-
 def list_templates(db: Session, user_id: int) -> List[RecurringTemplateOut]:
     tmpls = db.query(RecurringTemplate).filter(
         RecurringTemplate.user_id == user_id,
@@ -164,18 +144,15 @@ def list_templates(db: Session, user_id: int) -> List[RecurringTemplateOut]:
     acc_map = _build_acc_map(db, user_id)
     return [_to_out(t, cat_map, acc_map) for t in tmpls]
 
-
 def get_template(db: Session, template_id: int, user_id: int) -> RecurringTemplateOut:
     tmpl = _get_own(db, template_id, user_id)
     cat_map = _build_cat_map(db, user_id)
     acc_map = _build_acc_map(db, user_id)
     return _to_out(tmpl, cat_map, acc_map)
 
-
 def update_template(db: Session, template_id: int, user_id: int, payload: dict) -> RecurringTemplateOut:
     tmpl = _get_own(db, template_id, user_id)
 
-    # Validate account/category ownership if being changed
     if "account_id" in payload:
         acc = db.query(Account).filter(
             Account.id == payload["account_id"], Account.user_id == user_id
@@ -200,14 +177,10 @@ def update_template(db: Session, template_id: int, user_id: int, payload: dict) 
     acc_map = _build_acc_map(db, user_id)
     return _to_out(tmpl, cat_map, acc_map)
 
-
 def delete_template(db: Session, template_id: int, user_id: int) -> None:
     tmpl = _get_own(db, template_id, user_id)
     tmpl.is_active = False
     db.commit()
-
-
-# ── Upcoming (US-B2) ───────────────────────────────────────────────────────────
 
 def get_upcoming(db: Session, user_id: int, days: int = 30) -> UpcomingListResponse:
     today = date.today()
@@ -247,7 +220,6 @@ def get_upcoming(db: Session, user_id: int, days: int = 30) -> UpcomingListRespo
             else:
                 total_income += amount
 
-    # Sort by date ascending
     items.sort(key=lambda x: x.scheduled_date)
 
     return UpcomingListResponse(
@@ -256,22 +228,14 @@ def get_upcoming(db: Session, user_id: int, days: int = 30) -> UpcomingListRespo
         total_income=total_income,
     )
 
-
-# ── Generate transactions ──────────────────────────────────────────────────────
-
 def _generate_for_template(
     db: Session, tmpl: RecurringTemplate, up_to: date
 ) -> int:
-    """
-    Create uncleared transactions for all overdue dates up to `up_to`.
-    Advances next_run_date past up_to.
-    Returns number of transactions created.
-    """
     original_day = tmpl.start_date.day
     generated = 0
 
     while tmpl.next_run_date <= up_to and generated < _MAX_GEN_PER_TEMPLATE:
-        # Stop if end_date passed
+
         if tmpl.end_date and tmpl.next_run_date > tmpl.end_date:
             tmpl.is_active = False
             break
@@ -289,7 +253,6 @@ def _generate_for_template(
         )
         db.add(txn)
 
-        # Update account balance
         acc = db.query(Account).filter(Account.id == tmpl.account_id).first()
         if acc:
             bal = Decimal(str(acc.current_balance))
@@ -303,9 +266,7 @@ def _generate_for_template(
 
     return generated
 
-
 def generate_due(db: Session, template_id: int, user_id: int) -> GenerateResult:
-    """Manually generate all overdue transactions for one template."""
     tmpl = _get_own(db, template_id, user_id)
     today = date.today()
 
@@ -325,9 +286,7 @@ def generate_due(db: Session, template_id: int, user_id: int) -> GenerateResult:
         message=f"Đã tạo {generated} giao dịch định kỳ",
     )
 
-
 def process_all_due(db: Session, user_id: int) -> GenerateResult:
-    """Generate all overdue transactions across all active templates for this user."""
     today = date.today()
 
     due_templates = db.query(RecurringTemplate).filter(

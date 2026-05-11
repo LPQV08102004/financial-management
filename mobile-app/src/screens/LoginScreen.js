@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -161,7 +161,6 @@ export default function LoginScreen() {
         </Text>
       </TouchableOpacity>
 
-  
     </View>
   );
 }

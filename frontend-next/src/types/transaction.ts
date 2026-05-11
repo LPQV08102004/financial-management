@@ -1,4 +1,3 @@
-// src/types/transaction.ts
 
 export type TransactionType = 'income' | 'expense';
 
@@ -6,7 +5,7 @@ export interface Transaction {
   id: string | number;
   type: TransactionType;
   amount: number;
-  transaction_date: string; // ISO string
+  transaction_date: string;
   note?: string;
   account_id: string | number;
   category_id?: string | number;

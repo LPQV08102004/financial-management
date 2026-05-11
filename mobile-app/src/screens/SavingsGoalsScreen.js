@@ -128,7 +128,7 @@ export default function SavingsGoalsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backText}>←</Text>
@@ -142,14 +142,14 @@ export default function SavingsGoalsScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Total locked */}
+      {}
       <View style={styles.summaryBox}>
         <Text style={styles.summaryLabel}>Tổng tiền đang tích lũy</Text>
         <Text style={styles.summaryAmount}>{_fmtVND(totalLocked)}</Text>
         <Text style={styles.summaryNote}>({allGoals.filter(g => g.status === 'in_progress').length} mục tiêu đang thực hiện)</Text>
       </View>
 
-      {/* Tabs */}
+      {}
       <View style={styles.tabRow}>
         {STATUS_TABS.map((tab) => {
           const count = allGoals.filter((g) => g.status === tab.key).length;
@@ -167,7 +167,7 @@ export default function SavingsGoalsScreen({ navigation }) {
         })}
       </View>
 
-      {/* List */}
+      {}
       {loading ? (
         <ActivityIndicator style={{ marginTop: 40 }} size="large" color="#075c09" />
       ) : (

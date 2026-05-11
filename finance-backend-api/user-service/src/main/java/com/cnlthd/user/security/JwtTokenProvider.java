@@ -34,7 +34,7 @@ public class JwtTokenProvider {
 
   private String generateToken(String userId, String email, String role, long expirationTime) {
     SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-    
+
     return Jwts.builder()
         .subject(userId)
         .claim("email", email)

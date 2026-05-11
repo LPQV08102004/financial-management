@@ -4,7 +4,6 @@ from sqlalchemy import (
 from app.db.base import Base
 from app.shared.enums import CategoryType
 
-
 class CategoryGroup(Base):
     __tablename__ = "category_groups"
 
@@ -12,9 +11,8 @@ class CategoryGroup(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     name = Column(String(100), nullable=False)
     sort_order = Column(Integer, nullable=False, default=0)
-    is_system = Column(Boolean, nullable=False, default=False)  # system groups cannot be deleted
+    is_system = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
-
 
 class Category(Base):
     __tablename__ = "categories"
@@ -30,7 +28,6 @@ class Category(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
-
 class Subcategory(Base):
     __tablename__ = "subcategories"
 
@@ -39,7 +36,6 @@ class Subcategory(Base):
     name = Column(String(100), nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
-
 class Tag(Base):
     __tablename__ = "tags"
 
@@ -47,7 +43,6 @@ class Tag(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     name = Column(String(100), nullable=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
-
 
 class TransactionTag(Base):
     __tablename__ = "transaction_tags"

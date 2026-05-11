@@ -7,9 +7,9 @@ import Footer from '../components/Footer';
 import CategoryIcon from '../components/CategoryIcon';
 import { listCategories, createCategory, updateCategory, deleteCategory } from '../api/categoriesApi';
 import type { CategoryType } from '../types/category';
-import { 
-  Plus, X, Trash2, Utensils, Coffee, Car, Plane, Home, 
-  Stethoscope, Dumbbell, Briefcase, CreditCard, Gift 
+import {
+  Plus, X, Trash2, Utensils, Coffee, Car, Plane, Home,
+  Stethoscope, Dumbbell, Briefcase, CreditCard, Gift
 } from 'lucide-react';
 
 const PRESET_COLORS = [
@@ -17,10 +17,9 @@ const PRESET_COLORS = [
   '#6A4C93', '#F72585', '#4CC9F0', '#7FB069', '#B5838D',
 ];
 
-// Danh sách icon mapping cho Web
 const ICON_MAP: Record<string, any> = {
   'fast-food': Utensils, 'cafe': Coffee, 'car': Car, 'airplane': Plane,
-  'home': Home, 'medical': Stethoscope, 'fitness': Dumbbell, 
+  'home': Home, 'medical': Stethoscope, 'fitness': Dumbbell,
   'briefcase': Briefcase, 'card': CreditCard, 'gift': Gift,
   'ellipsis-horizontal': Plus
 };
@@ -104,14 +103,14 @@ export default function CategoriesScreen() {
   return (
     <div className="bg-[#f8f9fa] flex flex-col relative">
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <Header 
-        title="Danh mục" 
-        onMenuPress={() => setSidebarOpen(true)} 
+
+      <Header
+        title="Danh mục"
+        onMenuPress={() => setSidebarOpen(true)}
         rightIcon="📋"
       />
 
-      {/* Tab Bar */}
+      {}
       <div className="flex bg-white border-b shadow-sm">
         {[['expense', 'Chi phí'], ['income', 'Thu nhập']].map(([key, label]) => (
           <button
@@ -128,7 +127,7 @@ export default function CategoriesScreen() {
         ))}
       </div>
 
-      {/* Category Grid */}
+      {}
       <div className="p-5 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-5 overflow-y-auto">
         {filtered.map((item) => (
           <button
@@ -136,7 +135,7 @@ export default function CategoriesScreen() {
             onClick={() => openEdit(item)}
             className="flex flex-col items-center gap-2 group"
           >
-            <div 
+            <div
               className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
               style={{ backgroundColor: item.color }}
             >
@@ -147,8 +146,8 @@ export default function CategoriesScreen() {
             </span>
           </button>
         ))}
-        
-        {/* Add Card[cite: 7] */}
+
+        {}
         <button
           onClick={openAdd}
           className="flex flex-col items-center gap-2"
@@ -160,7 +159,7 @@ export default function CategoriesScreen() {
         </button>
       </div>
 
-            {/* Modal Sheet[cite: 7] */}
+            {}
       {modalVisible && (
         <div className="absolute inset-0 z-50 flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/40" onClick={() => setModalVisible(false)} />
@@ -177,15 +176,15 @@ export default function CategoriesScreen() {
             </div>
 
             <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-              {/* Preview[cite: 7] */}
+              {}
               <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl">
-                <div 
+                <div
                   className="w-16 h-16 rounded-full flex items-center justify-center shadow-inner"
                   style={{ backgroundColor: form.color }}
                 >
                   <CategoryIcon icon={form.icon} size={28} color="#fff" />
                 </div>
-                <input 
+                <input
                   className="flex-1 bg-transparent text-lg font-bold outline-none border-b-2 border-transparent focus:border-[#075c09]"
                   value={form.name}
                   placeholder="Tên danh mục..."
@@ -193,7 +192,7 @@ export default function CategoriesScreen() {
                 />
               </div>
 
-              {/* Color Picker[cite: 7] */}
+              {}
               <div>
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">Màu sắc</label>
                 <div className="flex flex-wrap gap-3">
@@ -208,7 +207,7 @@ export default function CategoriesScreen() {
                 </div>
               </div>
 
-              {/* Icon Selection[cite: 7] */}
+              {}
               <div>
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 block">Biểu tượng</label>
                 <div className="grid grid-cols-6 gap-3">
@@ -225,15 +224,15 @@ export default function CategoriesScreen() {
               </div>
             </div>
 
-            {/* Actions[cite: 7] */}
+            {}
             <div className="flex gap-4 mt-8">
-              <button 
+              <button
                 onClick={() => setModalVisible(false)}
                 className="flex-1 py-4 font-bold text-gray-400 hover:text-gray-600 transition-colors"
               >
                 Hủy bỏ
               </button>
-              <button 
+              <button
                 onClick={handleSave}
                 disabled={saving}
                 className="flex-[2] bg-[#075c09] text-white py-4 rounded-2xl font-bold shadow-lg shadow-[#075c09]/30 active:scale-95 transition-all"

@@ -1,4 +1,3 @@
-// src/types/analytics.ts
 
 export type AnalyticsPeriod = 'day' | 'week' | 'month' | 'year' | 'custom';
 
@@ -26,7 +25,7 @@ export interface CategoryStat {
 }
 
 export interface OverTimeStat {
-  label: string; // ví dụ: "2024-01-01" hoặc "Thứ 2"
+  label: string;
   income: number;
   expense: number;
 }

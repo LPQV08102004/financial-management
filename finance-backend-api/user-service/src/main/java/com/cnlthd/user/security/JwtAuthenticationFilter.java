@@ -31,25 +31,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
     try {
       String authHeader = request.getHeader("Authorization");
-      
+
       if (authHeader != null && authHeader.startsWith("Bearer ")) {
         String token = authHeader.substring(7);
-        
+
         if (jwtTokenProvider.validateToken(token)) {
           String userId = jwtTokenProvider.getUserIdFromToken(token);
           String role = jwtTokenProvider.getRoleFromToken(token);
-          
-          // Create authorities from role
+
           Collection<GrantedAuthority> authorities = new ArrayList<>();
           authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
-          
-          // Create authentication token
+
           UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
               userId, null, authorities);
-          
-          // Set authentication in security context
+
           SecurityContextHolder.getContext().setAuthentication(authentication);
-          
+
           log.debug("JWT Token validated for user: {}", userId);
         } else {
           log.warn("Invalid JWT Token");
@@ -58,7 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     } catch (Exception e) {
       log.error("Error processing JWT Token: {}", e.getMessage());
     }
-    
+
     filterChain.doFilter(request, response);
   }
 }

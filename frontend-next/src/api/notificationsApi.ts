@@ -1,8 +1,6 @@
-// src/api/notificationsApi.ts
+
 import { API_BASE_URL } from './config';
 import { apiFetch } from './authApi';
-
-// ── Custom Reminders ─────────────────────────────────────────────────────────
 
 export async function listReminders() {
   const res = await apiFetch(`${API_BASE_URL}/reminders`);
@@ -52,8 +50,6 @@ export async function deleteReminder(id: number | string) {
   }
 }
 
-// ── System Notifications ─────────────────────────────────────────────────────
-
 export async function generateNotifications() {
   const res = await apiFetch(`${API_BASE_URL}/notifications/generate`, { method: 'POST' });
   const data = await res.json().catch(() => ({}));
@@ -67,7 +63,7 @@ export async function listNotifications(opts: { displayType?: string; unreadOnly
   const res = await apiFetch(`${API_BASE_URL}/notifications?${params}`);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.detail || 'Lỗi tải thông báo');
-  return data; // { items, unread_count }
+  return data;
 }
 
 export async function getUnreadCount(): Promise<number> {

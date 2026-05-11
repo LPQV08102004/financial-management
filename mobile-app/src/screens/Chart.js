@@ -22,14 +22,12 @@ export default function Chart({ navigation }) {
   const [confirmedEndDate, setConfirmedEndDate] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // ── API chart data ────────────────────────────────────────────────────────────
   const [apiChartData, setApiChartData] = useState([]);
-  // Colors keyed by category name, populated when activeTab is expense/income
-  const [apiCategoryColors, setApiCategoryColors] = useState({});
-  // Tap tooltip
-  const [tooltip, setTooltip] = useState(null); // { lines: string[] }
 
-  /** Round up to a clean 'nice' ceiling so Y-axis ticks are whole round numbers */
+  const [apiCategoryColors, setApiCategoryColors] = useState({});
+
+  const [tooltip, setTooltip] = useState(null);
+
   const niceMax = (value) => {
     if (value <= 0) return 100_000;
     const exp = Math.floor(Math.log10(value));
@@ -42,7 +40,6 @@ export default function Chart({ navigation }) {
     return 10 * mag;
   };
 
-  /** Format large VND amounts to short readable form */
   const formatAmount = (value) => {
     if (value === 0) return '0';
     if (value >= 1_000_000_000) return `${+(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}tỷ`;
@@ -51,7 +48,6 @@ export default function Chart({ navigation }) {
     return String(value);
   };
 
-  /** Format exact amount with thousand separators */
   const formatExact = (value) =>
     new Intl.NumberFormat('vi-VN').format(value) + ' đ';
 
@@ -90,11 +86,8 @@ export default function Chart({ navigation }) {
 
   useFocusEffect(useCallback(() => { fetchData(); }, [fetchData]));
 
-
-  // Calculate chart data based on time period
   const chartData = apiChartData;
 
-  // Calculate maxValue based on active tab
   let rawMax = 100000;
   if (activeTab === 'all') {
     rawMax = Math.max(...chartData.map(d => Math.max(d.income || 0, d.expense || 0)), 100000);
@@ -110,12 +103,11 @@ export default function Chart({ navigation }) {
   const maxPossibleBars = Math.max(chartData.length, 1);
   const BAR_WIDTH = 22;
   const GROUP_SPACING = 70;
-  const CHART_SIDE_PADDING = 60; // left axis (40) + right margin (20)
+  const CHART_SIDE_PADDING = 60;
   const chartWidth = Math.max(300, maxPossibleBars * GROUP_SPACING + CHART_SIDE_PADDING);
   const barSpacing = (chartWidth - CHART_SIDE_PADDING) / maxPossibleBars;
   const barWidth = BAR_WIDTH;
 
-  // Get unique categories from all chart data for stacked charts
   const getAllCategories = () => {
     const categories = new Set();
     chartData.forEach(d => {
@@ -126,7 +118,6 @@ export default function Chart({ navigation }) {
     return Array.from(categories);
   };
 
-  // Check if there's any real data (not just zeros)
   const hasRealData = () => {
     if (activeTab === 'all') {
       return chartData.some(d => d.income > 0 || d.expense > 0);
@@ -141,7 +132,7 @@ export default function Chart({ navigation }) {
 
     return (
       <View style={{ flexDirection: 'row' }}>
-        {/* Y-axis labels */}
+        {}
         <View style={{ width: 50, height: chartHeight, position: 'relative', paddingHorizontal: 5 }}>
           {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
             const yPos = chartHeight - padding - graphHeight * ratio;
@@ -201,7 +192,7 @@ export default function Chart({ navigation }) {
 
     return (
       <View style={{ flexDirection: 'row' }}>
-        {/* Y-axis labels */}
+        {}
         <View style={{ width: 50, height: chartHeight, position: 'relative', paddingHorizontal: 5 }}>
           {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
             const yPos = chartHeight - padding - graphHeight * ratio;
@@ -229,7 +220,7 @@ export default function Chart({ navigation }) {
               );
             })}
 
-            {/* Stacked Bars */}
+            {}
             {chartData.map((data, idx) => {
               const xPos = padding + idx * barSpacing + barSpacing / 2 - barWidth / 2;
               let currentY = chartHeight - padding;
@@ -264,7 +255,7 @@ export default function Chart({ navigation }) {
 
   return (
     <View style={styles.screenContainer}>
-      {/* Tap tooltip modal */}
+      {}
       <Modal transparent visible={!!tooltip} animationType="fade" onRequestClose={() => setTooltip(null)}>
         <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }} onPress={() => setTooltip(null)}>
           <View style={{ backgroundColor: '#1f2937', borderRadius: 12, paddingHorizontal: 20, paddingVertical: 14, minWidth: 180, alignItems: 'center' }}>
@@ -279,7 +270,7 @@ export default function Chart({ navigation }) {
       </Modal>
 
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} scrollEnabled={true}>
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerMenu} onPress={() => setSidebarOpen(true)}>
             <View style={styles.hamburgerLine}></View>
@@ -289,27 +280,27 @@ export default function Chart({ navigation }) {
           <View style={styles.headerContent}>
             <Text style={styles.headerText}>Biểu đồ</Text>
           </View>
-          <HeaderIconButton 
-            icon="📋" 
+          <HeaderIconButton
+            icon="📋"
             onPress={() => navigation.navigate('Transaction')}
           />
         </View>
 
-        {/* Content Area */}
+        {}
         <View style={styles.tabContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.tab, activeTab === 'all' && styles.tabActive]}
             onPress={() => setActiveTab('all')}
           >
             <Text style={[styles.tabText, activeTab === 'all' && styles.tabTextActive]}>Chung</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.tab, activeTab === 'expense' && styles.tabActive]}
             onPress={() => setActiveTab('expense')}
           >
             <Text style={[styles.tabText, activeTab === 'expense' && styles.tabTextActive]}>Chi phí</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.tab, activeTab === 'income' && styles.tabActive]}
             onPress={() => setActiveTab('income')}
           >
@@ -336,7 +327,7 @@ export default function Chart({ navigation }) {
           setShowCalendar={setShowCalendar}
         />
 
-        {/* Chart Content */}
+        {}
         {activeTab === 'all' && (
           <View style={styles.chartContainerWrapper}>
             <View style={styles.chartLegend}>
@@ -378,7 +369,7 @@ export default function Chart({ navigation }) {
       </ScrollView>
       <Footer />
 
-      {/* Sidebar */}
+      {}
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} navigation={navigation} />
     </View>
   );
@@ -388,13 +379,13 @@ const styles = StyleSheet.create({
   screenContainer: { flex: 1, position: 'relative' },
   container: { flex: 1, backgroundColor: '#f8f9fa' },
   scrollContent: { paddingBottom: 40 },
-  header: { 
-    backgroundColor: '#075c09', 
-    padding: 20, 
-    paddingTop: 30, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between' 
+  header: {
+    backgroundColor: '#075c09',
+    padding: 20,
+    paddingTop: 30,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
   },
   headerMenu: { paddingHorizontal: 10, paddingVertical: 10 },
   hamburgerLine: { width: 24, height: 3, backgroundColor: '#fff', marginVertical: 4, marginTop: 3, borderRadius: 2 },
@@ -433,16 +424,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  contentContainer: { 
-    flex: 1, 
-    padding: 20, 
-    justifyContent: 'center', 
+  contentContainer: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f8f9fa'
   },
-  placeholderText: { 
-    fontSize: 18, 
-    color: '#999', 
+  placeholderText: {
+    fontSize: 18,
+    color: '#999',
     fontWeight: '500',
     textAlign: 'center'
   },

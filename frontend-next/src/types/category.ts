@@ -1,4 +1,3 @@
-// src/types/category.ts
 
 export type CategoryType = 'income' | 'expense';
 

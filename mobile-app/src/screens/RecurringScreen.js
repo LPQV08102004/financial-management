@@ -82,14 +82,14 @@ function UpcomingCard({ item }) {
 export default function RecurringScreen({ navigation }) {
   const [activeTab, setActiveTab] = useState('templates');
   const [templates, setTemplates] = useState([]);
-  const [upcoming, setUpcoming] = useState(null); // UpcomingListResponse
+  const [upcoming, setUpcoming] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      // Auto-process overdue templates silently
+
       processAllDue().catch(() => {});
       const [tmpls, upcomingData] = await Promise.all([
         listTemplates(),
@@ -202,7 +202,7 @@ export default function RecurringScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backText}>←</Text>
@@ -219,7 +219,7 @@ export default function RecurringScreen({ navigation }) {
         {activeTab === 'upcoming' && <View style={{ width: 36 }} />}
       </View>
 
-      {/* Tabs */}
+      {}
       <View style={styles.tabRow}>
         {TABS.map((tab) => (
           <TouchableOpacity

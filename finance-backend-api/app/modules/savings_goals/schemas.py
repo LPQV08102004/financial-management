@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.shared.enums import GoalStatus
 
-
 class SavingsGoalCreate(BaseModel):
     name: str = Field(min_length=1, max_length=150)
     target_amount: Decimal = Field(gt=0, decimal_places=2)
@@ -18,19 +17,16 @@ class SavingsGoalCreate(BaseModel):
             raise ValueError("Ngày mục tiêu phải ở tương lai")
         return self
 
-
 class SavingsGoalUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=150)
     target_amount: Optional[Decimal] = Field(default=None, gt=0, decimal_places=2)
     deadline: Optional[date] = None
     note: Optional[str] = None
 
-
 class DepositWithdrawRequest(BaseModel):
     amount: Decimal = Field(gt=0, decimal_places=2)
     account_id: int
     transaction_date: datetime
-
 
 class SavingsGoalOut(BaseModel):
     id: int
@@ -48,7 +44,6 @@ class SavingsGoalOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
 class SavingsGoalListResponse(BaseModel):
     items: List[SavingsGoalOut]
-    total_locked: Decimal  # sum of saved_amount for in_progress goals
+    total_locked: Decimal

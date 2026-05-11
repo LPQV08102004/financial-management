@@ -55,7 +55,7 @@ export default function AppSidebar() {
 
   return (
     <aside className="hidden lg:flex flex-col w-64 bg-[#075c09] h-full flex-shrink-0 overflow-y-auto">
-      {/* Logo */}
+      {}
       <div className="px-5 py-5 border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -68,7 +68,7 @@ export default function AppSidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
+      {}
       <nav className="flex-1 px-3 py-3 space-y-0.5">
         {NAV_ITEMS.map((item) => {
           const isActive =
@@ -100,7 +100,7 @@ export default function AppSidebar() {
         })}
       </nav>
 
-      {/* User Profile + Logout */}
+      {}
       <div className="border-t border-white/10 p-3 space-y-1">
         <Link
           href="/profile"

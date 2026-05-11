@@ -43,7 +43,7 @@ public class AuthController {
   @PostMapping("/logout")
   public ResponseEntity<ApiResponse<Void>> logout() {
     log.info("Logout request");
-    // Get user from security context
+
     String userId = (String) org.springframework.security.core.context.SecurityContextHolder
         .getContext().getAuthentication().getPrincipal();
     authService.logout(userId);
@@ -55,10 +55,10 @@ public class AuthController {
   public ResponseEntity<ApiResponse<LoginResponse>> refreshToken(
       @RequestHeader("Authorization") String authHeader) {
     log.info("Refresh token request");
-    
+
     String refreshToken = authHeader.replace("Bearer ", "");
     LoginResponse response = authService.refreshToken(refreshToken);
-    
+
     return ResponseEntity
         .ok(ApiResponse.success("Token làm mới thành công", response));
   }
@@ -66,7 +66,7 @@ public class AuthController {
   @PostMapping("/verify-email")
   public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam String token) {
     log.info("Email verification request");
-    // TODO: Implement email verification logic
+
     return ResponseEntity
         .ok(ApiResponse.success("Email xác thực thành công"));
   }
@@ -74,7 +74,7 @@ public class AuthController {
   @PostMapping("/forgot-password")
   public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestParam String email) {
     log.info("Forgot password request for email: {}", email);
-    // TODO: Implement forgot password logic (send email with reset link)
+
     return ResponseEntity
         .ok(ApiResponse.success("Vui lòng kiểm tra email để đặt lại mật khẩu"));
   }
@@ -84,7 +84,7 @@ public class AuthController {
       @RequestParam String token,
       @RequestParam String newPassword) {
     log.info("Reset password request");
-    // TODO: Implement reset password logic
+
     return ResponseEntity
         .ok(ApiResponse.success("Đặt lại mật khẩu thành công"));
   }

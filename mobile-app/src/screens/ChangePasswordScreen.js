@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+
 import React, { useState } from 'react';
 import {
   StyleSheet,
@@ -64,7 +64,7 @@ export default function ChangePasswordScreen({ navigation }) {
   return (
     <View style={styles.screenContainer}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Text style={styles.backArrow}>←</Text>
@@ -80,7 +80,7 @@ export default function ChangePasswordScreen({ navigation }) {
             Sau khi đổi mật khẩu, bạn sẽ được đăng xuất khỏi tất cả thiết bị.
           </Text>
 
-          {/* Current Password */}
+          {}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Mật khẩu hiện tại</Text>
             <TextInput
@@ -94,7 +94,7 @@ export default function ChangePasswordScreen({ navigation }) {
             />
           </View>
 
-          {/* New Password */}
+          {}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Mật khẩu mới</Text>
             <TextInput
@@ -108,7 +108,7 @@ export default function ChangePasswordScreen({ navigation }) {
             />
           </View>
 
-          {/* Confirm New Password */}
+          {}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Xác nhận mật khẩu mới</Text>
             <TextInput
@@ -122,7 +122,7 @@ export default function ChangePasswordScreen({ navigation }) {
             />
           </View>
 
-          {/* Submit */}
+          {}
           <TouchableOpacity
             style={[styles.submitButton, loading && styles.submitButtonDisabled]}
             onPress={handleSubmit}

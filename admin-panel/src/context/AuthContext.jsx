@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (token) {
-      // Verify still admin
+
       getStats().catch(() => logout())
     }
     setLoading(false)
@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem('admin_email', email)
     setToken(data.access_token)
     setAdminEmail(email)
-    // verify admin access
+
     try {
       await getStats()
     } catch {

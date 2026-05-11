@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  listTemplates, 
-  deleteTemplate, 
-  processAllDue, 
+import {
+  listTemplates,
+  deleteTemplate,
+  processAllDue,
   getUpcoming
 } from '../api/recurringApi';
-import { 
+import {
   RecurringTemplate,
   UpcomingOccurrence,
   UpcomingListResponse,
@@ -30,23 +30,22 @@ const _fmtDate = (dateStr: string) => {
   return `${d}/${m}/${y}`;
 };
 
-// Component thẻ giao dịch định kỳ (Template)
-function TemplateCard({ 
-  item, 
+function TemplateCard({
+  item,
   onEdit,
-  onDelete, 
-  onGenerate 
-}: { 
-  item: RecurringTemplate; 
+  onDelete,
+  onGenerate
+}: {
+  item: RecurringTemplate;
   onEdit: (i: RecurringTemplate) => void;
-  onDelete: (i: RecurringTemplate) => void; 
+  onDelete: (i: RecurringTemplate) => void;
   onGenerate: (i: RecurringTemplate) => void;
 }) {
   const color = TYPE_COLOR[item.type] || '#333';
   return (
     <div className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-50">
       <div className="flex items-center gap-2 mb-2">
-        <span 
+        <span
           className="text-[10px] font-bold text-white px-2 py-0.5 rounded-md uppercase"
           style={{ backgroundColor: color }}
         >
@@ -68,7 +67,7 @@ function TemplateCard({
         {item.note && <p className="text-xs text-gray-400 italic">💬 {item.note}</p>}
       </div>
 
-      <button 
+      <button
         onClick={() => onGenerate(item)}
         className="w-full py-2 rounded-lg border border-[#075c09] text-[#075c09] text-xs font-bold bg-[#f0f8f0] hover:bg-[#075c09] hover:text-white transition-colors"
       >
@@ -78,7 +77,6 @@ function TemplateCard({
   );
 }
 
-// Component thẻ giao dịch sắp tới (Upcoming)
 function UpcomingCard({ item }: { item: UpcomingOccurrence }) {
   const color = TYPE_COLOR[item.type] || '#333';
   return (
@@ -113,7 +111,7 @@ export default function RecurringScreen() {
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      // Tự động xử lý các giao dịch quá hạn trong im lặng[cite: 8]
+
       processAllDue().catch(() => {});
       const [tmpls, upcomingData] = await Promise.all([
         listTemplates(),
@@ -164,7 +162,7 @@ export default function RecurringScreen() {
 
   return (
     <div className="flex flex-col bg-gray-50 relative">
-      {/* Header */}
+      {}
       <header className="bg-[#075c09] text-white px-5 py-4 flex items-center gap-3 shadow-sm sticky top-0 z-30">
         <button
           onClick={() => window.history.back()}
@@ -183,7 +181,7 @@ export default function RecurringScreen() {
         )}
       </header>
 
-      {/* Tabs */}
+      {}
       <div className="flex bg-white border-b shadow-sm">
         {TABS.map((tab) => (
           <button
@@ -216,7 +214,7 @@ export default function RecurringScreen() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#075c09]"></div>
           </div>
         ) : activeTab === 'templates' ? (
-          /* Danh sách Templates[cite: 8] */
+
           templates.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
               <span className="text-5xl mb-4 opacity-50">🔁</span>
@@ -224,17 +222,17 @@ export default function RecurringScreen() {
             </div>
           ) : (
             templates.map(item => (
-              <TemplateCard 
-                key={item.id} 
+              <TemplateCard
+                key={item.id}
                 item={item}
                 onEdit={handleEdit}
-                onDelete={handleDelete} 
-                onGenerate={handleGenerate} 
+                onDelete={handleDelete}
+                onGenerate={handleGenerate}
               />
             ))
           )
         ) : (
-          /* Danh sách Upcoming[cite: 8] */
+
           <>
             {upcoming && upcoming.items.length > 0 && (
               <div className="flex gap-2 mb-4">
@@ -248,7 +246,7 @@ export default function RecurringScreen() {
                 </div>
               </div>
             )}
-            
+
             {(!upcoming || upcoming.items.length === 0) ? (
               <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                 <span className="text-5xl mb-4 opacity-50">📅</span>

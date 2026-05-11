@@ -16,14 +16,12 @@ from app.modules.budgets.schemas import (
 
 router = APIRouter(prefix="/budgets", tags=["Budgets"])
 
-
 @router.post("/assign", response_model=AssignMoneyResponse)
 def assign_money(
     body: AssignMoneyRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Set the budgeted amount for a category in a given month (zero-based assignment)."""
     entry, tbb = service.assign_money(
         db, current_user.id, body.category_id, body.period_month, body.amount
     )
@@ -33,14 +31,12 @@ def assign_money(
         is_overbudgeted=tbb < Decimal("0"),
     )
 
-
 @router.post("/move", response_model=MoveMoneyResponse)
 def move_money(
     body: MoveMoneyRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Move budgeted amount between two categories in the same month."""
     from_entry, to_entry = service.move_money(
         db, current_user.id,
         body.from_category_id, body.to_category_id,
@@ -53,16 +49,13 @@ def move_money(
         to_overspent=to_entry.available < 0,
     )
 
-
 @router.get("/summary", response_model=MonthSummaryOut)
 def get_month_summary(
     month: str = Query(..., description="Format: YYYY-MM"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Full budget summary for a month: TBB, totals, and all category entries."""
     return service.get_month_summary(db, current_user.id, month)
-
 
 @router.get("/entries", response_model=List[BudgetEntryOut])
 def list_entries(
@@ -73,7 +66,6 @@ def list_entries(
     summary = service.get_month_summary(db, current_user.id, month)
     return summary["entries"]
 
-
 @router.get("/entries/{entry_id}", response_model=BudgetEntryOut)
 def get_entry(
     entry_id: int,
@@ -82,17 +74,14 @@ def get_entry(
 ):
     return service.get_entry(db, current_user.id, entry_id)
 
-
 @router.get("/to-be-budgeted")
 def get_to_be_budgeted(
     month: str = Query(..., description="Format: YYYY-MM"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Current To Be Budgeted = total account balances - total budgeted this month."""
     tbb = service.get_to_be_budgeted(db, current_user.id, month)
     return {"period_month": month, "to_be_budgeted": tbb, "is_overbudgeted": tbb < 0}
-
 
 @router.get("/alerts", response_model=List[BudgetAlertOut])
 def list_alerts(
@@ -102,7 +91,6 @@ def list_alerts(
 ):
     return service.list_alerts(db, current_user.id, unread_only)
 
-
 @router.patch("/alerts/{alert_id}/read", response_model=BudgetAlertOut)
 def mark_alert_read(
     alert_id: int,
@@ -110,5 +98,3 @@ def mark_alert_read(
     current_user: User = Depends(get_current_user),
 ):
     return service.mark_alert_read(db, current_user.id, alert_id)
-
-

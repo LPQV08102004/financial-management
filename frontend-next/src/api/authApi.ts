@@ -1,23 +1,21 @@
-// src/api/authApi.ts
+
 import Cookies from 'js-cookie';
 import { API_BASE_URL } from './config';
-import { 
-  LoginPayload, 
-  RegisterPayload, 
-  AuthResponse, 
-  UserUpdatePayload, 
+import {
+  LoginPayload,
+  RegisterPayload,
+  AuthResponse,
+  UserUpdatePayload,
   UserProfile,
-  ChangePasswordPayload 
+  ChangePasswordPayload
 } from '../types/auth';
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 
-/** Lấy Token từ Cookie */
 export const getSavedToken = (): string | undefined => {
   return Cookies.get(ACCESS_TOKEN_KEY);
 };
 
-/** Header chung cho các request yêu cầu đăng nhập */
 async function getAuthHeaders(): Promise<HeadersInit> {
   const token = getSavedToken();
   if (!token) throw new Error('Bạn chưa đăng nhập');
@@ -27,10 +25,6 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   };
 }
 
-/**
- * Shared authenticated fetch — automatically attaches auth headers.
- * Redirects to /auth/login when there is no token or the server returns 401.
- */
 export async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const token = getSavedToken();
 
@@ -62,7 +56,6 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
   return res;
 }
 
-/** Đăng nhập */
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
@@ -73,13 +66,12 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
   const data = await parseResponseBody(response);
   if (!response.ok) throw new Error(formatApiError(response, data, 'Đăng nhập thất bại'));
 
-  if (data?.access_token) Cookies.set(ACCESS_TOKEN_KEY, data.access_token, { expires: 7 }); // Hết hạn sau 7 ngày
+  if (data?.access_token) Cookies.set(ACCESS_TOKEN_KEY, data.access_token, { expires: 7 });
   if (data?.refresh_token) Cookies.set(REFRESH_TOKEN_KEY, data.refresh_token, { expires: 30 });
 
   return data;
 }
 
-/** Đăng ký */
 export async function register(payload: RegisterPayload): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
@@ -96,11 +88,9 @@ export async function register(payload: RegisterPayload): Promise<AuthResponse> 
   return data;
 }
 
-/** Đăng xuất */
 export async function logout(): Promise<void> {
   const refreshToken = Cookies.get(REFRESH_TOKEN_KEY);
-  
-  // Xóa token ở client trước
+
   Cookies.remove(ACCESS_TOKEN_KEY);
   Cookies.remove(REFRESH_TOKEN_KEY);
 
@@ -120,7 +110,6 @@ export async function logout(): Promise<void> {
   }
 }
 
-/** Lấy thông tin cá nhân */
 export async function getMyProfile(): Promise<UserProfile> {
   const response = await fetch(`${API_BASE_URL}/users/me`, {
     method: 'GET',
@@ -132,7 +121,6 @@ export async function getMyProfile(): Promise<UserProfile> {
   return data;
 }
 
-/** Cập nhật thông tin cá nhân */
 export async function updateMyProfile(payload: UserUpdatePayload): Promise<UserProfile> {
   const response = await fetch(`${API_BASE_URL}/users/me`, {
     method: 'PATCH',
@@ -145,7 +133,6 @@ export async function updateMyProfile(payload: UserUpdatePayload): Promise<UserP
   return data;
 }
 
-/** Đổi mật khẩu */
 export async function changePassword(payload: ChangePasswordPayload): Promise<any> {
   const response = await fetch(`${API_BASE_URL}/users/me/change-password`, {
     method: 'POST',

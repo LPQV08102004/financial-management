@@ -25,7 +25,7 @@ export default function SignupScreen({ navigation }) {
   };
 
   const handleSignup = async () => {
-    // Validation
+
     if (!fullname || !email || !sdt || !password || !confirmPassword) {
       Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin');
       return;
@@ -71,7 +71,7 @@ export default function SignupScreen({ navigation }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.content}>
-        {/* Header */}
+        {}
         <View style={styles.headerSection}>
           <TouchableOpacity
             style={styles.backButton}
@@ -83,9 +83,9 @@ export default function SignupScreen({ navigation }) {
           <Text style={styles.appSubtitle}>Đăng ký để quản lý tài chính</Text>
         </View>
 
-        {/* Form */}
+        {}
         <View style={styles.formSection}>
-          {/* Fullname */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Họ và tên</Text>
             <TextInput
@@ -98,7 +98,7 @@ export default function SignupScreen({ navigation }) {
             />
           </View>
 
-          {/* Email */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email</Text>
             <TextInput
@@ -113,7 +113,7 @@ export default function SignupScreen({ navigation }) {
             />
           </View>
 
-          {/* Phone */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Số điện thoại</Text>
             <TextInput
@@ -127,7 +127,7 @@ export default function SignupScreen({ navigation }) {
             />
           </View>
 
-          {/* Password */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Mật khẩu</Text>
             <View style={styles.passwordContainer}>
@@ -152,7 +152,7 @@ export default function SignupScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Confirm Password */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Xác nhận mật khẩu</Text>
             <View style={styles.passwordContainer}>
@@ -177,7 +177,7 @@ export default function SignupScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Signup Button */}
+          {}
           <TouchableOpacity
             style={[styles.signupButton, loading && styles.signupButtonDisabled]}
             onPress={handleSignup}
@@ -189,7 +189,7 @@ export default function SignupScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Footer */}
+        {}
         <View style={styles.footerSection}>
           <Text style={styles.footerText}>Đã có tài khoản? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>

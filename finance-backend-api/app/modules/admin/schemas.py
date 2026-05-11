@@ -3,9 +3,6 @@ from typing import Optional, List
 from pydantic import BaseModel, EmailStr
 from app.shared.enums import AuditAction, CategoryType
 
-
-# ── User schemas ───────────────────────────────────────────────────────────────
-
 class AdminUserItem(BaseModel):
     id: int
     email: str
@@ -18,34 +15,26 @@ class AdminUserItem(BaseModel):
     class Config:
         from_attributes = True
 
-
 class AdminUserList(BaseModel):
     total: int
     page: int
     page_size: int
     items: List[AdminUserItem]
 
-
 class AdminUserDetail(AdminUserItem):
     total_transactions: int
     total_accounts: int
 
-
 class ResetPasswordRequest(BaseModel):
     new_password: str
-
 
 class CreateUserRequest(BaseModel):
     email: EmailStr
     password: str
     full_name: str
 
-
 class SetRoleRequest(BaseModel):
     is_admin: bool
-
-
-# ── Stats schemas ──────────────────────────────────────────────────────────────
 
 class SystemStats(BaseModel):
     total_users: int
@@ -55,9 +44,6 @@ class SystemStats(BaseModel):
     transactions_this_month: int
     total_accounts: int
     total_categories: int
-
-
-# ── Audit Log schemas ──────────────────────────────────────────────────────────
 
 class AuditLogItem(BaseModel):
     id: int
@@ -72,15 +58,11 @@ class AuditLogItem(BaseModel):
     class Config:
         from_attributes = True
 
-
 class AuditLogList(BaseModel):
     total: int
     page: int
     page_size: int
     items: List[AuditLogItem]
-
-
-# ── User Category schemas ──────────────────────────────────────────────────────
 
 class UserCategoryItem(BaseModel):
     id: int
@@ -94,15 +76,11 @@ class UserCategoryItem(BaseModel):
     is_active: bool
     created_at: datetime
 
-
 class UserCategoryList(BaseModel):
     total: int
     page: int
     page_size: int
     items: List[UserCategoryItem]
-
-
-# ── Default Category Template schemas ─────────────────────────────────────────
 
 class DefaultCategoryTemplateOut(BaseModel):
     id: int
@@ -118,7 +96,6 @@ class DefaultCategoryTemplateOut(BaseModel):
     class Config:
         from_attributes = True
 
-
 class DefaultCategoryTemplateCreate(BaseModel):
     group_name: str
     group_sort_order: int = 0
@@ -126,7 +103,6 @@ class DefaultCategoryTemplateCreate(BaseModel):
     type: CategoryType
     color: Optional[str] = None
     icon: Optional[str] = None
-
 
 class DefaultCategoryTemplateUpdate(BaseModel):
     group_name: Optional[str] = None

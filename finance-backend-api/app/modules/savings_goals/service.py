@@ -12,9 +12,6 @@ from app.modules.accounts.models import Account
 from app.modules.budgets.models import AuditLog
 from app.shared.enums import GoalStatus, TransactionType, ReconcileStatus, AuditAction
 
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
-
 def _compute_status(goal: SavingsGoal) -> GoalStatus:
     if goal.saved_amount >= goal.target_amount:
         return GoalStatus.completed
@@ -22,13 +19,11 @@ def _compute_status(goal: SavingsGoal) -> GoalStatus:
         return GoalStatus.overdue
     return GoalStatus.in_progress
 
-
 def _months_remaining(deadline: date) -> int:
     today = date.today()
     if deadline <= today:
         return 0
     return (deadline.year - today.year) * 12 + (deadline.month - today.month)
-
 
 def _to_out(goal: SavingsGoal) -> SavingsGoalOut:
     status = _compute_status(goal)
@@ -54,7 +49,6 @@ def _to_out(goal: SavingsGoal) -> SavingsGoalOut:
         is_active=goal.is_active,
     )
 
-
 def _get_own(db: Session, goal_id: int, user_id: int) -> SavingsGoal:
     goal = db.query(SavingsGoal).filter(
         SavingsGoal.id == goal_id,
@@ -65,16 +59,12 @@ def _get_own(db: Session, goal_id: int, user_id: int) -> SavingsGoal:
         raise NotFoundError("Không tìm thấy mục tiêu tiết kiệm")
     return goal
 
-
-# ── CRUD ───────────────────────────────────────────────────────────────────────
-
 def create_goal(db: Session, user_id: int, payload: dict) -> SavingsGoalOut:
     goal = SavingsGoal(user_id=user_id, **payload)
     db.add(goal)
     db.commit()
     db.refresh(goal)
     return _to_out(goal)
-
 
 def list_goals(db: Session, user_id: int) -> tuple[list[SavingsGoalOut], Decimal]:
     goals = db.query(SavingsGoal).filter(
@@ -89,15 +79,12 @@ def list_goals(db: Session, user_id: int) -> tuple[list[SavingsGoalOut], Decimal
     )
     return items, total_locked
 
-
 def get_goal(db: Session, goal_id: int, user_id: int) -> SavingsGoalOut:
     return _to_out(_get_own(db, goal_id, user_id))
-
 
 def update_goal(db: Session, goal_id: int, user_id: int, payload: dict) -> SavingsGoalOut:
     goal = _get_own(db, goal_id, user_id)
 
-    # Deadline validation if being updated
     new_deadline = payload.get("deadline")
     if new_deadline and new_deadline <= date.today():
         raise BadRequestError("Ngày mục tiêu phải ở tương lai")
@@ -110,12 +97,10 @@ def update_goal(db: Session, goal_id: int, user_id: int, payload: dict) -> Savin
     db.refresh(goal)
     return _to_out(goal)
 
-
 def delete_goal(db: Session, goal_id: int, user_id: int) -> None:
     goal = _get_own(db, goal_id, user_id)
     goal.is_active = False
     db.commit()
-
 
 def _get_account(db: Session, account_id: int, user_id: int) -> Account:
     acc = db.query(Account).filter(
@@ -124,7 +109,6 @@ def _get_account(db: Session, account_id: int, user_id: int) -> Account:
     if not acc:
         raise NotFoundError(f"Tài khoản {account_id} không tìm thấy")
     return acc
-
 
 def _write_audit(db: Session, user_id: int, action: AuditAction, txn_id: int, data: dict) -> None:
     db.add(AuditLog(
@@ -136,7 +120,6 @@ def _write_audit(db: Session, user_id: int, action: AuditAction, txn_id: int, da
         after_data=json.dumps(data, default=str),
     ))
 
-
 def deposit(
     db: Session,
     goal_id: int,
@@ -145,12 +128,6 @@ def deposit(
     account_id: int,
     transaction_date: datetime,
 ) -> SavingsGoalOut:
-    """
-    Atomically:
-      1. Debit account balance (expense transaction)
-      2. Increase goal.saved_amount
-    Both changes committed in a single DB transaction.
-    """
     goal = _get_own(db, goal_id, user_id)
     if _compute_status(goal) == GoalStatus.completed:
         raise BadRequestError("Mục tiêu đã hoàn thành, không thể nạp thêm tiền")
@@ -169,7 +146,6 @@ def deposit(
             f"Số dư tài khoản không đủ. Số dư hiện tại: {acc_balance:,.0f} đ"
         )
 
-    # Create real expense transaction (debits account)
     txn = Transaction(
         user_id=user_id,
         account_id=account_id,
@@ -194,7 +170,6 @@ def deposit(
     db.refresh(goal)
     return _to_out(goal)
 
-
 def withdraw(
     db: Session,
     goal_id: int,
@@ -203,12 +178,6 @@ def withdraw(
     account_id: int,
     transaction_date: datetime,
 ) -> SavingsGoalOut:
-    """
-    Atomically:
-      1. Credit account balance (income transaction)
-      2. Decrease goal.saved_amount
-    Both changes committed in a single DB transaction.
-    """
     goal = _get_own(db, goal_id, user_id)
     current = Decimal(str(goal.saved_amount))
     if amount > current:
@@ -218,7 +187,6 @@ def withdraw(
 
     acc = _get_account(db, account_id, user_id)
 
-    # Create real income transaction (credits account)
     txn = Transaction(
         user_id=user_id,
         account_id=account_id,

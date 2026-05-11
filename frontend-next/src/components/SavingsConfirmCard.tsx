@@ -1,15 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react'; // Sử dụng icon loading hiện đại
+import { Loader2 } from 'lucide-react';
 import { depositToGoal, withdrawFromGoal, getGoal } from '../api/savingsApi';
 import { listAccounts } from '../api/accountsApi';
 
-// Helper định dạng tiền tệ
 const fmtVND = (n: number | string) => Number(n).toLocaleString('vi-VN') + ' đ';
 
 interface SavingsConfirmCardProps {
-  parsed: any; // Thông tin từ AI Agent bóc tách được
+  parsed: any;
   onConfirmed: () => void;
   onCancel: () => void;
 }
@@ -26,7 +25,6 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
   const [error, setError] = useState('');
   const [cappedInfo, setCappedInfo] = useState('');
 
-  // Fetch full goal data if AI suggestion only has id/name (no target_amount)
   useEffect(() => {
     if (selectedGoal?.id && selectedGoal.target_amount == null) {
       getGoal(selectedGoal.id)
@@ -44,7 +42,6 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
       .catch(() => {});
   }, []);
 
-  // Auto-cap amount when goal or account changes (AI may have suggested too high)
   useEffect(() => {
     if (!selectedGoal?.target_amount || !amount) return;
     const num = Number(amount);
@@ -80,7 +77,6 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
     setCappedInfo('');
   };
 
-  // Logic kiểm tra các trường còn thiếu[cite: 6]
   const missingFields = [];
   if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) missingFields.push('Số tiền');
   if (!date) missingFields.push('Ngày');
@@ -115,15 +111,15 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
         🏦 Xác nhận tiết kiệm
       </h2>
 
-      {/* 1. Action Toggle[cite: 6] */}
+      {}
       <div className="mb-4">
         <label className="text-xs font-semibold text-gray-500 mb-2 block">Thao tác</label>
         <div className="flex gap-2">
           <button
             onClick={() => setAction('deposit')}
             className={`flex-1 py-2 rounded-lg border-2 font-semibold text-sm transition-all ${
-              action === 'deposit' 
-                ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]' 
+              action === 'deposit'
+                ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]'
                 : 'border-gray-200 text-gray-400 hover:bg-gray-50'
             }`}
           >
@@ -132,8 +128,8 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
           <button
             onClick={() => setAction('withdraw')}
             className={`flex-1 py-2 rounded-lg border-2 font-semibold text-sm transition-all ${
-              action === 'withdraw' 
-                ? 'border-[#CC3300] bg-[#fff3f3] text-[#CC3300]' 
+              action === 'withdraw'
+                ? 'border-[#CC3300] bg-[#fff3f3] text-[#CC3300]'
                 : 'border-gray-200 text-gray-400 hover:bg-gray-50'
             }`}
           >
@@ -142,7 +138,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
         </div>
       </div>
 
-      {/* 2. Amount, Date, Note[cite: 6] */}
+      {}
       <div className="space-y-3 mb-4">
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Số tiền (VND)</label>
@@ -197,7 +193,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
         </div>
       </div>
 
-      {/* 3. Goal Suggestions (Chips)[cite: 6] */}
+      {}
       <div className="mb-4">
         <label className="text-xs font-semibold text-gray-500 mb-2 block">Mục tiêu tiết kiệm</label>
         {parsed.goal_suggestions?.length > 0 ? (
@@ -206,7 +202,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
               <button
                 key={goal.id}
                 onClick={() => {
-                  // Always re-fetch full goal when clicking a chip (suggestion has no target_amount)
+
                   setSelectedGoal({ id: goal.id, name: goal.name, confidence: goal.confidence });
                 }}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-full border-2 text-xs font-semibold transition-all ${
@@ -224,7 +220,7 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
         )}
       </div>
 
-      {/* 4. Accounts[cite: 6] */}
+      {}
       {accounts.length > 0 && (
         <div className="mb-4">
           <label className="text-xs font-semibold text-gray-500 mb-2 block">Tài khoản thanh toán</label>
@@ -249,13 +245,13 @@ export default function SavingsConfirmCard({ parsed, onConfirmed, onCancel }: Sa
         </div>
       )}
 
-      {/* Error & Warnings[cite: 6] */}
+      {}
       {missingFields.length > 0 && (
         <p className="text-[11px] text-orange-600 font-medium mb-2">⚠ Cần bổ sung: {missingFields.join(', ')}</p>
       )}
       {error && <p className="text-[11px] text-[#CC3300] font-medium mb-2">{error}</p>}
 
-      {/* 5. Actions[cite: 6] */}
+      {}
       <div className="flex gap-3 mt-2">
         <button
           onClick={onCancel}

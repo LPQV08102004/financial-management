@@ -25,5 +25,5 @@ public class SignupRequest {
   @NotBlank(message = "Tên không được để trống")
   private String fullname;
 
-  private String sdt;  // Optional field
+  private String sdt;
 }

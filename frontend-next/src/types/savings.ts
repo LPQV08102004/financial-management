@@ -1,11 +1,10 @@
-// src/types/savings.ts
 
 export interface SavingsGoal {
   id: string | number;
   name: string;
   target_amount: number;
   saved_amount: number;
-  deadline: string; // YYYY-MM-DD
+  deadline: string;
   note?: string;
   created_at?: string;
 }
@@ -25,5 +24,5 @@ export interface CreateGoalPayload {
 export interface GoalTransactionPayload {
   amount: number;
   account_id: string | number;
-  transaction_date: string; // ISO string
+  transaction_date: string;
 }

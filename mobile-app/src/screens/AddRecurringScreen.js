@@ -20,7 +20,6 @@ const TYPES = [
   { key: 'expense', label: 'Chi tiêu', color: '#CC3300' },
 ];
 
-// "DD/MM/YYYY" → "YYYY-MM-DD" or null
 const _parseDate = (str) => {
   if (!str) return null;
   const parts = str.split('/');
@@ -30,7 +29,6 @@ const _parseDate = (str) => {
   return iso;
 };
 
-// "YYYY-MM-DD" → "DD/MM/YYYY"
 const _isoToDisplay = (iso) => {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
@@ -47,7 +45,6 @@ const _todayISO = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-// Get calendar days for a specific month
 const _getCalendarDaysForMonth = (date) => {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -65,7 +62,6 @@ const _getCalendarDaysForMonth = (date) => {
   return days;
 };
 
-// Check if date is in the past
 const _isPastDate = (date) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -74,7 +70,6 @@ const _isPastDate = (date) => {
   return checkDate < today;
 };
 
-// Get month and year display
 const _getMonthYearDisplay = (date) => {
   const months = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
                   'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
@@ -159,7 +154,6 @@ export default function AddRecurringScreen({ navigation, route }) {
       setAccounts(accList);
       setCategories(cats || []);
 
-      // Pre-select from existing template
       if (existing) {
         setSelectedAccount(accList.find((a) => a.id === existing.account_id) ?? null);
         setSelectedCategory(cats.find((c) => c.id === existing.category_id) ?? null);
@@ -170,7 +164,6 @@ export default function AddRecurringScreen({ navigation, route }) {
       .finally(() => setLoadingData(false));
   }, []);
 
-  // Re-fetch categories when type changes
   const handleTypeChange = async (newType) => {
     setType(newType);
     setSelectedCategory(null);
@@ -180,17 +173,15 @@ export default function AddRecurringScreen({ navigation, route }) {
     } catch (_) {}
   };
 
-  // Format amount with thousand separators (Vietnamese locale)
   const handleAmountChange = (text) => {
-    // Remove all non-numeric characters
+
     const numericOnly = text.replace(/\D/g, '');
-    
+
     if (numericOnly === '') {
       setAmount('');
       return;
     }
-    
-    // Format with thousand separators using Vietnamese locale
+
     const formatted = Number(numericOnly).toLocaleString('vi-VN');
     setAmount(formatted);
   };
@@ -227,7 +218,7 @@ export default function AddRecurringScreen({ navigation, route }) {
     setSubmitting(true);
     try {
       if (isEdit) {
-        // Only send editable fields
+
         const { name: n, amount: a, account_id, category_id, end_date, note: nt } = payload;
         await updateTemplate(existing.id, { name: n, amount: a, account_id, category_id, end_date, note: nt });
         Alert.alert('Thành công', 'Đã cập nhật giao dịch định kỳ', [
@@ -271,7 +262,7 @@ export default function AddRecurringScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      {/* Start Date Picker Modal */}
+      {}
       <Modal visible={showStartDateModal} transparent animationType="fade" onRequestClose={() => setShowStartDateModal(false)}>
         <TouchableOpacity style={styles.dateModalOverlay} activeOpacity={1} onPress={() => setShowStartDateModal(false)} />
         <View style={styles.dateModalContent}>
@@ -336,7 +327,7 @@ export default function AddRecurringScreen({ navigation, route }) {
         </View>
       </Modal>
 
-      {/* End Date Picker Modal */}
+      {}
       <Modal visible={showEndDateModal} transparent animationType="fade" onRequestClose={() => setShowEndDateModal(false)}>
         <TouchableOpacity style={styles.dateModalOverlay} activeOpacity={1} onPress={() => setShowEndDateModal(false)} />
         <View style={styles.dateModalContent}>
@@ -623,7 +614,6 @@ const styles = StyleSheet.create({
   },
   saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 
-  // Date Picker Styles
   dateInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -23,11 +23,6 @@ const _buildQuery = (params) =>
     Object.fromEntries(Object.entries(params).filter(([, v]) => v != null))
   ).toString();
 
-/**
- * GET /transactions
- * params: { type?, account_id?, category_id?, from_date?, to_date?, q?, skip?, limit? }
- * Returns: { items, total_count, total_amount }
- */
 export async function listTransactions(params = {}) {
   const res = await fetch(
     `${BASE_URL}/transactions?${_buildQuery(params)}`,
@@ -38,10 +33,6 @@ export async function listTransactions(params = {}) {
   return data;
 }
 
-/**
- * POST /transactions/income
- * payload: { account_id, amount, transaction_date, note?, category_id? }
- */
 export async function createIncome(payload) {
   const res = await fetch(`${BASE_URL}/transactions/income`, {
     method: 'POST',
@@ -53,10 +44,6 @@ export async function createIncome(payload) {
   return data;
 }
 
-/**
- * POST /transactions/expense
- * payload: { account_id, category_id, amount, transaction_date, note? }
- */
 export async function createExpense(payload) {
   const res = await fetch(`${BASE_URL}/transactions/expense`, {
     method: 'POST',
@@ -68,9 +55,6 @@ export async function createExpense(payload) {
   return data;
 }
 
-/**
- * DELETE /transactions/:id
- */
 export async function deleteTransaction(txnId) {
   const res = await fetch(`${BASE_URL}/transactions/${txnId}`, {
     method: 'DELETE',
@@ -82,10 +66,6 @@ export async function deleteTransaction(txnId) {
   }
 }
 
-/**
- * PATCH /transactions/:id
- * payload: { amount?, note?, transaction_date?, category_id? }
- */
 export async function updateTransaction(txnId, payload) {
   const res = await fetch(`${BASE_URL}/transactions/${txnId}`, {
     method: 'PATCH',

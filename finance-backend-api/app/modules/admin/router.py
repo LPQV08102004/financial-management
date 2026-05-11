@@ -16,15 +16,9 @@ from app.shared.dependencies import require_admin
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
-
-# ── Stats ──────────────────────────────────────────────────────────────────────
-
 @router.get("/stats", response_model=SystemStats)
 def get_stats(db: Session = Depends(get_db), _: User = Depends(require_admin)):
     return service.get_system_stats(db)
-
-
-# ── Users ──────────────────────────────────────────────────────────────────────
 
 @router.get("/users", response_model=AdminUserList)
 def list_users(
@@ -34,7 +28,6 @@ def list_users(
 ):
     return service.list_users(db, page=page, page_size=page_size, search=search, is_active=is_active)
 
-
 @router.post("/users", response_model=AdminUserItem, status_code=201)
 def create_user(
     body: CreateUserRequest,
@@ -43,16 +36,13 @@ def create_user(
     return service.create_user(db, actor_id=admin.id, email=body.email,
                                password=body.password, full_name=body.full_name)
 
-
 @router.get("/users/{user_id}", response_model=AdminUserDetail)
 def get_user(user_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     return service.get_user_detail(db, user_id)
 
-
 @router.patch("/users/{user_id}/status", response_model=AdminUserItem)
 def toggle_status(user_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     return service.toggle_user_status(db, actor_id=admin.id, user_id=user_id)
-
 
 @router.patch("/users/{user_id}/role", response_model=AdminUserItem)
 def set_role(
@@ -61,16 +51,12 @@ def set_role(
 ):
     return service.set_user_role(db, actor_id=admin.id, user_id=user_id, is_admin=body.is_admin)
 
-
 @router.post("/users/{user_id}/reset-password", status_code=204)
 def reset_password(
     user_id: int, body: ResetPasswordRequest,
     db: Session = Depends(get_db), admin: User = Depends(require_admin),
 ):
     service.reset_user_password(db, actor_id=admin.id, user_id=user_id, new_password=body.new_password)
-
-
-# ── Audit logs ─────────────────────────────────────────────────────────────────
 
 @router.get("/audit-logs", response_model=AuditLogList)
 def list_audit_logs(
@@ -79,9 +65,6 @@ def list_audit_logs(
     db: Session = Depends(get_db), _: User = Depends(require_admin),
 ):
     return service.list_audit_logs(db, page=page, page_size=page_size, user_id=user_id, action=action)
-
-
-# ── User Categories ────────────────────────────────────────────────────────────
 
 @router.get("/user-categories", response_model=UserCategoryList)
 def list_user_categories(
@@ -94,15 +77,11 @@ def list_user_categories(
                                         user_id=user_id, type_filter=type,
                                         include_inactive=include_inactive)
 
-
 @router.delete("/user-categories/{cat_id}", status_code=204)
 def deactivate_user_category(
     cat_id: int, db: Session = Depends(get_db), admin: User = Depends(require_admin),
 ):
     service.deactivate_user_category(db, actor_id=admin.id, cat_id=cat_id)
-
-
-# ── Default Category Templates ─────────────────────────────────────────────────
 
 @router.get("/default-categories", response_model=list[DefaultCategoryTemplateOut])
 def list_default_templates(
@@ -111,7 +90,6 @@ def list_default_templates(
 ):
     return service.list_default_templates(db, include_inactive=include_inactive)
 
-
 @router.post("/default-categories", response_model=DefaultCategoryTemplateOut, status_code=201)
 def create_default_template(
     body: DefaultCategoryTemplateCreate,
@@ -119,14 +97,12 @@ def create_default_template(
 ):
     return service.create_default_template(db, body.model_dump())
 
-
 @router.patch("/default-categories/{tpl_id}", response_model=DefaultCategoryTemplateOut)
 def update_default_template(
     tpl_id: int, body: DefaultCategoryTemplateUpdate,
     db: Session = Depends(get_db), _: User = Depends(require_admin),
 ):
     return service.update_default_template(db, tpl_id, body.model_dump(exclude_none=True))
-
 
 @router.delete("/default-categories/{tpl_id}", status_code=204)
 def delete_default_template(

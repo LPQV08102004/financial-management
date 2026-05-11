@@ -17,7 +17,6 @@ from app.modules.auth import service
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-
 @router.post("/register", response_model=TokenResponse, status_code=201)
 def register(body: RegisterRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     print(f"[ENDPOINT] register() called with email={body.email}")
@@ -39,7 +38,6 @@ def register(body: RegisterRequest, background_tasks: BackgroundTasks, db: Sessi
         traceback.print_exc()
         raise
 
-
 @router.post("/login", response_model=TokenResponse)
 def login(body: LoginRequest, db: Session = Depends(get_db)):
     user = service.authenticate_user(db, body.email, body.password)
@@ -50,7 +48,6 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
         user=UserOut.model_validate(user),
     )
 
-
 @router.post("/refresh", response_model=TokenResponse)
 def refresh(body: RefreshTokenRequest, db: Session = Depends(get_db)):
     user, access_token, refresh_token = service.rotate_refresh_token(db, body.refresh_token)
@@ -60,12 +57,10 @@ def refresh(body: RefreshTokenRequest, db: Session = Depends(get_db)):
         user=UserOut.model_validate(user),
     )
 
-
 @router.post("/logout", response_model=MessageResponse)
 def logout(body: LogoutRequest, db: Session = Depends(get_db)):
     service.logout_user(db, body.refresh_token)
     return MessageResponse(message="Đăng xuất thành công")
-
 
 @router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):

@@ -20,13 +20,13 @@ export default function ChangePasswordScreen() {
       setError('Vui lòng điền đầy đủ tất cả các trường');
       return;
     }
-    
+
     const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
     if (!STRONG_PASSWORD_REGEX.test(newPassword)) {
       setError('Mật khẩu mới phải từ 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setError('Mật khẩu mới và xác nhận mật khẩu không khớp');
       return;
@@ -51,8 +51,8 @@ export default function ChangePasswordScreen() {
   return (
     <div className="flex flex-col min-h-screen bg-[#FFF8F0] font-sans">
       <header className="bg-[#075c09] p-5 pt-8 flex items-center justify-between shadow-md">
-        <button 
-          onClick={() => window.history.back()} 
+        <button
+          onClick={() => window.history.back()}
           className="text-white text-2xl font-bold p-2 hover:opacity-80 transition-opacity"
         >
           ←

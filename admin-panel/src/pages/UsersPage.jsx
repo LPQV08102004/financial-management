@@ -23,9 +23,8 @@ export default function UsersPage() {
   const [filterActive, setFilterActive] = useState('')
   const [searchInput, setSearchInput] = useState('')
 
-  // Modals
   const [createModal, setCreateModal] = useState(false)
-  const [resetModal, setResetModal] = useState(null) // {id, name}
+  const [resetModal, setResetModal] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [resetPwd, setResetPwd] = useState('')
   const [formErr, setFormErr] = useState('')
@@ -43,7 +42,6 @@ export default function UsersPage() {
   useEffect(() => { load(1) }, [search, filterActive])
   useEffect(() => { load(page) }, [page])
 
-  // Debounce search input
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400)
     return () => clearTimeout(t)
@@ -96,7 +94,7 @@ export default function UsersPage() {
       </div>
       <div className="p-8">
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-          {/* Toolbar */}
+          {}
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-3">
             <h3 className="font-semibold text-sm">Danh sách tài khoản</h3>
             <div className="flex items-center gap-2 flex-wrap">
@@ -122,7 +120,7 @@ export default function UsersPage() {
             </div>
           </div>
 
-          {/* Table */}
+          {}
           {!data ? (
             <div className="text-center py-12 text-slate-400 text-sm">Đang tải...</div>
           ) : (
@@ -153,7 +151,7 @@ export default function UsersPage() {
                     <td className="px-4 py-3 text-xs text-slate-400">{new Date(u.created_at).toLocaleDateString('vi-VN')}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* Toggle status */}
+                        {}
                         {!u.is_admin && (
                           <button
                             onClick={() => handleToggle(u.id, u.full_name, u.is_active)}
@@ -166,14 +164,14 @@ export default function UsersPage() {
                             {u.is_active ? 'Khóa' : 'Mở khóa'}
                           </button>
                         )}
-                        {/* Toggle role */}
+                        {}
                         <button
                           onClick={() => handleSetRole(u.id, u.full_name, u.is_admin)}
                           className="text-xs px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
                         >
                           {u.is_admin ? 'Bỏ Admin' : 'Cấp Admin'}
                         </button>
-                        {/* Reset password */}
+                        {}
                         <button
                           onClick={() => { setResetPwd(''); setFormErr(''); setResetModal({ id: u.id, name: u.full_name }) }}
                           className="text-xs px-2.5 py-1 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 transition-colors"
@@ -188,7 +186,7 @@ export default function UsersPage() {
             </table>
           )}
 
-          {/* Pagination */}
+          {}
           {data && totalPages > 1 && (
             <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-slate-100 text-sm text-slate-500">
               <span>Tổng: {data.total}</span>
@@ -202,7 +200,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Create user modal */}
+      {}
       <Modal open={createModal} onClose={() => setCreateModal(false)} title="Tạo người dùng mới">
         <form onSubmit={handleCreate} className="space-y-3">
           {formErr && <div className="bg-red-50 text-red-600 text-xs rounded-lg px-3 py-2">{formErr}</div>}
@@ -226,7 +224,7 @@ export default function UsersPage() {
         </form>
       </Modal>
 
-      {/* Reset password modal */}
+      {}
       <Modal open={!!resetModal} onClose={() => setResetModal(null)}
         title={`Reset mật khẩu — ${resetModal?.name}`}>
         <form onSubmit={handleReset} className="space-y-3">

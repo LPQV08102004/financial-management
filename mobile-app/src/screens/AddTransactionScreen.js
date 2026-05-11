@@ -46,7 +46,7 @@ export default function AddTransactionScreen({ navigation }) {
     if (numericValue.startsWith('0') && numericValue.length > 1) {
       numericValue = numericValue.slice(1);
     }
-    // Cap at account balance for expense
+
     if (activeTab === 'expense' && selectedAccount) {
       const cap = Math.floor(Number(selectedAccount.current_balance));
       if (Number(numericValue) > cap) numericValue = String(cap);
@@ -56,19 +56,19 @@ export default function AddTransactionScreen({ navigation }) {
 
   const formatAmount = (value) => {
     if (!value) return '';
-    // Thêm dấu chấm phân tách hàng nghìn
+
     return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
 
   const formatDate = (date) => {
     const days = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
     const months = ['tháng 1', 'tháng 2', 'tháng 3', 'tháng 4', 'tháng 5', 'tháng 6', 'tháng 7', 'tháng 8', 'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12'];
-    
+
     const day = date.getDate();
     const dayName = days[date.getDay()];
     const month = months[date.getMonth()];
     const year = date.getFullYear();
-    
+
     return `${dayName}, ${day} ${month} ${year}`;
   };
 
@@ -241,7 +241,7 @@ export default function AddTransactionScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
           <Text style={styles.backButtonText}>←</Text>
@@ -249,7 +249,7 @@ export default function AddTransactionScreen({ navigation }) {
         <Text style={styles.headerTitle}>Thêm giao dịch</Text>
       </View>
 
-      {/* Tab Navigation */}
+      {}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'expense' && styles.activeTab]}
@@ -269,7 +269,7 @@ export default function AddTransactionScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Form */}
+      {}
       <ScrollView style={styles.form} contentContainerStyle={styles.formContent}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Số tiền</Text>
@@ -287,7 +287,7 @@ export default function AddTransactionScreen({ navigation }) {
               onChangeText={handleAmountChange}
               placeholderTextColor="#999"
             />
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.calculatorButton}
               onPress={() => setShowCalculator(true)}
             >
@@ -296,7 +296,7 @@ export default function AddTransactionScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Categories Section */}
+        {}
         <View style={styles.categorySection}>
           <Text style={styles.label}>Danh mục</Text>
           <View style={styles.categoryGrid}>
@@ -320,10 +320,10 @@ export default function AddTransactionScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Date Section */}
+        {}
         <View style={styles.dateSection}>
           <Text style={styles.label}>Ngày</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.dateContainer}
             onPress={() => setShowDatePicker(true)}
           >
@@ -345,10 +345,10 @@ export default function AddTransactionScreen({ navigation }) {
           />
         </View>
 
-        {/* Image Upload Section */}
+        {}
         <View style={styles.imageSection}>
           <View style={styles.imageSectionHeader}>
-            {/* <Text style={styles.label}>Ảnh (Tùy chọn)</Text> */}
+            {}
             <TouchableOpacity
               style={styles.scanReceiptBtn}
               onPress={handleScanReceipt}
@@ -360,33 +360,7 @@ export default function AddTransactionScreen({ navigation }) {
               }
             </TouchableOpacity>
           </View>
-          {/* <View style={styles.imageGrid}>
-            {[0, 1, 2].map((index) => (
-              <View key={index} style={styles.imageBox}>
-                {images[index] ? (
-                  <TouchableOpacity 
-                    style={styles.imageContainer}
-                    onPress={() => handleRemoveImage(index)}
-                  >
-                    <Image 
-                      source={{ uri: images[index] }} 
-                      style={styles.uploadedImage}
-                    />
-                    <View style={styles.removeImageButton}>
-                      <Text style={styles.removeImageText}>×</Text>
-                    </View>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity 
-                    style={styles.addImageButton}
-                    onPress={handlePickImage}
-                  >
-                    <Text style={styles.addImageIcon}>+</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))}
-          </View> */}
+          {}
         </View>
 
         <TouchableOpacity
@@ -401,7 +375,7 @@ export default function AddTransactionScreen({ navigation }) {
       </ScrollView>
       <Footer />
 
-      {/* OCR Receipt Confirmation Modal */}
+      {}
       <Modal visible={!!ocrResult} animationType="slide" onRequestClose={() => setOcrResult(null)}>
         <View style={styles.ocrModalContainer}>
           <View style={styles.ocrModalHeader}>
@@ -424,7 +398,7 @@ export default function AddTransactionScreen({ navigation }) {
         </View>
       </Modal>
 
-      {/* Date Picker Modal */}
+      {}
       <Modal visible={showDatePicker} transparent={true} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -440,21 +414,21 @@ export default function AddTransactionScreen({ navigation }) {
               </TouchableOpacity>
             </View>
 
-            {/* Days header */}
+            {}
             <View style={styles.calendarDaysHeader}>
               {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((day) => (
                 <Text key={day} style={styles.dayHeader}>{day}</Text>
               ))}
             </View>
 
-            {/* Calendar days */}
+            {}
             <View style={styles.calendarDays}>
               {Array.from({ length: getFirstDayOfMonth(currentMonth) }).map((_, i) => (
                 <View key={`empty-${i}`} style={styles.calendarDay} />
               ))}
               {Array.from({ length: getDaysInMonth(currentMonth) }).map((_, i) => {
                 const day = i + 1;
-                const isSelected = selectedDate.getDate() === day && 
+                const isSelected = selectedDate.getDate() === day &&
                                   selectedDate.getMonth() === currentMonth.getMonth() &&
                                   selectedDate.getFullYear() === currentMonth.getFullYear();
                 return (
@@ -471,7 +445,7 @@ export default function AddTransactionScreen({ navigation }) {
               })}
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.calendarCloseButton}
               onPress={() => setShowDatePicker(false)}
             >
@@ -481,7 +455,7 @@ export default function AddTransactionScreen({ navigation }) {
         </View>
       </Modal>
 
-      {/* Calculator Modal */}
+      {}
       <Modal visible={showCalculator} transparent={true} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.calculatorModal}>
@@ -517,19 +491,19 @@ export default function AddTransactionScreen({ navigation }) {
             </View>
 
             <View style={styles.calculatorBottomButtons}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.calculatorClearBtn}
                 onPress={() => handleCalculatorInput('C')}
               >
                 <Text style={styles.calculatorBtnText}>C</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.calculatorBackBtn}
                 onPress={() => handleCalculatorInput('←')}
               >
                 <Text style={styles.calculatorBtnText}>←</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.calculatorConfirmBtn}
                 onPress={handleCalculatorConfirm}
               >

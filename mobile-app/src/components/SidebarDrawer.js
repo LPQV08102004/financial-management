@@ -43,24 +43,24 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
 
   return (
     <>
-      {/* Sidebar Overlay */}
+      {}
       {isOpen && (
-        <TouchableOpacity 
-          style={styles.sidebarOverlay} 
+        <TouchableOpacity
+          style={styles.sidebarOverlay}
           onPress={onClose}
           activeOpacity={1}
           pointerEvents="auto"
         />
       )}
 
-      {/* Sidebar */}
+      {}
       {isOpen && (
-        <Animated.View 
+        <Animated.View
           style={[styles.sidebar, { transform: [{ translateX: sidebarAnimation }] }]}
           pointerEvents="auto"
         >
-          {/* User Profile Section */}
-          <TouchableOpacity 
+          {}
+          <TouchableOpacity
             style={styles.userProfileContainer}
             onPress={() => {
               navigation.navigate('Profile');
@@ -88,7 +88,7 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
               </Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.sidebarItem}
             onPress={() => {
               navigation.navigate('Home');
@@ -97,7 +97,7 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
           >
             <Text style={styles.sidebarItemText}>🏠 Trang chủ</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.sidebarItem}
             onPress={() => {
               navigation.navigate('Chart');
@@ -106,7 +106,7 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
           >
             <Text style={styles.sidebarItemText}>📊 Biểu đồ</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.sidebarItem}
             onPress={() => {
               navigation.navigate('Categories');
@@ -142,7 +142,7 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
           >
             <Text style={styles.sidebarItemText}>🤖 Trợ lý AI</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.sidebarItem}
             onPress={() => {
               navigation.navigate('Notification');
@@ -161,30 +161,30 @@ export default function SidebarDrawer({ isOpen, onClose, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  sidebarOverlay: { 
-    position: 'absolute', 
-    top: 0, 
-    left: 0, 
-    right: 0, 
-    bottom: 0, 
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', 
-    zIndex: 1 
+  sidebarOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    zIndex: 1
   },
-  sidebar: { 
-    position: 'absolute', 
-    left: 0, 
-    top: 0, 
-    bottom: 0, 
-    width: '75%', 
-    backgroundColor: '#216b38', 
-    paddingTop: 30, 
-    paddingHorizontal: 20, 
-    zIndex: 2, 
-    elevation: 10, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 2, height: 0 }, 
-    shadowOpacity: 0.3, 
-    shadowRadius: 5 
+  sidebar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: '75%',
+    backgroundColor: '#216b38',
+    paddingTop: 30,
+    paddingHorizontal: 20,
+    zIndex: 2,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5
   },
   userProfileContainer: {
     flexDirection: 'row',
@@ -227,13 +227,13 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     fontWeight: '600',
   },
-  sidebarItem: { 
-    paddingVertical: 16, 
-    paddingHorizontal: 12, 
+  sidebarItem: {
+    paddingVertical: 16,
+    paddingHorizontal: 12,
   },
-  sidebarItemText: { 
-    fontSize: 18, 
-    color: '#fff', 
-    fontWeight: '500' 
+  sidebarItemText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: '500'
   },
 });

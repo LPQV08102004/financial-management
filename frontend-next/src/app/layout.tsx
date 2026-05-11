@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css"; // Đảm bảo bạn có file css này
+import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import { ChatProvider } from "../context/ChatContext";
 
@@ -18,9 +18,9 @@ export default function RootLayout(props: Readonly<{
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={inter.className}>
-        {/* AuthProvider bọc ngoài cùng để xác định danh tính người dùng trước */}
+        {}
         <AuthProvider>
-          {/* ChatProvider nằm trong để có thể truy cập thông tin user nếu cần */}
+          {}
           <ChatProvider>
             {children}
           </ChatProvider>

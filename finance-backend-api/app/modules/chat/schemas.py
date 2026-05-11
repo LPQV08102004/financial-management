@@ -1,90 +1,69 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-
-
-
-
 class ChatMessage(BaseModel):
-    role: str          # "user" or "assistant"
+    role: str
     content: str
-
 
 class ChatRequest(BaseModel):
     message: str
     history: List[ChatMessage] = []
 
-
 class ChatResponse(BaseModel):
     reply: str
-
-
-# ── NLP Transaction Parsing ────────────────────────────────────────────────────
 
 class ParseTransactionRequest(BaseModel):
     message: str
 
-
 class CategorySuggestion(BaseModel):
     id: int
     name: str
-    confidence: int   # 0-100
-
+    confidence: int
 
 class ParseTransactionResponse(BaseModel):
-    type: Optional[str] = None          # "expense" | "income" | null
+    type: Optional[str] = None
     amount: Optional[float] = None
-    date: Optional[str] = None          # ISO "YYYY-MM-DD"
+    date: Optional[str] = None
     note: Optional[str] = None
     category_suggestions: List[CategorySuggestion] = []
-    missing_fields: List[str] = []      # fields that could not be extracted
-    warning: Optional[str] = None       # AI warning message (e.g. insufficient balance)
-
-
-# ── NLP Savings Action Parsing ─────────────────────────────────────────────────
+    missing_fields: List[str] = []
+    warning: Optional[str] = None
 
 class ParseSavingsRequest(BaseModel):
     message: str
 
-
 class GoalSuggestion(BaseModel):
     id: int
     name: str
-    confidence: int   # 0-100
-
+    confidence: int
 
 class ParseSavingsResponse(BaseModel):
-    action: Optional[str] = None        # "deposit" | "withdraw"
+    action: Optional[str] = None
     amount: Optional[float] = None
-    date: Optional[str] = None          # ISO "YYYY-MM-DD"
+    date: Optional[str] = None
     note: Optional[str] = None
     goal_suggestions: List[GoalSuggestion] = []
     missing_fields: List[str] = []
-    warning: Optional[str] = None       # AI warning message (e.g. over cap, insufficient balance)
-
-
-# ── OCR Receipt Parsing ────────────────────────────────────────────────────────
+    warning: Optional[str] = None
 
 class ReceiptOCRRequest(BaseModel):
-    image_base64: str           # Base64 encoded JPG/PNG (no data URI prefix)
-    hint: Optional[str] = None  # Optional store-type hint (e.g. "restaurant")
-
+    image_base64: str
+    hint: Optional[str] = None
 
 class ReceiptItem(BaseModel):
     name: str
-    qty: Optional[float] = None          # quantity
-    price: Optional[float] = None        # unit price or line total
-
+    qty: Optional[float] = None
+    price: Optional[float] = None
 
 class OCRReceiptResponse(BaseModel):
     amount: Optional[float] = None
     merchant_name: Optional[str] = None
-    date: Optional[str] = None           # YYYY-MM-DD
-    raw_text: str = ""                   # Full extracted text for transparency
+    date: Optional[str] = None
+    raw_text: str = ""
     type: str = "expense"
     note: Optional[str] = None
-    items: List[ReceiptItem] = []        # line items extracted from receipt
+    items: List[ReceiptItem] = []
     category_suggestions: List[CategorySuggestion] = []
-    confidence_level: str = "low"        # "high" | "medium" | "low"
+    confidence_level: str = "low"
     missing_fields: List[str] = []
     warnings: List[str] = []

@@ -124,7 +124,6 @@ export default function HomeScreen() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Pie chart
   let pieOffset = 0;
   const hasData = categoryStats.length > 0;
   const totalAmount = balance
@@ -135,9 +134,9 @@ export default function HomeScreen() {
     <div className="min-h-screen bg-slate-100">
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* ── Hero Header ── */}
+      {}
       <div className="bg-gradient-to-br from-[#075c09] to-[#054d07] text-white">
-        {/* Mobile top bar */}
+        {}
         <div className="flex items-center justify-between px-4 pt-4 pb-2 lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -159,15 +158,15 @@ export default function HomeScreen() {
           </button>
         </div>
 
-        {/* Desktop page title */}
+        {}
         <div className="hidden lg:block px-8 pt-8 pb-2">
           <p className="text-white/50 text-sm">{today}</p>
           <h1 className="text-2xl font-bold text-white mt-0.5">Tổng quan tài chính</h1>
         </div>
 
-        {/* Balance section */}
+        {}
         <div className="px-5 pb-6 lg:px-8">
-          {/* Mobile: centered balance */}
+          {}
           <div className="text-center py-4 lg:hidden">
             <p className="text-white/60 text-xs uppercase tracking-widest mb-1">Tổng số dư</p>
             <p className="text-4xl font-black tracking-tight">
@@ -176,7 +175,7 @@ export default function HomeScreen() {
             </p>
           </div>
 
-          {/* Desktop: 3-column stats */}
+          {}
           <div className="hidden lg:grid lg:grid-cols-3 lg:gap-4 mt-4">
             <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-sm border border-white/10">
               <div className="flex items-center gap-2 mb-1">
@@ -209,12 +208,12 @@ export default function HomeScreen() {
         </div>
       </div>
 
-      {/* ── Main Content ── */}
+      {}
       <div className="p-4 lg:p-6 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-6 lg:items-start">
 
-        {/* ─ Left column ─ */}
+        {}
         <div className="space-y-4">
-          {/* Mobile stat cards */}
+          {}
           <div className="grid grid-cols-2 gap-3 lg:hidden">
             <StatCard
               label="Thu nhập"
@@ -232,7 +231,7 @@ export default function HomeScreen() {
             />
           </div>
 
-          {/* Expense / Income tab */}
+          {}
           <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100">
             {(['expense', 'income'] as const).map((t) => (
               <button
@@ -249,7 +248,7 @@ export default function HomeScreen() {
             ))}
           </div>
 
-          {/* Date selector */}
+          {}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <DateTimeSelector
               timePeriod={timePeriod}
@@ -271,7 +270,7 @@ export default function HomeScreen() {
             />
           </div>
 
-          {/* Pie chart card */}
+          {}
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-slate-800">
@@ -283,7 +282,7 @@ export default function HomeScreen() {
             </div>
 
             <div className="flex items-center gap-6">
-              {/* Pie SVG */}
+              {}
               <div className="relative flex-shrink-0">
                 <svg width="160" height="160" viewBox="0 0 320 320" className="-rotate-90">
                   {hasData ? (
@@ -316,7 +315,7 @@ export default function HomeScreen() {
                 </div>
               </div>
 
-              {/* Legend */}
+              {}
               <div className="flex-1 space-y-2 min-w-0">
                 {hasData ? (
                   categoryStats.slice(0, 6).map((item, i) => (
@@ -339,9 +338,9 @@ export default function HomeScreen() {
           </div>
         </div>
 
-        {/* ─ Right column ─ */}
+        {}
         <div className="mt-4 lg:mt-0 space-y-4">
-          {/* Add transaction button */}
+          {}
           <button
             onClick={() => router.push('/add-transaction')}
             className="w-full flex items-center justify-center gap-2 py-3 bg-[#075c09] text-white font-bold rounded-2xl shadow-sm hover:bg-[#065308] active:scale-[0.98] transition-all"
@@ -350,7 +349,7 @@ export default function HomeScreen() {
             Thêm giao dịch
           </button>
 
-          {/* Recent transactions */}
+          {}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
               <h3 className="font-bold text-slate-800 text-sm">Giao dịch gần đây</h3>

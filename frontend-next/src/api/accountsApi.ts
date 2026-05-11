@@ -1,9 +1,8 @@
-// src/api/accountsApi.ts
+
 import { API_BASE_URL } from './config';
 import { Account, CreateAccountPayload } from '../types/account';
 import { apiFetch } from './authApi';
 
-/** GET /accounts — Lấy danh sách tài khoản */
 export async function listAccounts(): Promise<Account[]> {
   const res = await apiFetch(`${API_BASE_URL}/accounts`);
 
@@ -16,9 +15,6 @@ export async function listAccounts(): Promise<Account[]> {
   return data;
 }
 
-/**
- * POST /accounts — Tạo tài khoản mới
- */
 export async function createAccount(payload: CreateAccountPayload): Promise<Account> {
   const res = await apiFetch(`${API_BASE_URL}/accounts`, {
     method: 'POST',

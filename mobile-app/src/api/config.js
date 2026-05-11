@@ -28,8 +28,6 @@ export function getApiBaseUrl() {
 export function getApiBaseUrlCandidates() {
   const candidates = [];
 
-  // Prefer values injected into the Expo runtime (app manifest / extra),
-  // then fall back to process.env which is available in some dev setups.
   const manifestExtra =
     Constants.manifest?.extra ||
     Constants.expoConfig?.extra ||

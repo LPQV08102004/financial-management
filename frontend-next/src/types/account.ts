@@ -1,9 +1,8 @@
-// src/types/account.ts
 
 export type AccountType = 'checking' | 'savings' | 'cash' | 'credit_card' | 'investment' | 'other';
 
 export interface Account {
-  id: string; // hoặc number tùy theo backend của bạn
+  id: string;
   name: string;
   type: AccountType;
   current_balance: number;

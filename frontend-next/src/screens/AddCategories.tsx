@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Footer from '../components/Footer';
 import { createCategory } from '../api/categoriesApi';
 
-// Định nghĩa kiểu dữ liệu
 interface CategoryIcon {
   id: string;
   name: string;
@@ -42,7 +41,7 @@ export default function AddCategories() {
 
   return (
     <div className="flex flex-col bg-[#f5f5f5] relative">
-      {/* Header */}
+      {}
       <header className="bg-[#075c09] flex items-center p-4 pt-12 text-white sticky top-0 z-10">
         <button onClick={() => window.history.back()} className="p-1 text-2xl">
           ←
@@ -51,9 +50,9 @@ export default function AddCategories() {
         <div className="w-8" />
       </header>
 
-      {/* Body Content */}
+      {}
       <main className="flex-1 p-4 space-y-6 overflow-y-auto pb-24">
-        {/* Category Name Input[cite: 10] */}
+        {}
         <section>
           <label className="block text-[#075c09] text-sm font-bold mb-2">Tên danh mục</label>
           <input
@@ -66,14 +65,14 @@ export default function AddCategories() {
           />
         </section>
 
-        {/* Type Selector[cite: 10] */}
+        {}
         <section className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
           <div className="flex gap-3">
             <button
               onClick={() => setCategoryType('expense')}
               className={`flex-1 py-3 rounded-lg border-2 font-semibold text-sm transition-all ${
-                categoryType === 'expense' 
-                ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]' 
+                categoryType === 'expense'
+                ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]'
                 : 'border-gray-200 text-gray-500 bg-white'
               }`}
             >
@@ -82,8 +81,8 @@ export default function AddCategories() {
             <button
               onClick={() => setCategoryType('income')}
               className={`flex-1 py-3 rounded-lg border-2 font-semibold text-sm transition-all ${
-                categoryType === 'income' 
-                ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]' 
+                categoryType === 'income'
+                ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]'
                 : 'border-gray-200 text-gray-500 bg-white'
               }`}
             >
@@ -92,7 +91,7 @@ export default function AddCategories() {
           </div>
         </section>
 
-        {/* Icon Grid[cite: 10] */}
+        {}
         <section>
           <label className="block text-[#075c09] text-sm font-bold mb-2">Biểu tượng</label>
           <div className="grid grid-cols-3 gap-4 bg-gray-100 p-4 rounded-xl">
@@ -124,7 +123,7 @@ export default function AddCategories() {
           </div>
         </section>
 
-        {/* Color Grid[cite: 10] */}
+        {}
         <section>
           <label className="block text-[#075c09] text-sm font-bold mb-2">Màu sắc</label>
           <div className="flex flex-wrap gap-3">
@@ -146,7 +145,7 @@ export default function AddCategories() {
           </div>
         </section>
 
-        {/* Action Button[cite: 10] */}
+        {}
         <button
           onClick={async () => {
             if (!categoryName.trim()) { alert('Vui lòng nhập tên danh mục'); return; }

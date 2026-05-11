@@ -19,7 +19,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      {/* Sidebar — fixed, luôn cố định bên trái */}
+      {}
       <aside className="fixed top-0 left-0 h-screen w-56 bg-slate-800 text-white flex flex-col z-20">
         <div className="px-5 py-5 border-b border-slate-700">
           <h2 className="font-bold text-base">Finance Admin</h2>
@@ -51,7 +51,7 @@ export default function Layout({ children }) {
         </div>
       </aside>
 
-      {/* Main content — offset sang phải đúng bằng width sidebar */}
+      {}
       <main className="ml-56 min-h-screen overflow-auto">
         {children}
       </main>

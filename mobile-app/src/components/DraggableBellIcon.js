@@ -21,7 +21,7 @@ const DraggableBellIcon = ({
   const pan = useRef(new Animated.ValueXY({ x: width - size - 20, y: height / 2 - size / 2 })).current;
   const [isDragging, setIsDragging] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
-  const TAP_THRESHOLD = 10; // threshold for tap detection
+  const TAP_THRESHOLD = 10;
 
   const panResponder = useRef(
     PanResponder.create({
@@ -32,15 +32,14 @@ const DraggableBellIcon = ({
         setIsDragging(false);
       },
       onPanResponderMove: (evt, gestureState) => {
-        // Check if this is a real drag (not just a tap)
+
         const distance = Math.sqrt(gestureState.dx * gestureState.dx + gestureState.dy * gestureState.dy);
-        
+
         if (distance > TAP_THRESHOLD) {
           setIsDragging(true);
           const newX = gestureState.x0 - size / 2 + gestureState.dx;
           const newY = gestureState.y0 - size / 2 + gestureState.dy;
 
-          // Constrain within bounds
           const constrainedX = Math.max(0, Math.min(newX, width - size));
           const constrainedY = Math.max(0, Math.min(newY, height - size - 50));
 
@@ -49,11 +48,11 @@ const DraggableBellIcon = ({
         }
       },
       onPanResponderRelease: (evt, gestureState) => {
-        // Check if this was a tap or a drag
+
         const distance = Math.sqrt(gestureState.dx * gestureState.dx + gestureState.dy * gestureState.dy);
-        
+
         if (distance <= TAP_THRESHOLD) {
-          // This is a tap - trigger navigation
+
           setIsDragging(false);
           if (navigation && navigation.current) {
             navigation.current.navigate('NotificationScreen');
@@ -63,14 +62,12 @@ const DraggableBellIcon = ({
 
         setIsDragging(false);
 
-        // Get current position
         let currentX = gestureState.x0 - size / 2 + gestureState.dx;
         let currentY = gestureState.y0 - size / 2 + gestureState.dy;
 
         currentX = Math.max(0, Math.min(currentX, width - size));
         currentY = Math.max(0, Math.min(currentY, height - size - 50));
 
-        // Snap only horizontally (left or right edge)
         const centerX = currentX + size / 2;
         let snapX = currentX;
 
@@ -80,7 +77,6 @@ const DraggableBellIcon = ({
           snapX = width - size - 10;
         }
 
-        // Keep vertical position as is (don't snap vertically)
         const snapY = currentY;
 
         Animated.parallel([

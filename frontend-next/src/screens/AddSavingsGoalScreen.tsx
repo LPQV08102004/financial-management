@@ -2,16 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Footer from '../components/Footer';
-import { 
-  createGoal, 
-  updateGoal, 
-  depositToGoal, 
-  withdrawFromGoal, 
-  getGoal 
+import {
+  createGoal,
+  updateGoal,
+  depositToGoal,
+  withdrawFromGoal,
+  getGoal
 } from '../api/savingsApi';
 import { listAccounts } from '../api/accountsApi';
 
-// Helper functions với TypeScript types
 const _fmtVND = (n: number | string) => Number(n).toLocaleString('vi-VN');
 
 const _fmtDate = (dateStr: string) => {
@@ -29,7 +28,6 @@ const _parseDate = (str: string) => {
   return isNaN(Date.parse(iso)) ? null : iso;
 };
 
-// Component con phụ trợ
 const Section = ({ title, children }: { title: string, children: React.ReactNode }) => (
   <div className="bg-white rounded-xl p-4 mb-4 shadow-sm border border-gray-100">
     <h3 className="text-xs font-bold text-[#075c09] uppercase tracking-widest mb-4">{title}</h3>
@@ -44,7 +42,6 @@ const Field = ({ label, children }: { label: string, children: React.ReactNode }
   </div>
 );
 
-// --- Sub-component: Action Modal (Nạp/Rút tiền) ---
 function ActionModal({ visible, onClose, goal, onDone }: any) {
   const [mode, setMode] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount, setAmount] = useState('');
@@ -79,7 +76,7 @@ function ActionModal({ visible, onClose, goal, onDone }: any) {
         return alert(`Số tiền rút vượt quá số đã tích lũy (${Number(goal.saved_amount).toLocaleString('vi-VN')} đ)`);
       }
     }
-    
+
     setSubmitting(true);
     try {
       const isoDate = new Date().toISOString();
@@ -118,11 +115,11 @@ function ActionModal({ visible, onClose, goal, onDone }: any) {
         <p className="text-sm text-gray-500 mb-4">{goal.name}</p>
 
         <div className="flex gap-3 mb-4">
-          <button 
+          <button
             onClick={() => { setMode('deposit'); setAmount(''); }}
             className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${mode === 'deposit' ? 'border-[#075c09] bg-[#e8f5e9] text-[#075c09]' : 'border-gray-100 text-gray-400'}`}
           >Nạp tiền</button>
-          <button 
+          <button
             onClick={() => { setMode('withdraw'); setAmount(''); }}
             className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${mode === 'withdraw' ? 'border-red-600 bg-red-50 text-red-600' : 'border-gray-100 text-gray-400'}`}
           >Rút tiền</button>
@@ -135,8 +132,8 @@ function ActionModal({ visible, onClose, goal, onDone }: any) {
         </p>
 
         <Field label="Số tiền (đ)">
-          <input 
-            type="text" 
+          <input
+            type="text"
             value={amount}
             onChange={handleAmountChange}
             placeholder={`Tối đa ${cap.toLocaleString('vi-VN')} đ`}
@@ -144,7 +141,7 @@ function ActionModal({ visible, onClose, goal, onDone }: any) {
           />
         </Field>
 
-        <button 
+        <button
           onClick={handleSubmit}
           disabled={submitting}
           className={`w-full py-4 rounded-xl text-white font-bold shadow-lg active:scale-95 transition-all ${mode === 'deposit' ? 'bg-[#075c09]' : 'bg-red-600'}`}
@@ -157,7 +154,6 @@ function ActionModal({ visible, onClose, goal, onDone }: any) {
   );
 }
 
-// --- Main Screen ---
 export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: any }) {
   const isEdit = !!existingGoal;
   const [currentGoal, setCurrentGoal] = useState(existingGoal);
@@ -212,7 +208,7 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
 
   return (
     <div className="flex flex-col bg-[#f8f9fa] relative font-sans text-gray-800">
-      {/* Header */}
+      {}
       <header className="bg-[#075c09] pt-12 pb-5 px-5 flex items-center justify-between text-white sticky top-0 z-40">
         <button onClick={() => window.history.back()} className="text-2xl font-light">←</button>
         <h1 className="text-lg font-bold tracking-tight">{isEdit ? 'Chỉnh sửa mục tiêu' : 'Tạo mục tiêu mới'}</h1>
@@ -220,12 +216,12 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
       </header>
 
       <main className="flex-1 p-5 pb-28 space-y-5 overflow-y-auto">
-        {/* Progress Box (Chỉ hiện khi Edit) */}
+        {}
         {isEdit && currentGoal && (
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
             <div className="h-2.5 w-full bg-gray-100 rounded-full mb-3 overflow-hidden">
-              <div 
-                className="h-full bg-[#075c09] transition-all duration-500" 
+              <div
+                className="h-full bg-[#075c09] transition-all duration-500"
                 style={{ width: `${Math.min(currentGoal.progress_pct, 100)}%` }}
               />
             </div>
@@ -233,7 +229,7 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
               <span className="text-sm font-bold text-[#075c09]">{_fmtVND(currentGoal.saved_amount)} đ</span>
               <span className="text-xs font-medium text-gray-400">{_fmtVND(currentGoal.target_amount)} đ</span>
             </div>
-            <button 
+            <button
               onClick={() => setActionModalVisible(true)}
               className="w-full py-3 bg-[#075c09]/10 text-[#075c09] rounded-xl font-bold text-sm active:bg-[#075c09]/20 transition-colors"
             >
@@ -244,7 +240,7 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
 
         <Section title="Thông tin mục tiêu">
           <Field label="Tên mục tiêu *">
-            <input 
+            <input
               type="text" value={name} onChange={(e) => setName(e.target.value)}
               placeholder="VD: Mua MacBook, Du lịch..."
               className="w-full border border-gray-200 rounded-xl p-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-[#075c09]/20 outline-none transition-all"
@@ -252,8 +248,8 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
           </Field>
 
           <Field label="Số tiền cần đạt *">
-            <input 
-              type="text" value={targetAmount} 
+            <input
+              type="text" value={targetAmount}
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '');
                 setTargetAmount(val ? Number(val).toLocaleString('vi-VN') : '');
@@ -265,8 +261,8 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
 
           <Field label="Ngày mục tiêu *">
             <div className="flex border border-gray-200 rounded-xl bg-gray-50/50 overflow-hidden focus-within:ring-2 focus-within:ring-[#075c09]/20">
-              <input 
-                type="text" value={deadline} 
+              <input
+                type="text" value={deadline}
                 onChange={(e) => {
                     let val = e.target.value.replace(/\D/g, '');
                     if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
@@ -287,14 +283,14 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
         </Section>
 
         <Section title="Ghi chú">
-          <textarea 
+          <textarea
             value={note} onChange={(e) => setNote(e.target.value)}
             placeholder="Kế hoạch tiết kiệm của bạn..."
             className="w-full border border-gray-200 rounded-xl p-3.5 bg-gray-50/50 h-28 resize-none outline-none focus:ring-2 focus:ring-[#075c09]/20"
           />
         </Section>
 
-        <button 
+        <button
           onClick={handleSave}
           disabled={loading}
           className="w-full bg-[#075c09] text-white py-4 rounded-2xl font-bold shadow-xl shadow-[#075c09]/20 active:scale-[0.98] transition-all disabled:bg-gray-300"
@@ -303,8 +299,8 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
         </button>
       </main>
 
-            <ActionModal 
-        visible={actionModalVisible} 
+            <ActionModal
+        visible={actionModalVisible}
         onClose={() => setActionModalVisible(false)}
         goal={currentGoal}
         onDone={async () => {
@@ -313,7 +309,7 @@ export default function AddSavingsGoalScreen({ existingGoal }: { existingGoal?: 
         }}
       />
 
-      {/* Deadline Calendar Modal */}
+      {}
       {showDeadlineCalendar && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-end justify-center">
           <div className="bg-white w-full max-w-md rounded-t-3xl p-5 pb-8">

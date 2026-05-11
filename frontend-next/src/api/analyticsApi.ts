@@ -1,10 +1,10 @@
-// src/api/analyticsApi.ts
+
 import { API_BASE_URL } from './config';
-import { 
-  AnalyticsParams, 
-  BalanceResponse, 
-  CategoryStat, 
-  OverTimeStat 
+import {
+  AnalyticsParams,
+  BalanceResponse,
+  CategoryStat,
+  OverTimeStat
 } from '../types/analytics';
 import { apiFetch } from './authApi';
 
@@ -15,9 +15,6 @@ const _buildQuery = (params: AnalyticsParams): string =>
     )
   ).toString();
 
-/**
- * GET /analytics/dashboard/balance
- */
 export async function getBalance(params: AnalyticsParams = {}): Promise<BalanceResponse> {
   const query = _buildQuery(params);
   const res = await apiFetch(
@@ -27,9 +24,6 @@ export async function getBalance(params: AnalyticsParams = {}): Promise<BalanceR
   return res.json();
 }
 
-/**
- * GET /analytics/reports/by-category
- */
 export async function getStatsByCategory(params: AnalyticsParams = {}): Promise<CategoryStat[]> {
   const query = _buildQuery(params);
   const res = await apiFetch(
@@ -39,9 +33,6 @@ export async function getStatsByCategory(params: AnalyticsParams = {}): Promise<
   return res.json();
 }
 
-/**
- * GET /analytics/reports/over-time
- */
 export async function getOverTime(params: AnalyticsParams = {}): Promise<OverTimeStat[]> {
   const query = _buildQuery(params);
   const res = await apiFetch(

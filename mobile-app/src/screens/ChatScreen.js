@@ -244,7 +244,6 @@ export default function ChatScreen({ navigation }) {
   const renderItem = ({ item }) => {
     const isUser = item.role === 'user';
 
-    // Render transaction confirmation card
     if (item.type === 'card' && !item.confirmed) {
       return (
         <TransactionConfirmCard
@@ -255,7 +254,6 @@ export default function ChatScreen({ navigation }) {
       );
     }
 
-    // Render savings confirmation card
     if (item.type === 'savings-card' && !item.confirmed) {
       return (
         <SavingsConfirmCard
@@ -266,7 +264,6 @@ export default function ChatScreen({ navigation }) {
       );
     }
 
-    // Render OCR receipt confirmation card
     if (item.type === 'receipt-card' && !item.confirmed) {
       return (
         <ReceiptConfirmCard
@@ -295,7 +292,7 @@ export default function ChatScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={80}
     >
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backText}>←</Text>
@@ -314,7 +311,7 @@ export default function ChatScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Message list */}
+      {}
       <FlatList
         ref={listRef}
         data={messages}
@@ -324,7 +321,7 @@ export default function ChatScreen({ navigation }) {
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
       />
 
-      {/* Loading indicator */}
+      {}
       {loading && (
         <View style={styles.loadingRow}>
           <ActivityIndicator size="small" color="#075c09" />
@@ -334,7 +331,7 @@ export default function ChatScreen({ navigation }) {
         </View>
       )}
 
-      {/* NLP transaction mode banner */}
+      {}
       {nlpMode && !loading && (
         <View style={styles.nlpBanner}>
           <Text style={styles.nlpBannerText}>
@@ -346,7 +343,7 @@ export default function ChatScreen({ navigation }) {
         </View>
       )}
 
-      {/* Savings mode banner */}
+      {}
       {savingsMode && !loading && (
         <View style={[styles.nlpBanner, styles.savingsBanner]}>
           <Text style={[styles.nlpBannerText, styles.savingsBannerText]}>
@@ -358,7 +355,7 @@ export default function ChatScreen({ navigation }) {
         </View>
       )}
 
-      {/* Suggested questions */}
+      {}
       {!loading && messages.length <= 1 && !nlpMode && !savingsMode && (
         <View style={styles.suggestionsContainer}>
           {SUGGESTED.map((s, i) => (
@@ -369,9 +366,9 @@ export default function ChatScreen({ navigation }) {
         </View>
       )}
 
-      {/* Input bar */}
+      {}
       <View style={styles.inputBar}>
-        {/* NLP transaction button */}
+        {}
         <TouchableOpacity
           style={[styles.nlpBtn, nlpMode && styles.nlpBtnActive]}
           onPress={() => { setNlpMode((v) => !v); setSavingsMode(false); setOcrMode(false); }}
@@ -379,7 +376,7 @@ export default function ChatScreen({ navigation }) {
         >
           <Text style={styles.nlpBtnIcon}>🧾</Text>
         </TouchableOpacity>
-        {/* Savings mode button */}
+        {}
         <TouchableOpacity
           style={[styles.nlpBtn, savingsMode && styles.savingsBtnActive]}
           onPress={() => { setSavingsMode((v) => !v); setNlpMode(false); setOcrMode(false); }}
@@ -387,7 +384,7 @@ export default function ChatScreen({ navigation }) {
         >
           <Text style={styles.nlpBtnIcon}>🏦</Text>
         </TouchableOpacity>
-        {/* OCR receipt button */}
+        {}
         <TouchableOpacity
           style={[styles.nlpBtn, ocrMode && styles.ocrBtnActive]}
           onPress={() => { setOcrMode(true); setNlpMode(false); setSavingsMode(false); handleOCRScan(); }}

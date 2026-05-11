@@ -12,22 +12,20 @@ interface SidebarDrawerProps {
 }
 
 export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
-  const { state, signOut } = useAuth(); //
+  const { state, signOut } = useAuth();
   const pathname = usePathname();
-  const user = state.user; //[cite: 7]
-  
-  // Xử lý logic hiển thị tên người dùng[cite: 7]
+  const user = state.user;
+
   const displayName = user?.full_name || 'Người dùng';
-  
+
   const [totalBalance, setTotalBalance] = useState<number | null>(null);
 
-  // Lấy dữ liệu số dư khi Sidebar mở[cite: 7]
   useEffect(() => {
     if (isOpen) {
       listAccounts()
         .then((accounts) => {
           const total = (accounts || []).reduce(
-            (sum: number, acc: any) => sum + parseFloat(acc.current_balance || 0), 
+            (sum: number, acc: any) => sum + parseFloat(acc.current_balance || 0),
             0
           );
           setTotalBalance(total);
@@ -36,7 +34,6 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
     }
   }, [isOpen]);
 
-  // Menu items để render linh hoạt
   const menuItems = [
     { name: '🏠 Trang chủ', path: '/home' },
     { name: '� Giao dịch', path: '/transactions' },
@@ -50,22 +47,22 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
 
   return (
     <>
-      {/* 1. Sidebar Overlay[cite: 7] */}
-      <div 
+      {}
+      <div
         className={`fixed inset-0 bg-black/40 z-[60] transition-opacity duration-300 ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
 
-      {/* 2. Sidebar[cite: 7] */}
-      <aside 
+      {}
+      <aside
         className={`fixed left-0 top-0 bottom-0 w-[280px] bg-[#216b38] z-[70] transition-transform duration-300 ease-in-out shadow-2xl overflow-y-auto ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* User Profile Section[cite: 7] */}
-        <Link 
+        {}
+        <Link
           href="/profile"
           onClick={onClose}
           className="flex items-center p-6 mb-4 border-b border-white/30 hover:bg-white/5 transition-colors"
@@ -89,7 +86,7 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
           </div>
         </Link>
 
-        {/* Navigation Items[cite: 7] */}
+        {}
         <nav className="flex flex-col px-4">
           {menuItems.map((item) => {
             const isActive = pathname === item.path;
@@ -99,8 +96,8 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
                 href={item.path}
                 onClick={onClose}
                 className={`py-4 px-4 rounded-xl text-lg font-medium transition-all ${
-                  isActive 
-                    ? 'bg-white/15 text-white shadow-inner' 
+                  isActive
+                    ? 'bg-white/15 text-white shadow-inner'
                     : 'text-white hover:bg-white/10'
                 }`}
               >
@@ -110,9 +107,9 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
           })}
         </nav>
 
-        {/* Nút đăng xuất nếu cần (bổ sung thêm so với bản mobile) */}
+        {}
         <div className="px-4 mt-8 mb-4">
-          <button 
+          <button
             onClick={async () => {
               if (window.confirm('Bạn có chắc chắn muốn đăng xuất?')) {
                 await signOut();

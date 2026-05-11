@@ -25,17 +25,13 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 GROQ_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
-
 def _get_financial_context(db: Session, user_id: int) -> str:
-    """Build a financial summary string to inject as system context."""
     today = datetime.today()
     month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    # Total balance across all accounts
     accounts = db.query(Account).filter(Account.user_id == user_id, Account.is_active == True).all()
     total_balance = sum(a.current_balance for a in accounts) if accounts else Decimal("0")
 
-    # This month income/expense
     month_income = db.query(func.sum(Transaction.amount)).filter(
         Transaction.user_id == user_id,
         Transaction.type == TransactionType.income,
@@ -48,7 +44,6 @@ def _get_financial_context(db: Session, user_id: int) -> str:
         Transaction.transaction_date >= month_start,
     ).scalar() or Decimal("0")
 
-    # Last 10 transactions with category names
     recent_txns = (
         db.query(Transaction)
         .filter(Transaction.user_id == user_id)
@@ -57,7 +52,6 @@ def _get_financial_context(db: Session, user_id: int) -> str:
         .all()
     )
 
-    # Batch-load category names
     cat_ids = {t.category_id for t in recent_txns if t.category_id}
     cat_map = {}
     if cat_ids:
@@ -73,9 +67,26 @@ def _get_financial_context(db: Session, user_id: int) -> str:
         )
     txn_block = "\n".join(txn_lines) if txn_lines else "  (no transactions yet)"
 
-    # Accounts list
     acc_lines = [f"  - {a.name}: {a.current_balance:,.0f} VND" for a in accounts] or ["  (no accounts)"]
     acc_block = "\n".join(acc_lines)
+
+    goals = (
+        db.query(SavingsGoal)
+        .filter(SavingsGoal.user_id == user_id, SavingsGoal.is_active == True)
+        .all()
+    )
+    goal_lines = []
+    for g in goals:
+        saved = Decimal(str(g.saved_amount))
+        target = Decimal(str(g.target_amount))
+        remaining = target - saved
+        progress = (saved / target * 100) if target > 0 else Decimal("0")
+        deadline = g.target_date.strftime('%d/%m/%Y') if getattr(g, 'target_date', None) else "không hạn"
+        goal_lines.append(
+            f"  - {g.name}: đã tiết kiệm {saved:,.0f}/{target:,.0f} VND "
+            f"({progress:.0f}%), còn thiếu {remaining:,.0f} VND, hạn {deadline}"
+        )
+    goal_block = "\n".join(goal_lines) if goal_lines else "  (chưa có mục tiêu tiết kiệm)"
 
     return f"""Thông tin tài chính của người dùng (cập nhật {today.strftime('%d/%m/%Y')}):
 - Tổng số dư: {total_balance:,.0f} VND
@@ -85,9 +96,10 @@ def _get_financial_context(db: Session, user_id: int) -> str:
   + Tiết kiệm ròng: {(month_income - month_expense):,.0f} VND
 - Tài khoản:
 {acc_block}
+- Mục tiêu tiết kiệm:
+{goal_block}
 - 10 giao dịch gần nhất:
 {txn_block}"""
-
 
 async def chat(db: Session, user: User, message: str, history: List[ChatMessage]) -> str:
     if not settings.GROQ_API_KEY:
@@ -95,18 +107,20 @@ async def chat(db: Session, user: User, message: str, history: List[ChatMessage]
 
     financial_context = _get_financial_context(db, user.id)
 
-    system_prompt = f"""Bạn là trợ lý tài chính cá nhân. Bạn CHỈ trả lời các câu hỏi liên quan đến tài chính cá nhân, chi tiêu, thu nhập, tiết kiệm, ngân sách và dữ liệu tài chính của người dùng.
+    system_prompt = f"""Bạn là trợ lý tài chính cá nhân. Bạn CHỈ trả lời các câu hỏi liên quan đến tài chính cá nhân, chi tiêu, thu nhập, tiết kiệm, mục tiêu tiết kiệm, ngân sách, đầu tư cá nhân, lập kế hoạch tài chính, và dữ liệu tài chính của người dùng.
 
-Nếu câu hỏi KHÔNG liên quan đến tài chính (ví dụ: tin tức, thể thao, công nghệ, xã hội, giải trí...), hãy từ chối ngắn gọn bằng một câu duy nhất như: "Tôi chỉ hỗ trợ các câu hỏi về tài chính cá nhân." — KHÔNG hỏi lại, KHÔNG giải thích thêm.
+Khi người dùng hỏi về việc tiết kiệm cho một mục tiêu cụ thể (mua laptop, du lịch, mua xe, mua nhà, học phí…), hãy tra cứu trong phần "Mục tiêu tiết kiệm" bên dưới và đưa ra lời khuyên dựa trên: số đã tiết kiệm, số còn thiếu, hạn chót, và khả năng tiết kiệm hàng tháng (thu nhập - chi tiêu).
+
+Nếu câu hỏi KHÔNG liên quan đến tài chính (ví dụ: tin tức, thể thao, công nghệ, xã hội, giải trí, thời tiết, nấu ăn...), hãy từ chối ngắn gọn bằng một câu duy nhất như: "Tôi chỉ hỗ trợ các câu hỏi về tài chính cá nhân." — KHÔNG hỏi lại, KHÔNG giải thích thêm.
 
 Chỉ trả lời dựa trên thông tin thực tế được cung cấp bên dưới. Nếu không đủ dữ liệu, nói rõ điều đó.
 
-Khi liệt kê danh sách giao dịch, hãy trình bày MỖI giao dịch trên MỘT DÒNG RIÊNG (dùng ký tự xuống dòng \\n giữa các mục), không gộp thành một đoạn liền.
+Khi liệt kê danh sách giao dịch hoặc danh sách mục tiêu, hãy trình bày MỖI mục trên MỘT DÒNG RIÊNG (dùng ký tự xuống dòng \\n giữa các mục), không gộp thành một đoạn liền.
 
 {financial_context}"""
 
     messages = [{"role": "system", "content": system_prompt}]
-    for h in history[-10:]:  # keep last 10 turns to avoid token overflow
+    for h in history[-10:]:
         messages.append({"role": h.role, "content": h.content})
     messages.append({"role": "user", "content": message})
 
@@ -131,24 +145,18 @@ Khi liệt kê danh sách giao dịch, hãy trình bày MỖI giao dịch trên 
     data = resp.json()
     return data["choices"][0]["message"]["content"]
 
-
-# ── NLP Transaction Parsing ────────────────────────────────────────────────────
-
 async def parse_transaction(db: Session, user: User, message: str) -> ParseTransactionResponse:
-    """Extract structured transaction fields from a natural language message."""
     if not settings.GROQ_API_KEY:
         raise BadRequestError("GROQ_API_KEY chưa được cấu hình.")
 
     today = datetime.today()
 
-    # Fetch user's categories to help with suggestion
     categories = db.query(Category).filter(
         Category.user_id == user.id,
         Category.is_active == True,
     ).all()
     cat_list = [{"id": c.id, "name": c.name, "type": c.type.value} for c in categories]
 
-    # Fetch account balances for spending limit awareness
     accounts = db.query(Account).filter(
         Account.user_id == user.id,
         Account.is_active == True,
@@ -204,7 +212,7 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
                     {"role": "user", "content": message},
                 ],
                 "max_tokens": 512,
-                "temperature": 0.1,   # low temp for structured extraction
+                "temperature": 0.1,
             },
         )
 
@@ -213,7 +221,6 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
 
     raw = resp.json()["choices"][0]["message"]["content"].strip()
 
-    # Strip markdown code fences if present
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
@@ -225,7 +232,6 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
     except json.JSONDecodeError:
         raise BadRequestError("Không thể phân tích câu nhập — vui lòng thử lại.")
 
-    # Determine missing required fields
     missing = []
     if not parsed.get("amount"):
         missing.append("amount")
@@ -246,7 +252,6 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
         if s.get("id") and s.get("name")
     ]
 
-    # ── Post-parse: generate warning for expense overdraw ──────────────────────
     txn_warning: str | None = None
     parsed_amount = parsed.get("amount")
     if parsed_amount and parsed.get("type") == "expense" and parsed_amount > total_balance:
@@ -265,23 +270,17 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
         warning=txn_warning,
     )
 
-
-# ── NLP Savings Action Parsing ─────────────────────────────────────────────────
-
 async def parse_savings_action(db: Session, user: User, message: str) -> ParseSavingsResponse:
-    """Extract structured deposit/withdraw fields from a natural language message."""
     if not settings.GROQ_API_KEY:
         raise BadRequestError("GROQ_API_KEY chưa được cấu hình.")
 
     today = datetime.today()
 
-    # Fetch user's active savings goals
     goals = db.query(SavingsGoal).filter(
         SavingsGoal.user_id == user.id,
         SavingsGoal.is_active == True,
     ).all()
 
-    # Fetch user's accounts for balance awareness
     accounts = db.query(Account).filter(
         Account.user_id == user.id,
         Account.is_active == True,
@@ -388,13 +387,12 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
         if s.get("id") and s.get("name")
     ]
 
-    # ── Post-parse: cap amount and generate warning ────────────────────────────
     warning: str | None = None
     parsed_amount = parsed.get("amount")
     parsed_action = parsed.get("action")
 
     if parsed_amount and parsed_action == "deposit" and suggestions:
-        # Find the matched goal to get remaining
+
         matched_goal = next((g for g in goals if g.id == suggestions[0].id), None)
         if matched_goal:
             remaining = float(Decimal(str(matched_goal.target_amount)) - Decimal(str(matched_goal.saved_amount)))
@@ -436,11 +434,7 @@ Chỉ trả về JSON, không có markdown, không có giải thích."""
         warning=warning,
     )
 
-
-# ── OCR Receipt Parsing ────────────────────────────────────────────────────────
-
 async def _call_groq_vision(image_base64: str, hint: str | None) -> dict:
-    """Call Groq Vision API to extract receipt data. Returns parsed dict."""
     if not settings.GROQ_API_KEY:
         raise BadRequestError("GROQ_API_KEY chưa được cấu hình.")
 
@@ -502,12 +496,10 @@ Nếu không đọc được một trường, đặt null. Chỉ trả về JSON
     except json.JSONDecodeError:
         return {"merchant": None, "date": None, "total_amount": None, "items": [], "raw_text": raw}
 
-
 def _parse_ocr_amount(raw_amount: str | None) -> float | None:
-    """Convert raw amount string to float. Handles Vietnamese formats."""
     if not raw_amount:
         return None
-    # Strip everything except digits and dots/commas
+
     cleaned = str(raw_amount).replace(",", "").replace(".", "").replace(" ", "")
     cleaned = ''.join(c for c in cleaned if c.isdigit())
     if not cleaned:
@@ -517,33 +509,29 @@ def _parse_ocr_amount(raw_amount: str | None) -> float | None:
     except ValueError:
         return None
 
-
 def _parse_ocr_date(raw_date: str | None) -> str | None:
-    """Normalize date string to YYYY-MM-DD. Accepts DD/MM/YYYY or YYYY-MM-DD."""
     if not raw_date:
         return None
     raw_date = raw_date.strip()
-    # Already ISO format
+
     if len(raw_date) == 10 and raw_date[4] == '-':
         return raw_date
-    # DD/MM/YYYY
+
     parts = raw_date.replace('-', '/').split('/')
     if len(parts) == 3:
         try:
             if len(parts[2]) == 4:
-                # DD/MM/YYYY
+
                 d, m, y = parts
             else:
-                # YYYY/MM/DD
+
                 y, m, d = parts
             return f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
         except (ValueError, IndexError):
             return None
     return None
 
-
 def _assess_ocr_quality(amount: float | None, date: str | None, merchant: str | None) -> tuple[str, list[str]]:
-    """Return (confidence_level, warnings) based on how many fields were extracted."""
     extracted = sum(1 for v in [amount, date, merchant] if v is not None)
     warnings = []
     if amount is None:
@@ -561,13 +549,11 @@ def _assess_ocr_quality(amount: float | None, date: str | None, merchant: str | 
         level = "low"
     return level, warnings
 
-
 async def _suggest_categories_for_receipt(
     user_id: int,
     context: str,
     db: Session,
 ) -> list[CategorySuggestion]:
-    """Suggest top-3 expense categories for a receipt given merchant + items context."""
     if not settings.GROQ_API_KEY:
         return []
 
@@ -636,21 +622,13 @@ Chỉ dùng id từ danh sách trên. Nếu không phù hợp, trả về []."""
             ))
     return result[:3]
 
-
 async def extract_receipt_ocr(
     image_base64: str,
     hint: str | None,
     user_id: int,
     db: Session,
 ) -> OCRReceiptResponse:
-    """
-    Full OCR pipeline:
-    1. Groq Vision → extract merchant, date, amount, raw_text
-    2. Parse & normalize extracted fields
-    3. Groq NLP → suggest categories for this receipt
-    4. Assess extraction quality → confidence_level + warnings
-    """
-    # Step 1: Vision extraction
+
     vision_data = await _call_groq_vision(image_base64, hint)
 
     raw_text = vision_data.get("raw_text") or ""
@@ -659,7 +637,6 @@ async def extract_receipt_ocr(
     date = _parse_ocr_date(vision_data.get("date"))
     raw_items = vision_data.get("items") or []
 
-    # Parse structured items (each item may be a dict or a plain string)
     parsed_items: list[ReceiptItem] = []
     for it in raw_items:
         if isinstance(it, dict):
@@ -680,7 +657,6 @@ async def extract_receipt_ocr(
         elif isinstance(it, str) and it.strip():
             parsed_items.append(ReceiptItem(name=it.strip()))
 
-    # Step 2: Build context string for category suggestion
     context_parts = []
     if merchant:
         context_parts.append(merchant)
@@ -690,13 +666,10 @@ async def extract_receipt_ocr(
         context_parts.append(f"{amount:,.0f} VND")
     context = " - ".join(context_parts) if context_parts else "hóa đơn mua hàng"
 
-    # Step 3: Category suggestions
     suggestions = await _suggest_categories_for_receipt(user_id, context, db)
 
-    # Step 4: Quality assessment
     confidence_level, warnings = _assess_ocr_quality(amount, date, merchant)
 
-    # Step 5: Determine missing fields
     missing = []
     if amount is None:
         missing.append("amount")

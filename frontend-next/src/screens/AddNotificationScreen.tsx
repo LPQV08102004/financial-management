@@ -26,7 +26,6 @@ export default function AddNotificationScreen() {
   const [showTimeModal, setShowTimeModal] = useState(false);
   const [notes, setNotes] = useState('');
 
-  // Format date: dd/mm/yyyy
   const formatDate = (date: Date) => {
     return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
   };
@@ -37,7 +36,7 @@ export default function AddNotificationScreen() {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay(); 
+    const startingDayOfWeek = firstDay.getDay();
 
     const days = [];
     for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
@@ -76,14 +75,14 @@ export default function AddNotificationScreen() {
 
   return (
     <div className="flex flex-col bg-[#FFF8F0] relative">
-      {/* Header */}
+      {}
       <header className="bg-[#075c09] p-5 pt-8 flex items-center justify-between text-white sticky top-0 z-20">
         <button onClick={() => window.history.back()} className="text-2xl font-bold px-2">←</button>
         <h1 className="text-xl font-medium">Thêm lời nhắc</h1>
         <div className="w-10"></div>
       </header>
 
-      {/* Form Content[cite: 11] */}
+      {}
       <main className="flex-1 p-5 space-y-5 pb-24 overflow-y-auto">
         <section>
           <label className="block text-[#075c09] font-semibold mb-2">
@@ -98,10 +97,10 @@ export default function AddNotificationScreen() {
           />
         </section>
 
-        {/* Frequency Picker[cite: 11] */}
+        {}
         <section>
           <label className="block text-[#075c09] font-semibold mb-2">Tần suất nhắc nhở</label>
-          <button 
+          <button
             onClick={() => setShowFrequencyModal(true)}
             className="w-full bg-white border border-gray-300 rounded-lg p-3 text-left flex justify-between items-center"
           >
@@ -110,10 +109,10 @@ export default function AddNotificationScreen() {
           </button>
         </section>
 
-        {/* Date Picker[cite: 11] */}
+        {}
         <section>
           <label className="block text-[#075c09] font-semibold mb-2">Ngày bắt đầu nhắc nhở</label>
-          <button 
+          <button
             onClick={() => setShowDateModal(true)}
             className="w-full bg-white border border-gray-300 rounded-lg p-3 text-left"
           >
@@ -121,10 +120,10 @@ export default function AddNotificationScreen() {
           </button>
         </section>
 
-        {/* Time Picker[cite: 11] */}
+        {}
         <section>
           <label className="block text-[#075c09] font-semibold mb-2">Giờ</label>
-          <button 
+          <button
             onClick={() => setShowTimeModal(true)}
             className="w-full bg-white border border-gray-300 rounded-lg p-3 text-left font-semibold"
           >
@@ -142,7 +141,7 @@ export default function AddNotificationScreen() {
           />
         </section>
 
-        <button 
+        <button
           onClick={handleCreateReminder}
           disabled={!reminderName.trim()}
           className={`w-full py-4 rounded-lg font-bold text-white shadow-lg transition-all active:scale-95 ${
@@ -153,7 +152,7 @@ export default function AddNotificationScreen() {
         </button>
       </main>
 
-      {/* Modals[cite: 11] */}
+      {}
       {showFrequencyModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
           <div className="bg-white w-full max-w-md rounded-t-2xl p-5 animate-slide-up">
@@ -176,7 +175,7 @@ export default function AddNotificationScreen() {
         </div>
       )}
 
-      {/* Simplified Time Modal[cite: 11] */}
+      {}
       {showTimeModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-xs rounded-2xl p-5">
@@ -184,8 +183,8 @@ export default function AddNotificationScreen() {
             <div className="flex gap-4 h-48 overflow-hidden">
               <div className="flex-1 overflow-y-auto no-scrollbar border-r">
                 {hours.map(h => (
-                  <button 
-                    key={h} 
+                  <button
+                    key={h}
                     onClick={() => setSelectedHour(h)}
                     className={`w-full py-2 text-center ${selectedHour === h ? 'bg-[#E5F5E5] font-bold' : ''}`}
                   >
@@ -195,8 +194,8 @@ export default function AddNotificationScreen() {
               </div>
               <div className="flex-1 overflow-y-auto no-scrollbar">
                 {minutes.map(m => (
-                  <button 
-                    key={m} 
+                  <button
+                    key={m}
                     onClick={() => setSelectedMinute(m)}
                     className={`w-full py-2 text-center ${selectedMinute === m ? 'bg-[#E5F5E5] font-bold' : ''}`}
                   >

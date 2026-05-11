@@ -1,14 +1,13 @@
-// src/api/savingsApi.ts
+
 import { API_BASE_URL } from './config';
-import { 
-  SavingsGoal, 
-  SavingsListResponse, 
-  CreateGoalPayload, 
-  GoalTransactionPayload 
+import {
+  SavingsGoal,
+  SavingsListResponse,
+  CreateGoalPayload,
+  GoalTransactionPayload
 } from '../types/savings';
 import { apiFetch } from './authApi';
 
-/** GET /savings-goals — Lấy danh sách mục tiêu */
 export async function listGoals(): Promise<SavingsListResponse> {
   const res = await apiFetch(`${API_BASE_URL}/savings-goals`);
   const data = await res.json().catch(() => ({}));
@@ -16,7 +15,6 @@ export async function listGoals(): Promise<SavingsListResponse> {
   return data;
 }
 
-/** POST /savings-goals — Tạo mục tiêu mới */
 export async function createGoal(payload: CreateGoalPayload): Promise<SavingsGoal> {
   const res = await apiFetch(`${API_BASE_URL}/savings-goals`, {
     method: 'POST',
@@ -30,7 +28,6 @@ export async function createGoal(payload: CreateGoalPayload): Promise<SavingsGoa
   return data;
 }
 
-/** GET /savings-goals/:id — Chi tiết mục tiêu */
 export async function getGoal(goalId: string | number): Promise<SavingsGoal> {
   const res = await apiFetch(`${API_BASE_URL}/savings-goals/${goalId}`);
   const data = await res.json().catch(() => ({}));
@@ -41,9 +38,8 @@ export async function getGoal(goalId: string | number): Promise<SavingsGoal> {
   return data;
 }
 
-/** PATCH /savings-goals/:id — Cập nhật mục tiêu */
 export async function updateGoal(
-  goalId: string | number, 
+  goalId: string | number,
   payload: Partial<CreateGoalPayload>
 ): Promise<SavingsGoal> {
   const res = await apiFetch(`${API_BASE_URL}/savings-goals/${goalId}`, {
@@ -58,7 +54,6 @@ export async function updateGoal(
   return data;
 }
 
-/** DELETE /savings-goals/:id — Xóa mục tiêu */
 export async function deleteGoal(goalId: string | number): Promise<void> {
   const res = await apiFetch(`${API_BASE_URL}/savings-goals/${goalId}`, {
     method: 'DELETE',
@@ -69,7 +64,6 @@ export async function deleteGoal(goalId: string | number): Promise<void> {
   }
 }
 
-/** POST /savings-goals/:id/deposit — Nạp tiền vào mục tiêu */
 export async function depositToGoal(
   goalId: string | number,
   amount: number,
@@ -89,7 +83,6 @@ export async function depositToGoal(
   return data;
 }
 
-/** POST /savings-goals/:id/withdraw — Rút tiền khỏi mục tiêu */
 export async function withdrawFromGoal(
   goalId: string | number,
   amount: number,

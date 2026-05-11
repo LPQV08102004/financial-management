@@ -69,11 +69,10 @@ export default function EditProfileScreen({ navigation }) {
 
       if (!result.canceled && result.assets && result.assets[0]) {
         const asset = result.assets[0];
-        // Use asset.mimeType for correct type (same pattern as chatbot OCR)
+
         const mimeType = asset.mimeType || 'image/jpeg';
         const dataUri = `data:${mimeType};base64,${asset.base64}`;
 
-        // 16MB cap — base64 is ~4/3x original file size
         const MAX_BASE64 = 16 * 1024 * 1024;
         if (dataUri.length > MAX_BASE64) {
           Alert.alert('Lỗi', 'Ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 12MB.');
@@ -88,7 +87,7 @@ export default function EditProfileScreen({ navigation }) {
   };
 
   const handleSave = async () => {
-    // fullName could be pre-filled from user — only block if truly empty after editing
+
     if (fullName !== undefined && fullName.trim() === '') {
       Alert.alert('Lỗi', 'Vui lòng nhập tên');
       return;
@@ -106,9 +105,8 @@ export default function EditProfileScreen({ navigation }) {
         phone_number: phoneNumber || null,
       };
 
-      // Only include avatar_url when it changed
       if (avatarUri !== originalAvatarUri) {
-        payload.avatar_url = avatarUri; // data URI (data:image/...;base64,...), http URL, or null
+        payload.avatar_url = avatarUri;
       }
 
       const updatedUser = await updateMyProfile(payload);
@@ -141,7 +139,7 @@ export default function EditProfileScreen({ navigation }) {
   return (
     <View style={styles.screenContainer}>
       <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity style={styles.headerMenu} onPress={() => navigation.goBack()}>
             <Text style={styles.backArrow}>←</Text>
@@ -152,9 +150,9 @@ export default function EditProfileScreen({ navigation }) {
           <View style={styles.headerSpacer}></View>
         </View>
 
-        {/* Content */}
+        {}
         <View style={styles.contentWrapper}>
-          {/* Avatar Section */}
+          {}
           <View style={styles.avatarSection}>
             <Text style={styles.sectionTitle}>Ảnh đại diện</Text>
             <View style={styles.avatarContainer}>
@@ -186,9 +184,9 @@ export default function EditProfileScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Form Section */}
+          {}
           <View style={styles.formSection}>
-            {/* Full Name */}
+            {}
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Tên đầy đủ</Text>
               <TextInput
@@ -201,7 +199,7 @@ export default function EditProfileScreen({ navigation }) {
               />
             </View>
 
-            {/* Phone Number */}
+            {}
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Số điện thoại</Text>
               <TextInput
@@ -215,7 +213,7 @@ export default function EditProfileScreen({ navigation }) {
               />
             </View>
 
-            {/* Save Button */}
+            {}
             <TouchableOpacity
               style={[styles.saveButton, saving && styles.saveButtonDisabled]}
               onPress={handleSave}
@@ -226,7 +224,7 @@ export default function EditProfileScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
 
-            {/* Cancel Button */}
+            {}
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => navigation.goBack()}
@@ -238,7 +236,7 @@ export default function EditProfileScreen({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* Image Options Modal */}
+      {}
       <Modal
         transparent
         animationType="fade"

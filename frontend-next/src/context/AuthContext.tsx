@@ -2,20 +2,19 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import { useRouter } from 'next/navigation';
-// Sử dụng đường dẫn tương đối theo yêu cầu của bạn
-import { 
-  getMyProfile, 
-  getSavedToken, 
-  login as apiLogin, 
-  logout as apiLogout, 
-  register as apiRegister 
+
+import {
+  getMyProfile,
+  getSavedToken,
+  login as apiLogin,
+  logout as apiLogout,
+  register as apiRegister
 } from '../api/authApi';
-import { 
-  UserProfile, 
-  RegisterPayload 
+import {
+  UserProfile,
+  RegisterPayload
 } from '../types/auth';
 
-// --- Types ---
 interface AuthState {
   isLoading: boolean;
   isSignout: boolean;
@@ -40,7 +39,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// --- Reducer ---
 const authReducer = (prevState: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'RESTORE_TOKEN':
@@ -88,18 +86,18 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
-        const token = getSavedToken(); // Lấy từ Cookie thông qua api
+        const token = getSavedToken();
         if (!token) {
           dispatch({ type: 'RESTORE_TOKEN', payload: null });
           return;
         }
 
         try {
-          const user = await getMyProfile(); // Lấy profile từ backend
+          const user = await getMyProfile();
           dispatch({ type: 'RESTORE_TOKEN', payload: { token, user } });
         } catch (profileError: any) {
-          // Token hết hạn hoặc không hợp lệ, xóa token và logout
-          await apiLogout().catch(() => {}); // Gọi logout để xóa token từ server
+
+          await apiLogout().catch(() => {});
           dispatch({ type: 'RESTORE_TOKEN', payload: null });
         }
       } catch (e) {
@@ -113,7 +111,7 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const data = await apiLogin({ email, password }); // Gửi payload login[cite: 1, 2]
+      const data = await apiLogin({ email, password });
       const token = data.access_token;
       const user = data.user || await getMyProfile();
 
@@ -127,7 +125,7 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
 
   const signUp = useCallback(async (payload: RegisterPayload) => {
     try {
-      const registerData = await apiRegister(payload); // Gửi payload đăng ký[cite: 1, 2]
+      const registerData = await apiRegister(payload);
       let token = registerData.access_token;
 
       if (!token) {
@@ -157,7 +155,7 @@ export function AuthProvider(props: Readonly<{ children: React.ReactNode }>) {
   const signOut = useCallback(async () => {
     dispatch({ type: 'SIGN_OUT' });
     try {
-      await apiLogout(); // Thực hiện logout và xóa cookie
+      await apiLogout();
       router.push('/auth/login');
       return { success: true };
     } catch (error: any) {

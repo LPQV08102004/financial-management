@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, f
 
 from app.db.base import Base
 
-
 class User(Base):
     __tablename__ = "users"
 
@@ -16,7 +15,6 @@ class User(Base):
     is_admin = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
-
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"

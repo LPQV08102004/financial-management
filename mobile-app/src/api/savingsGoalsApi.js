@@ -18,10 +18,6 @@ function parseError(detail, fallback) {
   return fallback;
 }
 
-/**
- * GET /savings-goals
- * Returns: { items: SavingsGoalOut[], total_locked: Decimal }
- */
 export async function listGoals() {
   const res = await fetch(`${BASE_URL}/savings-goals`, {
     headers: await getAuthHeaders(),
@@ -31,10 +27,6 @@ export async function listGoals() {
   return data;
 }
 
-/**
- * POST /savings-goals
- * payload: { name, target_amount, deadline (YYYY-MM-DD), note? }
- */
 export async function createGoal(payload) {
   const res = await fetch(`${BASE_URL}/savings-goals`, {
     method: 'POST',
@@ -46,9 +38,6 @@ export async function createGoal(payload) {
   return data;
 }
 
-/**
- * GET /savings-goals/:id
- */
 export async function getGoal(goalId) {
   const res = await fetch(`${BASE_URL}/savings-goals/${goalId}`, {
     headers: await getAuthHeaders(),
@@ -58,10 +47,6 @@ export async function getGoal(goalId) {
   return data;
 }
 
-/**
- * PATCH /savings-goals/:id
- * payload: { name?, target_amount?, deadline?, note? }
- */
 export async function updateGoal(goalId, payload) {
   const res = await fetch(`${BASE_URL}/savings-goals/${goalId}`, {
     method: 'PATCH',
@@ -73,9 +58,6 @@ export async function updateGoal(goalId, payload) {
   return data;
 }
 
-/**
- * DELETE /savings-goals/:id
- */
 export async function deleteGoal(goalId) {
   const res = await fetch(`${BASE_URL}/savings-goals/${goalId}`, {
     method: 'DELETE',
@@ -87,11 +69,6 @@ export async function deleteGoal(goalId) {
   }
 }
 
-/**
- * POST /savings-goals/:id/deposit
- * payload: { amount, account_id, transaction_date (ISO string) }
- * Debits the account and increases saved_amount atomically.
- */
 export async function depositToGoal(goalId, amount, accountId, transactionDate) {
   const res = await fetch(`${BASE_URL}/savings-goals/${goalId}/deposit`, {
     method: 'POST',
@@ -103,11 +80,6 @@ export async function depositToGoal(goalId, amount, accountId, transactionDate) 
   return data;
 }
 
-/**
- * POST /savings-goals/:id/withdraw
- * payload: { amount, account_id, transaction_date (ISO string) }
- * Credits the account and decreases saved_amount atomically.
- */
 export async function withdrawFromGoal(goalId, amount, accountId, transactionDate) {
   const res = await fetch(`${BASE_URL}/savings-goals/${goalId}/withdraw`, {
     method: 'POST',

@@ -10,9 +10,6 @@ async function getAuthHeaders() {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 }
 
-// ── System Notifications ──────────────────────────────────────────────────────
-
-/** POST /notifications/generate — quét dữ liệu và sinh thông báo mới */
 export async function generateNotifications() {
   const res = await fetch(`${BASE_URL}/notifications/generate`, {
     method: 'POST',
@@ -20,18 +17,9 @@ export async function generateNotifications() {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.detail || 'Lỗi tạo thông báo');
-  return data; // { generated: number }
+  return data;
 }
 
-/**
- * GET /notifications
- * @param {object} opts
- * @param {string} [opts.displayType] - 'savings' | 'recurring' | 'reminder'
- * @param {boolean} [opts.unreadOnly]
- * @param {number} [opts.skip]
- * @param {number} [opts.limit]
- * @returns {{ items: Notification[], unread_count: number }}
- */
 export async function listNotifications({ displayType, unreadOnly = false, skip = 0, limit = 50 } = {}) {
   const params = new URLSearchParams({ unread_only: unreadOnly, skip, limit });
   if (displayType && displayType !== 'all') params.append('display_type', displayType);
@@ -43,7 +31,6 @@ export async function listNotifications({ displayType, unreadOnly = false, skip 
   return data;
 }
 
-/** GET /notifications/unread-count */
 export async function getUnreadCount() {
   const res = await fetch(`${BASE_URL}/notifications/unread-count`, {
     headers: await getAuthHeaders(),
@@ -53,7 +40,6 @@ export async function getUnreadCount() {
   return data.unread_count;
 }
 
-/** PATCH /notifications/read-all */
 export async function markAllRead() {
   const res = await fetch(`${BASE_URL}/notifications/read-all`, {
     method: 'PATCH',
@@ -64,7 +50,6 @@ export async function markAllRead() {
   return data;
 }
 
-/** PATCH /notifications/:id/read */
 export async function markRead(notificationId) {
   const res = await fetch(`${BASE_URL}/notifications/${notificationId}/read`, {
     method: 'PATCH',
@@ -75,7 +60,6 @@ export async function markRead(notificationId) {
   return data;
 }
 
-/** DELETE /notifications/:id */
 export async function deleteNotification(notificationId) {
   const res = await fetch(`${BASE_URL}/notifications/${notificationId}`, {
     method: 'DELETE',
@@ -87,9 +71,6 @@ export async function deleteNotification(notificationId) {
   }
 }
 
-// ── Custom Reminders ──────────────────────────────────────────────────────────
-
-/** GET /reminders */
 export async function listReminders() {
   const res = await fetch(`${BASE_URL}/reminders`, {
     headers: await getAuthHeaders(),
@@ -99,10 +80,6 @@ export async function listReminders() {
   return data;
 }
 
-/**
- * POST /reminders
- * @param {{ name, frequency, start_date, reminder_time?, note? }} payload
- */
 export async function createReminder(payload) {
   const res = await fetch(`${BASE_URL}/reminders`, {
     method: 'POST',
@@ -114,7 +91,6 @@ export async function createReminder(payload) {
   return data;
 }
 
-/** PATCH /reminders/:id */
 export async function updateReminder(reminderId, payload) {
   const res = await fetch(`${BASE_URL}/reminders/${reminderId}`, {
     method: 'PATCH',
@@ -126,7 +102,6 @@ export async function updateReminder(reminderId, payload) {
   return data;
 }
 
-/** DELETE /reminders/:id */
 export async function deleteReminder(reminderId) {
   const res = await fetch(`${BASE_URL}/reminders/${reminderId}`, {
     method: 'DELETE',

@@ -2,7 +2,6 @@
 
 import React from 'react';
 
-// Định nghĩa Props Interface để chặt chẽ về dữ liệu
 interface DateTimeSelectorProps {
   timePeriod: 'day' | 'week' | 'month' | 'year' | 'custom';
   selectedDate: Date;
@@ -11,8 +10,7 @@ interface DateTimeSelectorProps {
   showCalendar: boolean;
   currentCalendarMonth: Date;
   selectingStartDate: boolean;
-  
-  // State setters
+
   setTimePeriod: (period: 'day' | 'week' | 'month' | 'year' | 'custom') => void;
   setSelectedDate: (date: Date) => void;
   setCustomStartDate: (date: Date | null) => void;
@@ -43,7 +41,6 @@ export default function DateTimeSelector({
   setShowCalendar,
 }: DateTimeSelectorProps) {
 
-  // --- Logic Helpers (Giữ nguyên logic từ bản Mobile) ---
   const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const getFirstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
@@ -77,7 +74,6 @@ export default function DateTimeSelector({
     return "Chọn khoảng thời gian";
   };
 
-  // --- Handlers ---
   const handleNav = (offset: number, unit: 'day' | 'week' | 'month' | 'year') => {
     const newDate = new Date(selectedDate);
     if (unit === 'day') newDate.setDate(newDate.getDate() + offset);
@@ -114,7 +110,7 @@ export default function DateTimeSelector({
 
   return (
     <div className="w-full max-w-xl mx-auto space-y-4">
-      {/* 1. Time Period Selector */}
+      {}
       <div className="flex bg-white p-2 rounded-xl shadow-sm border border-gray-100 justify-between gap-1">
         {['day', 'week', 'month', 'year', 'custom'].map((p) => (
           <button
@@ -129,8 +125,8 @@ export default function DateTimeSelector({
               }
             }}
             className={`flex-1 py-2 px-1 text-xs md:text-sm font-medium rounded-full transition-all ${
-              timePeriod === p 
-                ? 'bg-[#075c09] text-white shadow-md' 
+              timePeriod === p
+                ? 'bg-[#075c09] text-white shadow-md'
                 : 'bg-transparent text-gray-500 hover:bg-gray-50'
             }`}
           >
@@ -143,20 +139,20 @@ export default function DateTimeSelector({
         ))}
       </div>
 
-      {/* 2. Date Range Navigation */}
+      {}
       <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border-l-4 border-l-[#075c09]">
-        <button 
+        <button
           onClick={() => handleNav(-1, timePeriod as any)}
           className="w-10 h-10 flex items-center justify-center text-[#075c09] hover:bg-gray-100 rounded-full font-bold"
         >
           ❮
         </button>
-        
+
         <span className="text-sm md:text-base font-semibold text-[#075c09] text-center px-2">
           {getDateRangeText()}
         </span>
 
-        <button 
+        <button
           onClick={() => handleNav(1, timePeriod as any)}
           disabled={isNextDisabled()}
           className={`w-10 h-10 flex items-center justify-center text-[#075c09] rounded-full font-bold ${
@@ -167,11 +163,11 @@ export default function DateTimeSelector({
         </button>
       </div>
 
-      {/* 3. Custom Calendar (Web Version) */}
+      {}
       {timePeriod === 'custom' && showCalendar && (
         <div className="bg-white p-5 rounded-xl shadow-lg border border-gray-100 animate-in fade-in zoom-in duration-200">
           <div className="flex justify-between items-center mb-6">
-            <button 
+            <button
               onClick={() => setCurrentCalendarMonth(new Date(currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() - 1)))}
               className="p-2 text-[#075c09] hover:bg-green-50 rounded-lg"
             >
@@ -180,7 +176,7 @@ export default function DateTimeSelector({
             <h3 className="font-bold text-[#075c09] capitalize">
               {currentCalendarMonth.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}
             </h3>
-            <button 
+            <button
               onClick={() => setCurrentCalendarMonth(new Date(currentCalendarMonth.setMonth(currentCalendarMonth.getMonth() + 1)))}
               className="p-2 text-[#075c09] hover:bg-green-50 rounded-lg"
             >
@@ -195,12 +191,12 @@ export default function DateTimeSelector({
           </div>
 
           <div className="grid grid-cols-7 gap-1">
-            {/* Empty cells for start of month */}
+            {}
             {Array.from({ length: getFirstDayOfMonth(currentCalendarMonth) }).map((_, i) => (
               <div key={`empty-${i}`} />
             ))}
-            
-            {/* Actual days */}
+
+            {}
             {Array.from({ length: getDaysInMonth(currentCalendarMonth) }).map((_, i) => {
               const day = i + 1;
               const dateObj = new Date(currentCalendarMonth.getFullYear(), currentCalendarMonth.getMonth(), day);
@@ -212,10 +208,10 @@ export default function DateTimeSelector({
                   key={day}
                   onClick={() => handleDateSelect(day)}
                   className={`aspect-square flex items-center justify-center rounded-lg text-sm transition-colors ${
-                    isSelected 
-                      ? 'bg-[#075c09] text-white font-bold' 
-                      : inRange 
-                        ? 'bg-green-100 text-[#075c09]' 
+                    isSelected
+                      ? 'bg-[#075c09] text-white font-bold'
+                      : inRange
+                        ? 'bg-green-100 text-[#075c09]'
                         : 'hover:bg-gray-100 text-gray-700'
                   }`}
                 >
@@ -225,15 +221,15 @@ export default function DateTimeSelector({
             })}
           </div>
 
-          {/* Action Buttons */}
+          {}
           <div className="mt-6 flex gap-3">
-            <button 
+            <button
               onClick={() => setShowCalendar(false)}
               className="flex-1 py-2.5 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-medium transition-colors"
             >
               Hủy
             </button>
-            <button 
+            <button
               disabled={!customStartDate || !customEndDate}
               onClick={() => {
                 setConfirmedStartDate(customStartDate);

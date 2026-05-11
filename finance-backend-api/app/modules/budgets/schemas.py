@@ -3,7 +3,6 @@ from decimal import Decimal
 from typing import Optional, List
 from pydantic import BaseModel, field_validator
 
-
 class BudgetEntryOut(BaseModel):
     id: int
     user_id: int
@@ -17,11 +16,10 @@ class BudgetEntryOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
 class AssignMoneyRequest(BaseModel):
     category_id: int
-    period_month: str   # YYYY-MM
-    amount: Decimal     # The total budgeted amount to set for this category this month
+    period_month: str
+    amount: Decimal
 
     @field_validator("period_month")
     @classmethod
@@ -39,12 +37,10 @@ class AssignMoneyRequest(BaseModel):
             raise ValueError("amount cannot be negative")
         return v
 
-
 class AssignMoneyResponse(BaseModel):
     entry: BudgetEntryOut
     to_be_budgeted: Decimal
-    is_overbudgeted: bool   # True when TBB < 0 (over-assigned)
-
+    is_overbudgeted: bool
 
 class MoveMoneyRequest(BaseModel):
     from_category_id: int
@@ -68,13 +64,11 @@ class MoveMoneyRequest(BaseModel):
             raise ValueError("amount must be positive")
         return v
 
-
 class MoveMoneyResponse(BaseModel):
     from_entry: BudgetEntryOut
     to_entry: BudgetEntryOut
     from_overspent: bool
     to_overspent: bool
-
 
 class MonthSummaryOut(BaseModel):
     period_month: str
@@ -83,7 +77,6 @@ class MonthSummaryOut(BaseModel):
     total_activity: Decimal
     total_available: Decimal
     entries: List[BudgetEntryOut]
-
 
 class BudgetAlertOut(BaseModel):
     id: int

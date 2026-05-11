@@ -8,7 +8,6 @@ import {
 const COLORS = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD','#A0522D','#6C5CE7','#00B894','#74B9FF','#FD79A8','#55EFC4','#FDCB6E','#E17055','#00CEC9','#B2BEC3']
 const EMPTY_TPL = { group_name: '', group_sort_order: 0, name: '', type: 'expense', color: '', icon: '' }
 
-// Danh sách icon Ionicons dùng trong mobile app, nhóm theo chủ đề
 const ICON_GROUPS = [
   {
     group: 'Ăn uống & Đồ uống',
@@ -130,7 +129,6 @@ const ICON_GROUPS = [
   },
 ]
 
-// Map value → {emoji, label} để tra nhanh khi hiển thị
 const ICON_MAP = Object.fromEntries(
   ICON_GROUPS.flatMap(g => g.icons.map(i => [i.value, i]))
 )
@@ -141,8 +139,6 @@ function Badge({ children, color }) {
     purple:'bg-purple-100 text-purple-700' }[color] || 'bg-slate-100 text-slate-500'
   return <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${cls}`}>{children}</span>
 }
-
-// ── User Categories Tab ────────────────────────────────────────────────────────
 
 function UserCategoriesTab() {
   const [data, setData] = useState(null)
@@ -262,12 +258,10 @@ function UserCategoriesTab() {
   )
 }
 
-// ── Default Categories Tab ─────────────────────────────────────────────────────
-
 function DefaultCategoriesTab() {
   const [templates, setTemplates] = useState(null)
   const [includeInactive, setIncludeInactive] = useState(false)
-  const [modal, setModal] = useState(null) // null | {mode:'create'} | {mode:'edit', tpl}
+  const [modal, setModal] = useState(null)
   const [form, setForm] = useState(EMPTY_TPL)
   const [formErr, setFormErr] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -304,7 +298,6 @@ function DefaultCategoriesTab() {
     catch (e) { alert(e.message) }
   }
 
-  // Group templates by group_name
   const groups = templates ? templates.reduce((acc, t) => {
     if (!acc[t.group_name]) acc[t.group_name] = []
     acc[t.group_name].push(t)
@@ -439,7 +432,7 @@ function DefaultCategoriesTab() {
                 </optgroup>
               ))}
             </select>
-            {/* Preview icon đã chọn */}
+            {}
             {form.icon && ICON_MAP[form.icon] && (
               <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
                 <span
@@ -485,8 +478,6 @@ function DefaultCategoriesTab() {
   )
 }
 
-// ── Main Page ──────────────────────────────────────────────────────────────────
-
 export default function CategoriesPage() {
   const [tab, setTab] = useState('user')
   return (
@@ -495,7 +486,7 @@ export default function CategoriesPage() {
         <h1 className="text-lg font-semibold">Quản lý danh mục</h1>
       </div>
       <div className="p-8">
-        {/* Tabs */}
+        {}
         <div className="flex gap-1 mb-6 bg-slate-100 rounded-xl p-1 w-fit">
           {[['user','Danh mục người dùng'],['default','Danh mục mặc định']].map(([k,l]) => (
             <button key={k} onClick={() => setTab(k)}

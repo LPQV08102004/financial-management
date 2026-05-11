@@ -3,7 +3,6 @@ from sqlalchemy import Column, Integer, String, DateTime, Enum, Numeric, Text, B
 from app.db.base import Base
 from app.shared.enums import AccountType
 
-
 class Account(Base):
     __tablename__ = "accounts"
 

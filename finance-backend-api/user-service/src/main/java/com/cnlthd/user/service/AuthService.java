@@ -33,24 +33,19 @@ public class AuthService {
 
   public LoginResponse login(LoginRequest request) {
     log.info("User login request for email: {}", request.getEmail());
-    
-    // Get user by email
+
     User user = userService.getUserByEmail(request.getEmail());
 
-    // Check if user is active
     if (!user.getIsActive()) {
       throw new InvalidCredentialsException("Tài khoản đã bị vô hiệu hóa");
     }
 
-    // Validate password
     if (!userService.validatePassword(request.getEmail(), request.getPassword())) {
       throw new InvalidCredentialsException("Email hoặc mật khẩu không chính xác");
     }
 
-    // Update last login time
     user.setLastLoginAt(LocalDateTime.now());
 
-    // Generate tokens
     String accessToken = jwtTokenProvider.generateAccessToken(
         user.getId(),
         user.getEmail(),
@@ -74,26 +69,22 @@ public class AuthService {
 
   public void logout(String userId) {
     log.info("User logout: {}", userId);
-    // In a real application, you might want to blacklist the token or revoke it
+
   }
 
   public LoginResponse refreshToken(String refreshToken) {
     log.info("Refresh token request");
-    
-    // Validate refresh token
+
     if (!jwtTokenProvider.validateToken(refreshToken)) {
       throw new InvalidCredentialsException("Invalid refresh token");
     }
 
-    // Get user info from token
     String userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
     String email = jwtTokenProvider.getEmailFromToken(refreshToken);
     String role = jwtTokenProvider.getRoleFromToken(refreshToken);
 
-    // Get user details
     User user = userService.getUserById(userId);
 
-    // Generate new tokens
     String newAccessToken = jwtTokenProvider.generateAccessToken(userId, email, role);
     String newRefreshToken = jwtTokenProvider.generateRefreshToken(userId, email, role);
 

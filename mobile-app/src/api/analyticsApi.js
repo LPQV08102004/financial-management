@@ -18,10 +18,6 @@ const _buildQuery = (params) =>
     Object.fromEntries(Object.entries(params).filter(([, v]) => v != null))
   ).toString();
 
-/**
- * GET /analytics/dashboard/balance
- * params: { period, date?, from_date?, to_date? }
- */
 export async function getBalance(params = {}) {
   const res = await fetch(
     `${BASE_URL}/analytics/dashboard/balance?${_buildQuery(params)}`,
@@ -31,10 +27,6 @@ export async function getBalance(params = {}) {
   return res.json();
 }
 
-/**
- * GET /analytics/reports/by-category
- * params: { type?, period, date?, from_date?, to_date? }
- */
 export async function getStatsByCategory(params = {}) {
   const res = await fetch(
     `${BASE_URL}/analytics/reports/by-category?${_buildQuery(params)}`,
@@ -44,10 +36,6 @@ export async function getStatsByCategory(params = {}) {
   return res.json();
 }
 
-/**
- * GET /analytics/reports/over-time
- * params: { type?, period, date?, from_date?, to_date? }
- */
 export async function getOverTime(params = {}) {
   const res = await fetch(
     `${BASE_URL}/analytics/reports/over-time?${_buildQuery(params)}`,

@@ -17,21 +17,21 @@ const PRESET_COLORS = [
 ];
 
 const ICON_LIST = [
-  // Ăn uống
+
   'fast-food', 'cafe', 'restaurant', 'pizza', 'nutrition', 'beer', 'ice-cream', 'wine',
-  // Di chuyển
+
   'car', 'bus', 'airplane', 'bicycle', 'boat', 'train', 'walk', 'subway',
-  // Sức khỏe & thể thao
+
   'medical', 'fitness', 'heart', 'barbell', 'football', 'basketball', 'tennisball', 'bandage',
-  // Nhà ở & tiện ích
+
   'home', 'cart', 'bed', 'hammer', 'bulb', 'water', 'flash', 'tv',
-  // Tài chính
+
   'cash', 'card', 'wallet', 'trending-up', 'trending-down', 'bar-chart', 'pricetag', 'stats-chart',
-  // Giải trí & học tập
+
   'film', 'game-controller', 'musical-notes', 'book', 'brush', 'camera', 'headset', 'school',
-  // Công việc
+
   'briefcase', 'laptop', 'desktop', 'print', 'documents', 'clipboard', 'build', 'library',
-  // Khác
+
   'gift', 'trophy', 'ribbon', 'star', 'pin', 'flag', 'globe', 'people',
   'shirt', 'paw', 'leaf', 'phone-portrait', 'shield', 'ellipsis-horizontal',
 ];
@@ -191,7 +191,7 @@ export default function CategoriesScreen({ navigation }) {
       <Footer />
       <SidebarDrawer isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} navigation={navigation} />
 
-      {/* ── Add / Edit bottom sheet ── */}
+      {}
       <Modal
         visible={modalVisible}
         transparent
@@ -222,7 +222,7 @@ export default function CategoriesScreen({ navigation }) {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              {/* Live preview */}
+              {}
               <View style={styles.previewRow}>
                 <View style={[styles.previewCircle, { backgroundColor: form.color }]}>
                   <CategoryIcon icon={form.icon} size={32} color="#fff" />
@@ -232,7 +232,7 @@ export default function CategoriesScreen({ navigation }) {
                 </Text>
               </View>
 
-              {/* Type selector — only when adding */}
+              {}
               {!editTarget && (
                 <>
                   <Text style={styles.fieldLabel}>Loại</Text>
@@ -252,7 +252,7 @@ export default function CategoriesScreen({ navigation }) {
                 </>
               )}
 
-              {/* Name */}
+              {}
               <Text style={styles.fieldLabel}>Tên</Text>
               <TextInput
                 style={styles.nameInput}
@@ -263,7 +263,7 @@ export default function CategoriesScreen({ navigation }) {
                 maxLength={50}
               />
 
-              {/* Color */}
+              {}
               <Text style={styles.fieldLabel}>Màu</Text>
               <View style={styles.colorRow}>
                 {PRESET_COLORS.map(c => (
@@ -279,7 +279,7 @@ export default function CategoriesScreen({ navigation }) {
                 ))}
               </View>
 
-              {/* Icon */}
+              {}
               <Text style={styles.fieldLabel}>Icon</Text>
               <View style={styles.iconGrid}>
                 {ICON_LIST.map(name => (
@@ -298,7 +298,7 @@ export default function CategoriesScreen({ navigation }) {
               </View>
             </ScrollView>
 
-            {/* Action buttons */}
+            {}
             <View style={styles.actionRow}>
               <TouchableOpacity
                 style={styles.cancelBtn}

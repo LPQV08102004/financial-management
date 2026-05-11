@@ -6,15 +6,15 @@ import { createExpense, createIncome } from '../api/transactionApi';
 import { listAccounts } from '../api/accountsApi';
 
 interface TransactionConfirmCardProps {
-  parsed: any; // Dữ liệu từ AI Agent bóc tách được
+  parsed: any;
   onConfirmed: () => void;
   onCancel: () => void;
 }
 
-export default function TransactionConfirmCard({ 
-  parsed, 
-  onConfirmed, 
-  onCancel 
+export default function TransactionConfirmCard({
+  parsed,
+  onConfirmed,
+  onCancel
 }: TransactionConfirmCardProps) {
   const [type, setType] = useState<'expense' | 'income'>(parsed.type || 'expense');
   const [amount, setAmount] = useState(parsed.amount ? String(parsed.amount) : '');
@@ -28,7 +28,6 @@ export default function TransactionConfirmCard({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Lấy danh sách tài khoản khi component mount
   useEffect(() => {
     listAccounts()
       .then((list) => {
@@ -38,7 +37,6 @@ export default function TransactionConfirmCard({
       .catch(() => {});
   }, []);
 
-  // Auto-cap amount when account changes or type switches to expense
   useEffect(() => {
     if (type !== 'expense' || !selectedAccount || !amount) return;
     const num = Number(amount);
@@ -58,7 +56,6 @@ export default function TransactionConfirmCard({
     setAmount(String(num));
   };
 
-  // Kiểm tra các trường thông tin bắt buộc[cite: 6]
   const missingFields: string[] = [];
   if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) missingFields.push('Số tiền');
   if (!date) missingFields.push('Ngày');
@@ -99,15 +96,15 @@ export default function TransactionConfirmCard({
     <div className="bg-white rounded-2xl p-4 m-3 shadow-lg border-l-4 border-l-[#075c09] max-w-md mx-auto">
       <h2 className="text-lg font-bold text-[#075c09] mb-3">📋 Xác nhận giao dịch</h2>
 
-      {/* Loại giao dịch (Toggle)[cite: 6] */}
+      {}
       <div className="mb-3">
         <label className="text-xs font-semibold text-gray-500 mb-1 block">Loại</label>
         <div className="flex gap-2">
           <button
             onClick={() => setType('expense')}
             className={`flex-1 py-2 rounded-lg border transition-all font-medium text-sm ${
-              type === 'expense' 
-                ? 'bg-[#075c09] border-[#075c09] text-white' 
+              type === 'expense'
+                ? 'bg-[#075c09] border-[#075c09] text-white'
                 : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
             }`}
           >
@@ -116,8 +113,8 @@ export default function TransactionConfirmCard({
           <button
             onClick={() => setType('income')}
             className={`flex-1 py-2 rounded-lg border transition-all font-medium text-sm ${
-              type === 'income' 
-                ? 'bg-[#075c09] border-[#075c09] text-white' 
+              type === 'income'
+                ? 'bg-[#075c09] border-[#075c09] text-white'
                 : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
             }`}
           >
@@ -126,7 +123,7 @@ export default function TransactionConfirmCard({
         </div>
       </div>
 
-      {/* Thông tin nhập liệu[cite: 6] */}
+      {}
       <div className="space-y-3 mb-4">
         <div>
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Số tiền (VND)</label>
@@ -174,7 +171,7 @@ export default function TransactionConfirmCard({
         </div>
       </div>
 
-      {/* Danh mục (Chips)[cite: 6] */}
+      {}
       {type === 'expense' && (
         <div className="mb-3">
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Danh mục</label>
@@ -200,7 +197,7 @@ export default function TransactionConfirmCard({
         </div>
       )}
 
-      {/* Tài khoản (Chips)[cite: 6] */}
+      {}
       {accounts.length > 0 && (
         <div className="mb-4">
           <label className="text-xs font-semibold text-gray-500 mb-1 block">Tài khoản</label>
@@ -222,13 +219,13 @@ export default function TransactionConfirmCard({
         </div>
       )}
 
-      {/* Cảnh báo & Lỗi[cite: 6] */}
+      {}
       {missingFields.length > 0 && (
         <p className="text-xs text-orange-500 mb-2">⚠ Cần bổ sung: {missingFields.join(', ')}</p>
       )}
       {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
 
-      {/* Nút hành động[cite: 6] */}
+      {}
       <div className="flex gap-3">
         <button
           onClick={onCancel}

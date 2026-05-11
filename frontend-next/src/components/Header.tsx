@@ -25,10 +25,10 @@ export default function Header({
     <header
       className={`bg-[#075c09] px-5 py-4 flex flex-row items-center justify-between shadow-sm ${className}`}
     >
-      {/* Left: hamburger (mobile only) or back arrow */}
+      {}
       <div className="min-w-[44px]">
         {showMenu ? (
-          // Hamburger hidden on desktop — AppSidebar handles navigation
+
           <button
             onClick={onMenuPress}
             className="lg:hidden p-2 hover:bg-white/10 rounded-full transition-colors focus:outline-none"
@@ -51,12 +51,12 @@ export default function Header({
         )}
       </div>
 
-      {/* Center: page title */}
+      {}
       <div className="flex-1 flex justify-center overflow-hidden px-2">
         <h1 className="text-white text-lg font-semibold truncate">{title}</h1>
       </div>
 
-      {/* Right: action icon or spacer */}
+      {}
       <div className="min-w-[44px] flex justify-end">
         {rightIcon ? (
           <button
